@@ -61,16 +61,32 @@ async function newSession(browser, opts = {}) {
   });
   page.on('pageerror', e => log.push({ type: 'pageerror', text: String(e && (e.stack || e.message) || e).slice(0, 1200), noise: false, at: Date.now() }));
   page.on('crash', () => log.push({ type: 'pageerror', text: 'PAGE CRASHED', noise: false, at: Date.now() }));
+  // Navigations: open()/reload() count the expected ones; anything more is a dev-server (HMR) full reload.
+  const nav = { count: 0, expected: 0 };
+  page.on('framenavigated', f => { if (f === page.mainFrame()) nav.count++; });
+  page.on('console', m => { if (/\[vite\]/.test(m.text())) log.push({ type: 'vite', text: m.text().slice(0, 300), noise: true, at: Date.now() }); });
+  page.__nav = nav;
   page.setDefaultTimeout(30_000);
-  return { context, page, log };
+  return { context, page, log, nav };
 }
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 async function open(page, query = '') {
+  if (page.__nav) page.__nav.expected++;
   await page.goto(URL + '/' + query, { waitUntil: 'load', timeout: 90_000 });
   await page.waitForSelector('#root > *', { timeout: 60_000 });
 }
+
+/** Reload the page on purpose (counted as an expected navigation). */
+async function reload(page) {
+  if (page.__nav) page.__nav.expected++;
+  await page.reload({ waitUntil: 'load', timeout: 90_000 });
+  await page.waitForSelector('#root > *', { timeout: 60_000 });
+}
+
+/** True when the dev server reloaded the page behind the flow's back (source edited during the run). */
+const unexpectedReload = page => !!page.__nav && page.__nav.count > page.__nav.expected;
 
 /** Wait until the 3D scene has rendered (SceneCore publishes window.__haiulScene once two frames are drawn). */
 async function waitScene(page, timeout = 120_000) {
@@ -300,7 +316,7 @@ function overlaps(boxes, tol = 1) {
 }
 
 module.exports = {
-  ROOT, URL, OUT, FIX, launch, newSession, open, waitScene, probe, waitStore, MODULE_IMPORT, summary, circuitResults, shot, sleep,
+  ROOT, URL, OUT, FIX, launch, newSession, open, reload, unexpectedReload, waitScene, probe, waitStore, MODULE_IMPORT, summary, circuitResults, shot, sleep,
   loadDemoViaWelcome, startWithDemo, canvasBox, inspector, key, writeStringFixture, dropFiles, numIn, kpiValue,
   imageDiff, chromeBoxes, overlaps, isNoise, shotStalls,
 };
