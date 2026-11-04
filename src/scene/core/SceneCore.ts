@@ -30,6 +30,12 @@ export interface SceneStats {
   buildMs: number;
   aoMs: number;
   gridNodes: number;
+  /** JS time per rendered frame (scene update + draw submission), EMA ms. */
+  cpuMs: number;
+  /** Last depletion update (planes + caps for every solid), ms. */
+  depletionMs: number;
+  /** Frames that re-rendered the shadow map / total frames (camera-only frames skip it). */
+  shadowFrames: number;
 }
 
 type LayerKey = keyof SceneContext['layers'];
@@ -55,6 +61,8 @@ export class SceneCore {
   readonly canvas: HTMLCanvasElement;
   readonly overlay: HTMLCanvasElement;
   readonly labelLayer: HTMLDivElement;
+  /** DOM layer above labels for tool hints / POV HUD; never hidden by the Labels toggle. */
+  readonly hudLayer: HTMLDivElement;
   readonly renderer: THREE.WebGLRenderer;
   readonly scene = new THREE.Scene();
   readonly layers: Record<LayerKey, THREE.Group>;
@@ -64,7 +72,7 @@ export class SceneCore {
   readonly solids: SolidsLayer;
   readonly section: SectionLayer;
   readonly ctx: SceneContext;
-  stats: SceneStats = { fps: 0, frameMs: 0, frames: 0, triangles: 0, calls: 0, terrainTriangles: 0, pixelRatio: 1, buildMs: 0, aoMs: 0, gridNodes: 0 };
+  stats: SceneStats = { fps: 0, frameMs: 0, frames: 0, triangles: 0, calls: 0, terrainTriangles: 0, pixelRatio: 1, buildMs: 0, aoMs: 0, gridNodes: 0, cpuMs: 0, depletionMs: 0, shadowFrames: 0 };
   ready = false;
   readyPromise: Promise<void>;
 
@@ -119,7 +127,9 @@ export class SceneCore {
     this.overlay.className = css.overlay;
     this.labelLayer = document.createElement('div');
     this.labelLayer.className = css.labels;
-    container.append(this.canvas, this.overlay, this.labelLayer);
+    this.hudLayer = document.createElement('div');
+    this.hudLayer.className = css.hud;
+    container.append(this.canvas, this.overlay, this.labelLayer, this.hudLayer);
     this.octx = this.overlay.getContext('2d')!;
 
     // renderer
@@ -201,6 +211,7 @@ export class SceneCore {
       canvas: this.canvas,
       overlay: this.overlay,
       labelLayer: this.labelLayer,
+      hudLayer: this.hudLayer,
       frame: () => this.frameV,
       layers: this.layers,
       requestRender: () => this.requestRender(true),
@@ -392,6 +403,7 @@ export class SceneCore {
   private gridOn = true;
 
   private syncDepletion(force = false) {
+    const t0 = performance.now();
     const s = useApp.getState();
     const sc = s.scenario;
     const fr = new Map<string, number>();
@@ -409,7 +421,7 @@ export class SceneCore {
         }
       } catch (e) { console.warn('[scene] shift state failed', e); }
     }
-    if (this.solids.setFractions(fr, force)) { this.shadowDirty = true; this.requestRender(true); }
+    if (this.solids.setFractions(fr, force)) { this.shadowDirty = true; this.requestRender(true); this.stats.depletionMs = Math.round((performance.now() - t0) * 100) / 100; }
     this.terrain.setGlows(this.solids.glowSpots());
   }
 
@@ -502,7 +514,7 @@ export class SceneCore {
       this.unsubs.push(() => el.removeEventListener(t, f as EventListener, opts));
     };
     on('pointerdown', e => {
-      if (e.target !== this.canvas && e.target !== el && e.target !== this.overlay) return;
+      if (e.target !== this.canvas && e.target !== el && e.target !== this.overlay && e.target !== this.hudLayer && e.target !== this.labelLayer) return;
       el.focus({ preventScroll: true });
       const p = this.makePointer('down', e);
       const consumed = this.route(p);
@@ -635,6 +647,7 @@ export class SceneCore {
   }
 
   private renderFrame(now: number, kept: boolean) {
+    const tStart = performance.now();
     this.dirty = false;
     const cam = this.rig.active;
     const ve = this.frameV.vx;
@@ -668,7 +681,7 @@ export class SceneCore {
     const steps = [10, 25, 50, 100, 250, 500, 1000];
     const gs = steps.find(s => s / mpp >= 120) ?? 1000;
     this.terrain.setGrid(gs, this.gridOn && mode !== 'pov' && mode !== 'chase');
-    if (this.shadowDirty || kept) { this.renderer.shadowMap.needsUpdate = true; this.shadowDirty = false; }
+    if (this.shadowDirty || kept) { this.renderer.shadowMap.needsUpdate = true; this.shadowDirty = false; this.stats.shadowFrames++; }
     this.solids.syncPlanes();
     this.renderer.render(this.scene, cam);
     // labels
@@ -701,6 +714,8 @@ export class SceneCore {
       this.stats.frameMs = Math.round(avg * 10) / 10;
       this.stats.fps = Math.round(1000 / avg);
     }
+    const cpu = performance.now() - tStart;
+    this.stats.cpuMs = Math.round((this.stats.cpuMs ? this.stats.cpuMs * 0.8 + cpu * 0.2 : cpu) * 100) / 100;
     const v: ViewInfo = { heading: this.rig.headingDeg(), mpp, mode: this.rig.mode, transitioning: this.rig.transitioning };
     for (const cb of this.viewCbs) cb(v);
   }
@@ -787,7 +802,7 @@ export class SceneCore {
     this.renderer.renderLists.dispose();
     this.renderer.dispose();
     this.renderer.forceContextLoss();
-    this.canvas.remove(); this.overlay.remove(); this.labelLayer.remove();
+    this.canvas.remove(); this.overlay.remove(); this.labelLayer.remove(); this.hudLayer.remove();
     const w = window as unknown as { __haiulScene?: { core?: unknown; ready?: boolean; stats?: unknown } };
     if (w.__haiulScene?.core === this) w.__haiulScene = { ready: false, stats: { ...this.stats } };
   }

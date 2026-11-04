@@ -34,7 +34,7 @@ function Legend() {
         <span className={css.lgItem} title="Grade (rise over run): 0–4 % flat · 4–8 % moderate · 8–10 % steep · >10 % excessive">
           <span className={css.lgRamp}>
             <i style={{ background: grad }} />
-            <span className={css.lgTicks}><b style={{ left: '0%' }}>0</b><b style={{ left: `${(4 / 12) * 100}%` }}>4</b><b style={{ left: `${(8 / 12) * 100}%` }}>8</b><b className={css.lgEnd}>10+%</b></span>
+            <span className={css.lgTicks}><b style={{ left: '0%' }}>0</b><b style={{ left: `${(4 / 12) * 100}%` }}>4</b><b style={{ left: `${(8 / 12) * 100}%` }}>8 %</b></span>
           </span>
         </span>
       )}

@@ -20,7 +20,9 @@ float hk_ground(vec2 p, float fw) {
   float s = (hk_vnoise(p / 210.0) - 0.5) * 0.8;
   s += (hk_vnoise(p / 53.0 + 3.1) - 0.5) * 0.42 * hk_fade(fw, 5.0, 15.0);
   s += (hk_vnoise(p / 13.0 + 7.7) - 0.5) * 0.22 * hk_fade(fw, 1.3, 3.8);
-  s += (hk_vnoise(p / 3.1 + 1.3) - 0.5) * 0.16 * hk_fade(fw, 0.3, 0.9);
+  s += (hk_vnoise(p / 3.1 + 1.3) - 0.5) * 0.24 * hk_fade(fw, 0.3, 0.9);
+  // gravel grain that survives out to ~150 m in POV (period ~0.9 m, fades by ~0.45 m/px)
+  s += (hk_vnoise(p / 0.9 + 4.4) - 0.5) * 0.26 * hk_fade(fw, 0.18, 0.45);
   s -= smoothstep(0.5, 0.9, hk_vnoise(p / 0.35 + 2.7)) * 0.2 * hk_fade(fw, 0.035, 0.1);
   s += (hk_vnoise(p / 0.11 + 6.1) - 0.5) * 0.2 * hk_fade(fw, 0.012, 0.035);
   return s;
@@ -28,7 +30,8 @@ float hk_ground(vec2 p, float fw) {
 // Bump height for the micro relief (fine octaves + pebbles).
 float hk_bump(vec2 p, float fw) {
   float s = (hk_vnoise(p / 6.0 + 2.2) - 0.5) * 0.3 * hk_fade(fw, 0.6, 1.6);
-  s += (hk_vnoise(p / 1.3 + 5.5) - 0.5) * 0.12 * hk_fade(fw, 0.13, 0.35);
+  s += (hk_vnoise(p / 1.3 + 5.5) - 0.5) * 0.18 * hk_fade(fw, 0.13, 0.35);
+  s += (hk_vnoise(p / 0.7 + 1.9) - 0.5) * 0.07 * hk_fade(fw, 0.09, 0.22);
   s += (hk_vnoise(p / 0.3 + 8.8) - 0.5) * 0.035 * hk_fade(fw, 0.03, 0.08);
   return s;
 }
