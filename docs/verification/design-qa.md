@@ -305,10 +305,13 @@ the sheet to keep software GL fast; `h_*` are the Manning dev harness.
 ### Fixed: haulage and analytics views (profile, section, inspector, Assumptions, Truck curves, Compare): #9 (section), #10, #12, #13, #14, #19, #20, #22, #25, #27, #28, #29, #30, #31, #40, HRL §11.1–11.3
 
 Files: `src/features/haulage/**`, `src/features/assumptions/**`, `src/features/curves/**`, `src/features/compare/**`.
-Screenshots (light and dark, 1920×1080 and 1366×768) are in `…/scratchpad/fix_views_a/`. While this round ran, opening a
-section in the full app crashed in `src/scene/core/Chrome.tsx` (a scene fix in progress, outside these folders), so the
-section panel was checked in the haulage harness (`/src/features/haulage/harness/index.html?sel=circuit:0&section=1`,
-files `5x_section_harness_*.png`) as well as in the app.
+Screenshots (light and dark, 1920×1080 and 1366×768) are in `…/scratchpad/fix_views_a/`.
+- `1x_*`: the app. The profile, inspector and string files are in both themes at both sizes; the section is in light at
+  both sizes. These hide the WebGL canvas: with the machine under load, software GL timed out the page screenshots.
+- `5x_section_harness_*`: the section panel in the haulage harness, both themes, both sizes.
+- `6x_*`: Assumptions, Truck curves and Compare in the analytics harness, both themes, both sizes.
+- Midway through this round, opening a section in the app looped in `src/scene/core/Chrome.tsx`. That was another
+  fixer's work in progress; it was fixed before the final captures.
 
 - **#9 (section part) Fixed.** Where A–B crosses a haul string, the section now shows the road.
   - On the section itself, each crossing shows its carriageway at `roadWidthM` (30 m by default), widened by 1 / sin θ
@@ -322,6 +325,8 @@ files `5x_section_harness_*.png`) as well as in the app.
     line reads "two-way 3.5 × 7.6 m = 26.8 m", and a second one under the ground reads "30.0 m carriageway".
   - The truck drawn is the selected circuit's. The check uses the widest truck on the road (its circuits, main or
     alternative haul). A select picks the road when several cross.
+  - On a short dock (768 px tall with the Profile / Section tabs) the caption row under the drawing drops, so the drawing
+    keeps its room.
   - The pure helpers live in `haulage/model.ts` (`roadCheck`, `trucksOnString`, `tyreSize`, `apparentWidth`, `bundBase`)
     and are unit-tested.
   - The string inspector has a new **Road** section: carriageway width and bund height fields (undoable), led by the two
@@ -483,3 +488,166 @@ folders, served on port 5174 (`fix_shell/snap`).
   a closed solid whose volume ÷ plan area is under 0.5 m. Such a solid gets a warning ("Encloses 250 bcm over 2.5 ha –
   an average of 0.01 m thick. It looks like a sheet, check the solid.") and an amber Volume readout. The footer counts it
   under "with notes". This is unit-tested.
+
+### Fixed: scene modules (strings, actors, cockpit): #2 (HUD part), #6 (modules part), #8 (modules part), #9 (3D part), #39
+
+Files: `src/scene/strings/**`, `src/scene/actors/**`, `src/scene/cockpit/**`. Screenshots are in
+`…/scratchpad/fix_scene_modules/`. `b3_*` and `b2_*` come from the app at 1366×768. `h_*` come from the actors harness,
+which has plain terrain. The shared server kept reloading on other agents' work, so some states were captured in the
+harness.
+
+- **#2 (HUD part) Fixed.** The cockpit HUD has fixed-width columns: speed 136 px, the route strip, and a 184 px
+  Grade / Limit / Load grid. All figures are tabular. Nothing is cut off any more:
+  - The phase line says loaded or empty, and the Load row shows the material on its own ("Overburden"), so
+    "Loaded · C…" is gone.
+  - Long phase or material text wraps instead of being cut.
+  - The route strip sizes itself to the room between the bottom-right map chrome and its mirror image (140 px is kept
+    free on each side). It shrinks to 240 px, then hides.
+  - The unit / model / circuit caption has moved from a pill at the top into the HUD glass. The top centre is now free
+    for the shell's ride rest pill, and nothing meets the view switcher when the chrome wakes.
+  - The stop-sign distance now sits under the strip, between the two end names (`b2_pov_day_light.png`,
+    `b3_pov_day_light.png`).
+- **#6 (modules part) Fixed.** String end pins and the focused string's grade chips go to the core's shared placer
+  (`ctx.labels`), so they are placed together with the block labels:
+  - Priorities: pins 40, the selected string's pins 100, grade chips 20.
+  - Only labels that changed are sent again, because the placer re-places on every upsert.
+  - The anchor stays our dig / dump end dot (`data-dot="0"`).
+  - When there is no placer (harness), the module places the labels itself as before.
+  - The leg hover card and the selected-truck card now sit on the HUD layer at `--z-card`, above every scene label.
+- **#8 (modules part) Fixed.** In POV and chase the ribbons give way to a real 3D haul road (`strings/road3d.ts`).
+  Grade colour stays on the map ribbon and the HUD profile only (`b3_pov_day_light.png`, `b3_chase_day_light.png`,
+  `h_pov4.png`).
+  - The carriageway is compacted gravel at `roadWidthM` with a 1 % crown. It has darker, smoother wheel tracks along
+    both keep-left lanes and loose spill at the windrow toes. A faint dashed centreline is drawn only on two-way roads
+    (at least 3 × the widest truck).
+  - Rubble windrows at `bundHeightM` run along both edges. They are darker at the toes and catch the light on the
+    crest.
+  - The windrows open 18–48 m from the dig and the dump, and where another road's carriageway crosses them. A road
+    that shares a corridor keeps them.
+  - Where the road runs in cut, the bank replaces the windrow and the carriageway ends at its toe. Where the ground
+    falls away, fill batters run down to it.
+  - Corners are rounded with a Bézier of at most 22 m, so the edges no longer kink. The surface rides over small
+    ground bumps, so no terrain speckles through it.
+  - Guide posts, 1.6 m tall, stand every 50 m on both edges. Each driver sees a red reflector on the left and a white
+    one on the right. The reflectors glow at night.
+  - The black placeholder mirror is now a live mirror. Each mirror glass shows a 144 × 360 render target looking back
+    along the flank, with a convex field of view, flipped left to right. It shows the tray, the rear duals (the
+    followed truck's wheels now render in POV) and the road behind. Only one mirror refreshes per frame, at most every
+    45 ms, and only in POV.
+  - Night comes from the core's `environment().night`, never from the theme. Every truck shows headlight and tail-light
+    glows, kept at least 3.5 px so a fleet reads across the pit, plus a soft beam painted on the road. In POV and chase
+    the followed truck gets a real spot light, which lights the road, windrows, posts and trucks ahead
+    (`b3_pov_night.png`, `h_night_chase2.png`).
+  - Lanes now sit a quarter of the road width from the centre (7.5 m on a 30 m road), so trucks passing each other
+    clear.
+- **#9 (3D part) Fixed.** In the map views the ribbon draws the carriageway at the true `roadWidthM` once it is clearly
+  wider than the string line (`b3_map_string_selected.png`, `h_map2.png`):
+  - a grade tint at 15 % (26 % when the string is selected);
+  - thin darker casing lines on both edges, each with a light halo;
+  - the 7–8.5 px string line, ticks and chevrons kept down the middle.
+  The selection glow is a halo outside the band edge, not a fill.
+- **#39 Fixed.** At an end-of-shift park-up (`kind: 'changeover'` or a "park-up" label), each truck turns round, drives
+  back along its lane (eased, up to about 40 km/h) and pulls into its slot on a park-up line. The line runs along the
+  shoulder near the truck's loader, with slots 1.35 truck lengths apart (`h_parkup.png`, `b3_parkup.png`).
+  - The phase shows "Empty return · To park-up", then "Parked · End-of-shift park-up".
+  - At other stops (crib, prestart), trucks out on the road pull onto the shoulder and pull back out before the event
+    ends.
+  - Each truck's own pause start is found from the engine once (by bisection) and then cached.
+  - This is unit-tested in `sim.test.ts`.
+- **Dark-theme POV.** The modules take day and night only from the core's clock-driven `environment()`, with a fallback
+  to the same shift-clock sun. Road, post and lamp colours do not depend on the theme.
+- **Still open (scene core).** The core's new near-field terrain gravel aliases to salt-and-pepper noise under
+  SwiftShader. It is the one thing in the cab view that still reads worse than HRL's ground.
+
+### Fixed: scene core: #2 (core part), #3, #5, #6 (core part), #7, #8 (core part), #16, #17, #24, #35
+
+Before and after shots are in `…/scratchpad/fix_scene_core/`: `before_*` (build `661e5bc`), app shots at 1366×768 `v3_*`,
+`v4_*` and `v5_*`, harness shots `h3_*` and `h4_*`.
+
+- **#5 Fixed (P1).** The shift's work is now the main thing you see during playback.
+  - **The terrain is carved where a dig block has been dug.** `core/carve.ts` turns every solid into a small column
+    atlas (zmin, zmax and coverage on a plan grid, in a half-float texture). The live depletion plane is passed as a
+    uniform. With these, the terrain vertex shader drops the dug columns to the block floor. On a face-advance block,
+    vertices within one cell of the face slide onto the plane, so the face moves smoothly. The shadow map uses the same
+    carve.
+  - **Cut and fill are recoloured the Rain Model way, keeping the hillshade.** Carved ground is cool blue. It gets
+    darker with depth and on the walls, so a trench reads as a hole rather than a raised box. Ground opened this shift is
+    a brighter blue. Built ground is sage.
+  - **The volume mined in the period is a bright cut-blue slab on the advancing face**, with crisp edges. A glowing
+    face line is also drawn on the overlay, so the face still reads at overview scale.
+  - **Dump lifts are real lit meshes.** The placed part is opaque, lit and shadow-casting, with a capped tip face.
+    Material placed this period has a lighter tint. What is still to place stays a dashed ghost.
+  - **Every active block's label shows a counter**, for example "+7,050 bcm this shift": blue for digs, sage for dumps.
+  - **`timeline.horizon` is honoured:**
+    - `shift`: the engine's shift simulation.
+    - `week`: 7 × the circuit's assigned bcm/day, spread across the slider.
+    - `completion`: each dig block goes from 0 to 100 % across the slider, and its dump fills by the same bcm.
+
+    In `week` and `completion`, the slab is the trailing shift's work and the counter shows the running total.
+- **#6 (core part) Fixed.** `ctx.labels` (`core/labels.ts`) is the scene's single label placer. It places the core's
+  block labels and every module label in one pass per frame.
+  - **Priorities:** selected 100, hovered 90, block 50, pin 40, chip 20. A label with no room is hidden, so labels
+    never overlap. Each label tries its previous slot first, so labels don't hop while the camera moves.
+  - **Two styles:** labels below priority 30 are tags centred on their anchor; the rest are callouts with a stem. A
+    module can override this with `el.dataset.place = 'center' | 'above'`. `el.dataset.color` sets the colour of the
+    anchor dot. Displaced labels get a leader line.
+  - **Contour RL labels avoid placed labels** (`hits()` and `reserve()`).
+  - **Cost:** sizes come from a ResizeObserver, items are sorted in place, and the DOM is written only when a value
+    changes. `upsert` asks for a frame only when something changed.
+  - **For module owners:** call `upsert` from `onFrame`.
+- **#7 Fixed.** Contours now visibly matter.
+  - **Intervals and weights:** minor contours at the set interval, index contours every 5th (2 m → 10 m). They use
+    HRL's weights: minor about 1 px, index about 1.6 px.
+  - **Fading:** each set fades only where its lines would crowd, not by slope, so batters keep their contours.
+    Dead-flat ground (under 0.1 % slope, such as dump tops and the pit floor) stays clean.
+  - **Smoothing:** on gentle ground the contours come from a lightly smoothed surface, as HRL's do, so survey noise
+    doesn't crinkle them. Steep faces use the true RL.
+  - **RL labels:** index contours carry sparse RL labels. They come from a marching-squares pass, run along the
+    contour, stay upright, are haloed and occlusion-tested, and keep clear of scene labels.
+  - **Plan view:** an unlit Rain Model survey plot: 78 % four-light grey plus 22 % hypsometric tint, with baked AO
+    (`v3_plan`).
+  - **Still open: the 2 m default.** The store default is still 5 m. `emptyScenario` in `src/state/store.ts` is outside
+    the scene core and needs `contourIntervalM: 2`. The shots set 2 m through the settings.
+- **#8 (core part) Fixed.**
+  - **Sky and sun follow the shift clock** (`core/environment.ts`): `shift.startHour + timeline.tMin`. The model uses a
+    Bowen Basin latitude and a November declination, so sunrise is 05:34 and sunset 18:26.
+  - **Day shift:** 06:00 and 17:55 are golden hour but stay legible. The key light's elevation is clamped to 24–62°,
+    with its intensity compensated.
+  - **Night only when the clock says night:** moonlight, ground at about ×0.35, stars, lighting-plant pools at the
+    faces, and light contour ink.
+  - **Dark theme:** a dark backdrop and a dusk-toned sky by day, but the scene stays daylit.
+  - **For the cockpit's headlights:** `sceneApi.environment()`, `sceneApi.onEnvironment()` and `ctx.environment()`
+    expose `{ hour, sunElDeg, sunAzDeg, daylight, night, headlights, lightDir }`.
+  - **Near-field detail:** a procedural tileable gravel texture fades in under about 110 m. It is generated off the
+    build path, sampled at two rotated scales and triplanar on faces. It now samples with `textureGrad`, using
+    derivatives taken outside the branch. This fixes the salt-and-pepper noise reported under "Still open (scene core)"
+    above: an implicit-LOD lookup inside a branch has an undefined mip level, and SwiftShader used level 0.
+  - **Haze in ride views:** from 160 m out to 3.6 km, blending into the horizon sky.
+- **#2 (core part) Fixed.** In POV and chase, the scale bar and the legend are hidden. Fit and the compass stay.
+- **#3 Fixed.** The dock sizes to its content, inside the right column.
+  - The scale bar's maximum length is computed from the room left after fit, the compass and the legend.
+  - If even a short bar won't fit, the legend is dropped first.
+  - The surface clips its content, so the bar never spills out of the pill or off-screen.
+- **#16 Fixed.** Framing honours the safe rect.
+  - The safe rect comes from the shell's `--right-col`, `--top` and `--below`, resolved to pixels by a hidden probe, plus
+    any `setSafeInsets` override. It is cached, so no style is read per frame.
+  - Home, fit, focus and plan all frame into it.
+  - When the safe rect changes and the camera hasn't been moved since home or fit, the view re-frames, so the whole pit
+    stays visible at 1366.
+- **#17 Fixed.** Solids read as volumes.
+  - Side faces are drawn at ×0.58 of the top, whatever the sun.
+  - The top edge has a crisp, darker line.
+  - Hidden edges show dashed through the terrain, and the x-ray faces are shaded by orientation.
+  - Dig blocks are a translucent volume and dumps are opaque. Both cast and receive shadows.
+- **#24 Fixed.** The skirt's easting and northing labels sit on the backdrop just below the skirt, not on the dark
+  strata. They are 11 px semibold: dark ink on a light halo in the light theme, light ink in the dark theme. Their ticks
+  run the full height of the skirt.
+- **#35 Fixed.** `SceneChrome` renders nothing until the scenario has assets.
+- **Performance.**
+  - **Per frame:** no allocations in the label, contour-label, overlay, haze and camera-ride paths. Contour-label
+    occlusion is capped at 24 short raycasts per frame. Depletion changes cost only uniform writes plus two caps per
+    moving solid.
+  - **Build:** terrain build adds only `smoothed()` (two NaN-aware box passes) and the column atlas. The gravel texture
+    is made in idle time.
+  - **Tests:** `npx vitest run src/scene` passes 47 tests, including the new `core/core.test.ts`. The scene files
+    typecheck clean.

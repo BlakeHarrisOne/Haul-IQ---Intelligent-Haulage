@@ -307,8 +307,10 @@ function RoadDetail({ cross, road, H, options, onPick }: { cross: Crossing; road
   const half = Wr / 2;
   const lo = -half - bb - 2.5, hi = Math.max(half + bb + 2.5, -half + need + 2.5);
   const BAND_H = Math.max(7, th + 0.6);
-  const HEAD = 34, FOOT = 20, TOP = 18, BOT = 18;
-  const svgW = DETAIL_W - 24, svgH = Math.max(60, H - HEAD - FOOT);
+  // short docks (laptop heights, with the Profile / Section tabs) drop the caption row so the drawing keeps its room
+  const compact = H < 132;
+  const HEAD = compact ? 30 : 34, FOOT = compact ? 0 : 20, TOP = 18, BOT = 18;
+  const svgW = DETAIL_W - 24, svgH = Math.max(40, H - HEAD - FOOT);
   const GROUND = 1.6; // m of ground shown under the formation
   const k = Math.min(svgW / (hi - lo), (svgH - TOP - BOT) / (BAND_H + GROUND));
   const ox = (svgW - (hi - lo) * k) / 2 - lo * k;
@@ -323,7 +325,7 @@ function RoadDetail({ cross, road, H, options, onPick }: { cross: Crossing; road
   const place = fit ? gradePlace(hs.points, fit) : '';
   return (
     <div className={s.roadDetail} style={{ width: DETAIL_W }}>
-      <div className={s.rdHead}>
+      <div className={s.rdHead} style={compact ? { height: HEAD } : undefined}>
         {options.length > 1
           ? <span className={s.rdPick}><Select small value={hs.id} onChange={onPick} width="100%" title="Road at this crossing" options={options.map(o => ({ value: o.id, label: o.name }))} /></span>
           : <span className={s.rdName}><i className={s.lineKey} style={{ background: circuitColor(hs.color) }} /><span>{hs.name}</span></span>}
@@ -365,10 +367,10 @@ function RoadDetail({ cross, road, H, options, onPick }: { cross: Crossing; road
         </g>
         <text x={X(0)} y={Y(0) + 20} dy="0.2em" textAnchor="middle" style={{ ...chartText, fontSize: 11, fill: 'var(--ink-2)', fontWeight: 600 }}>{num(Wr, 1)} m carriageway</text>
       </svg>
-      <div className={s.rdFoot} title={fit ? `Steepest ${GRADE_WINDOW_M} m on ${hs.name}: ${fmtGrade(fit.grade, 1)} ${place}` : undefined}>
+      {!compact && <div className={s.rdFoot} title={fit ? `Steepest ${GRADE_WINDOW_M} m on ${hs.name}: ${fmtGrade(fit.grade, 1)} ${place}` : undefined}>
         <span>{truck.name} {num(tw, 1)} m · here {fmtGrade(cross.grade, 1)}</span>
         {fit && <span className={fit.ok ? s.tOk : s.tBad}>· max {pct(Math.abs(fit.grade))} per {GRADE_WINDOW_M} m {fit.ok ? '✓' : `> ${pct(GRADE_LIMIT, 0)}`}</span>}
-      </div>
+      </div>}
     </div>
   );
 }
