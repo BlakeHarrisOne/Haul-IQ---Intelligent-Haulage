@@ -1,0 +1,3182 @@
+{
+ "meta": {
+  "source_workbook": "calc.xlsm (Haulage Calculator Spreadsheet, Short Term Planning)",
+  "extracted": "2026-11-04",
+  "extractor": "openpyxl cached values (data_only=True) + formulas (data_only=False)",
+  "float_note": "All numbers are IEEE-754 doubles exactly as cached by Excel (JSON repr round-trips).",
+  "description": "Test vector: current ActiveRoute state of calc.xlsm with all inputs, per-segment Travel Time values and cached outputs."
+ },
+ "source_string": {
+  "raw_data_title_row": 1028,
+  "title": "EX09 - B7-9 to RL282",
+  "raw_data_truck_note": [
+   3,
+   "Trucks req at 0.92hrs PT hang/shift (32kbcm)"
+  ],
+  "raw_data_flag": "centroid-to-centroid",
+  "note": "Data Dump!A2:C118 is byte-identical to Raw Data!E1030:G1146 (117 points)."
+ },
+ "coordinate_convention": {
+  "point_format": [
+   "easting_m",
+   "northing_m",
+   "elevation_m"
+  ],
+  "data_dump_columns": {
+   "A": "EASTING (header text says 'NORTHING' - mislabelled)",
+   "B": "NORTHING (header text says 'EASTING' - mislabelled)",
+   "C": "ELEVATION (RL, m)"
+  },
+  "evidence": [
+   "Column A values ~236 000 (MGA easting range) and column B ~7 051 000 (MGA northing range)",
+   "Chart 'Haul Route - Visual Check' plots A as X axis titled 'Easting (m)' and B as Y axis titled 'Northing (m)'",
+   "Raw Data exports put X (easting) in col E and Y (northing) in col F; these are pasted unchanged into Data Dump A/B"
+  ],
+  "impact_on_calcs": "None - 3D distance is symmetric in the two horizontal axes.",
+  "order": "Points are ordered dig (first) -> dump (last). Loaded leg = forward order; return leg = same segments with negated grade."
+ },
+ "points": [
+  [
+   236494.145034092,
+   7051413.66124887,
+   294.727579310536
+  ],
+  [
+   236508.146852738,
+   7051402.2999323,
+   295.09825537488
+  ],
+  [
+   236518.006145756,
+   7051394.2999323,
+   295.217721042514
+  ],
+  [
+   236537.724731794,
+   7051378.2999323,
+   295.74876471334
+  ],
+  [
+   236562.949189685,
+   7051357.83237314,
+   296.485257883435
+  ],
+  [
+   236566.949189685,
+   7051354.58670431,
+   296.438617941645
+  ],
+  [
+   236567.30261085,
+   7051354.2999323,
+   296.444895307989
+  ],
+  [
+   236570.949189685,
+   7051351.34103549,
+   296.340774875709
+  ],
+  [
+   236572.23225736,
+   7051350.2999323,
+   296.380081253317
+  ],
+  [
+   236579.17706934,
+   7051344.66479236,
+   296.498403400183
+  ],
+  [
+   236583.761976498,
+   7051340.2999323,
+   296.659604960705
+  ],
+  [
+   236584.949189685,
+   7051339.16969798,
+   296.715594430451
+  ],
+  [
+   236585.862803142,
+   7051338.2999323,
+   296.598995513241
+  ],
+  [
+   236596.36693636,
+   7051328.2999323,
+   295.303198116486
+  ],
+  [
+   236600.568589647,
+   7051324.2999323,
+   294.842766120126
+  ],
+  [
+   236600.949189685,
+   7051323.9375987,
+   294.795925167449
+  ],
+  [
+   236608.498782213,
+   7051316.75033977,
+   294.305004889115
+  ],
+  [
+   236608.949189685,
+   7051316.32154906,
+   294.267050404518
+  ],
+  [
+   236648.887602451,
+   7051278.2999323,
+   294.643453759428
+  ],
+  [
+   236665.056304437,
+   7051262.90722768,
+   294.409216463566
+  ],
+  [
+   236669.753171571,
+   7051259.49595041,
+   294.005453743017
+  ],
+  [
+   236670.949189685,
+   7051258.62729705,
+   293.932471290037
+  ],
+  [
+   236671.399926649,
+   7051258.2999323,
+   293.858235149357
+  ],
+  [
+   236672.949189685,
+   7051257.17472146,
+   293.758240604881
+  ],
+  [
+   236674.153655977,
+   7051256.2999323,
+   293.696266733798
+  ],
+  [
+   236674.949189685,
+   7051255.72214588,
+   293.615203225288
+  ],
+  [
+   236700.949189685,
+   7051236.83866322,
+   292.574386586351
+  ],
+  [
+   236703.139241072,
+   7051235.24805563,
+   292.735767945647
+  ],
+  [
+   236705.808006659,
+   7051235.44111532,
+   292.344958117879
+  ],
+  [
+   236716.998482631,
+   7051236.25063935,
+   292.064057720791
+  ],
+  [
+   236726.448686154,
+   7051236.93427129,
+   292.593553394079
+  ],
+  [
+   236750.722974092,
+   7051278.2999323,
+   288.582479801413
+  ],
+  [
+   236756.723585546,
+   7051288.52553644,
+   288.488891949339
+  ],
+  [
+   236758.050687561,
+   7051290.78704261,
+   288.046560898423
+  ],
+  [
+   236758.949189685,
+   7051293.16253932,
+   288.302869608112
+  ],
+  [
+   236766.396658803,
+   7051312.85246318,
+   287.31958816205
+  ],
+  [
+   236766.944146017,
+   7051314.2999323,
+   287.600067774724
+  ],
+  [
+   236766.945530179,
+   7051314.3035918,
+   287.598784666414
+  ],
+  [
+   236766.949189685,
+   7051314.31326695,
+   287.599985807129
+  ],
+  [
+   236769.970046644,
+   7051322.2999323,
+   286.442199680643
+  ],
+  [
+   236771.80952986,
+   7051327.16323336,
+   286.219052046537
+  ],
+  [
+   236776.949189685,
+   7051334.4660392,
+   285.601039697313
+  ],
+  [
+   236779.359019602,
+   7051337.89010238,
+   285.649193725222
+  ],
+  [
+   236779.647454815,
+   7051338.2999323,
+   285.5311619194
+  ],
+  [
+   236781.011315847,
+   7051340.23780613,
+   285.251749747944
+  ],
+  [
+   236795.130889355,
+   7051360.2999323,
+   285.182317183918
+  ],
+  [
+   236800.342605079,
+   7051367.70512044,
+   285.292470946908
+  ],
+  [
+   236804.949189685,
+   7051372.78589093,
+   285.443787451594
+  ],
+  [
+   236813.277563388,
+   7051381.97155859,
+   285.828405593057
+  ],
+  [
+   236818.949189685,
+   7051388.22700247,
+   286.268326897479
+  ],
+  [
+   236818.983869678,
+   7051388.2652523,
+   286.271237819174
+  ],
+  [
+   236829.895358749,
+   7051400.2999323,
+   287.182445466793
+  ],
+  [
+   236835.151737499,
+   7051406.09738448,
+   287.808379435797
+  ],
+  [
+   236838.962063537,
+   7051410.2999323,
+   288.206936084309
+  ],
+  [
+   236849.417503223,
+   7051421.83161876,
+   289.023533720383
+  ],
+  [
+   236849.842109283,
+   7051422.2999323,
+   289.017389115111
+  ],
+  [
+   236854.949189685,
+   7051427.93271788,
+   289.195735533606
+  ],
+  [
+   236855.282132156,
+   7051428.2999323,
+   289.210109048406
+  ],
+  [
+   236856.074860561,
+   7051429.17426142,
+   289.266508770716
+  ],
+  [
+   236856.949189685,
+   7051430.13859096,
+   289.26107789129
+  ],
+  [
+   236857.025911609,
+   7051430.22321037,
+   289.25631664116
+  ],
+  [
+   236857.095473113,
+   7051430.2999323,
+   289.258460123006
+  ],
+  [
+   236860.92415703,
+   7051434.52272769,
+   289.348642244935
+  ],
+  [
+   236862.138656618,
+   7051436.2999323,
+   289.35471458154
+  ],
+  [
+   236868.151078002,
+   7051445.09804398,
+   289.790609511843
+  ],
+  [
+   236869.77490109,
+   7051447.47422089,
+   289.988748384147
+  ],
+  [
+   236878.949189685,
+   7051460.89916411,
+   289.97865841705
+  ],
+  [
+   236875.570594168,
+   7051472.2999323,
+   290.163672242762
+  ],
+  [
+   236870.450827639,
+   7051476.2999323,
+   290.508018524333
+  ],
+  [
+   236850.949189685,
+   7051491.53628172,
+   290.317484448139
+  ],
+  [
+   236846.949189685,
+   7051494.66142423,
+   290.442314537501
+  ],
+  [
+   236845.296385949,
+   7051495.95273603,
+   290.509124150902
+  ],
+  [
+   236836.949189685,
+   7051502.4742805,
+   291.086958047524
+  ],
+  [
+   236836.15203952,
+   7051503.09708246,
+   291.15878015195
+  ],
+  [
+   236827.007693091,
+   7051510.24142889,
+   291.91421977184
+  ],
+  [
+   236821.813045617,
+   7051514.2999323,
+   292.453768238984
+  ],
+  [
+   236809.369059849,
+   7051524.02223951,
+   293.350613385439
+  ],
+  [
+   236804.949189685,
+   7051527.79103671,
+   293.646452547374
+  ],
+  [
+   236804.352380599,
+   7051528.2999323,
+   293.705963957493
+  ],
+  [
+   236782.949189685,
+   7051546.55030684,
+   294.10597611438
+  ],
+  [
+   236781.249498486,
+   7051547.9996235,
+   294.160466044974
+  ],
+  [
+   236780.897310284,
+   7051548.2999323,
+   294.171592873589
+  ],
+  [
+   236772.949189685,
+   7051555.07724781,
+   294.460696183968
+  ],
+  [
+   236754.949189685,
+   7051570.42574156,
+   294.847382638436
+  ],
+  [
+   236740.517933264,
+   7051582.73118872,
+   294.979433275257
+  ],
+  [
+   236726.950648559,
+   7051594.2999323,
+   295.148974014295
+  ],
+  [
+   236726.949189685,
+   7051594.30117627,
+   295.14897552964
+  ],
+  [
+   236721.376181249,
+   7051599.05324767,
+   295.099814802408
+  ],
+  [
+   236700.949189685,
+   7051615.61928619,
+   295.015934454767
+  ],
+  [
+   236700.109909235,
+   7051616.2999323,
+   295.045979006128
+  ],
+  [
+   236692.949189685,
+   7051622.10718764,
+   295.050426539783
+  ],
+  [
+   236672.982493486,
+   7051638.2999323,
+   294.950023815602
+  ],
+  [
+   236664.949189685,
+   7051644.81484272,
+   294.602773403814
+  ],
+  [
+   236648.949189685,
+   7051657.79064562,
+   293.368847887362
+  ],
+  [
+   236648.321206441,
+   7051658.2999323,
+   293.319614303105
+  ],
+  [
+   236626.949189685,
+   7051675.63237461,
+   291.986872061679
+  ],
+  [
+   236621.193790692,
+   7051680.2999323,
+   291.910357774021
+  ],
+  [
+   236615.601734209,
+   7051684.83502122,
+   291.814817801118
+  ],
+  [
+   236608.995025448,
+   7051684.25409654,
+   291.514499508022
+  ],
+  [
+   236598.734388011,
+   7051683.35188368,
+   291.465054437518
+  ],
+  [
+   236596.949189685,
+   7051681.16870166,
+   291.465332066333
+  ],
+  [
+   236596.558368875,
+   7051680.69075311,
+   291.448773107851
+  ],
+  [
+   236575.221123437,
+   7051654.59668285,
+   290.526536926627
+  ],
+  [
+   236575.004313308,
+   7051654.2999323,
+   290.474612860342
+  ],
+  [
+   236574.136700904,
+   7051653.11242108,
+   290.379059888713
+  ],
+  [
+   236573.543085169,
+   7051652.2999323,
+   290.367714732169
+  ],
+  [
+   236564.848951653,
+   7051640.40017033,
+   289.141557641673
+  ],
+  [
+   236554.949189685,
+   7051626.85025063,
+   287.638723194844
+  ],
+  [
+   236553.028179879,
+   7051624.2209421,
+   287.302593388717
+  ],
+  [
+   236532.949189685,
+   7051596.73859398,
+   284.0831491316
+  ],
+  [
+   236529.921870398,
+   7051592.59506676,
+   283.621759280562
+  ],
+  [
+   236516.501958616,
+   7051574.74716337,
+   282.848616076229
+  ],
+  [
+   236511.351648609,
+   7051567.89747337,
+   282.739403103817
+  ],
+  [
+   236506.201338603,
+   7051561.04778338,
+   282.626114478915
+  ],
+  [
+   236492.949189685,
+   7051543.42299735,
+   282.334573353583
+  ],
+  [
+   236492.467178585,
+   7051542.7819434,
+   282.328048418033
+  ],
+  [
+   236491.403764521,
+   7051541.36764859,
+   282.303250402212
+  ]
+ ],
+ "point_count": 117,
+ "inputs": {
+  "excavator_B3": {
+   "cell": "ActiveRoute!B3",
+   "value": "EX09",
+   "label": "EX (dropdown U5:U9)"
+  },
+  "truck_type_C3": {
+   "cell": "ActiveRoute!C3",
+   "value": "CAT789D (OB)",
+   "label": "Truck type (dropdown M5:M10)"
+  },
+  "haul_efficiency_C6": {
+   "cell": "ActiveRoute!C6",
+   "value": 0.85,
+   "label": "Haul Eff Factor"
+  },
+  "stop_signs_C11": {
+   "cell": "ActiveRoute!C11",
+   "value": 2,
+   "label": "Stop Signs (incl. return haul)"
+  },
+  "desired_daily_volume_C20": {
+   "cell": "ActiveRoute!C20",
+   "value": 36000,
+   "label": "Desired Daily Vol",
+   "unit": "bcm",
+   "note": "Constant cell overwritten by Macro_1..9 (goal seek). Current value equals C19, i.e. state is consistent with a #TRUCKS button >= 4 having been pressed (goal capped at C19) or with manual entry."
+  },
+  "ideal_avg_hours_I34": {
+   "cell": "ActiveRoute!I34",
+   "value": 20,
+   "label": "Ideal Avg Hours (PT/day) -> C22 and C19"
+  },
+  "stop_penalty_s_per_stop": 60
+ },
+ "derived_lookups": {
+  "match_index_of_B3_in_H4_H32": 25,
+  "C8_dump_time": "INDEX(I4:I32, 25+1) = I29",
+  "C9_spot_time": "INDEX(I4:I32, 25+2) = I30",
+  "C10_loading_time": "INDEX(I4:I32, 25+3) = I31",
+  "C19_planned_rate_cell": "INDEX(I4:I32, 25+4) = I32 (x I34)",
+  "C21_truck_load_cell": "N14 (CAT789D (OB))",
+  "C26_planned_rate_cell": "I32 (via IF chain B3=H28)"
+ },
+ "travel_time_row3": {
+  "A3": "#REF!",
+  "B3": "",
+  "C3": "",
+  "D3": "",
+  "J3": "#REF!",
+  "K3": "",
+  "L3": "",
+  "M3": "",
+  "note": "Row 3 references a deleted Data Dump row; IFERROR swallows it so it contributes nothing. Segments effectively start at row 4 (Data Dump rows 2->3)."
+ },
+ "segments": [
+  {
+   "travel_time_row": 4,
+   "from_point_index": 0,
+   "to_point_index": 1,
+   "data_dump_rows": [
+    2,
+    3
+   ],
+   "distance_m": 18.035183402037735,
+   "grade": 0.020552941219446837,
+   "grade_rounded": 0.02,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 2.1642220082445283,
+   "unloaded_distance_m": 18.035183402037735,
+   "unloaded_grade": -0.020552941219446837,
+   "unloaded_grade_rounded": -0.02,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 2.1642220082445283
+  },
+  {
+   "travel_time_row": 5,
+   "from_point_index": 1,
+   "to_point_index": 2,
+   "data_dump_rows": [
+    3,
+    4
+   ],
+   "distance_m": 12.697241072790872,
+   "grade": 0.009408789433002532,
+   "grade_rounded": 0.01,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 1.5236689287349046,
+   "unloaded_distance_m": 12.697241072790872,
+   "unloaded_grade": -0.009408789433002532,
+   "unloaded_grade_rounded": -0.01,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 1.5236689287349046
+  },
+  {
+   "travel_time_row": 6,
+   "from_point_index": 2,
+   "to_point_index": 3,
+   "data_dump_rows": [
+    4,
+    5
+   ],
+   "distance_m": 25.398910266364137,
+   "grade": 0.0209081281541943,
+   "grade_rounded": 0.02,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 3.047869231963696,
+   "unloaded_distance_m": 25.398910266364137,
+   "unloaded_grade": -0.0209081281541943,
+   "unloaded_grade_rounded": -0.02,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 3.047869231963696
+  },
+  {
+   "travel_time_row": 7,
+   "from_point_index": 3,
+   "to_point_index": 4,
+   "data_dump_rows": [
+    5,
+    6
+   ],
+   "distance_m": 32.49210174859479,
+   "grade": 0.022666836876037235,
+   "grade_rounded": 0.02,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 3.899052209831375,
+   "unloaded_distance_m": 32.49210174859479,
+   "unloaded_grade": -0.022666836876037235,
+   "unloaded_grade_rounded": -0.02,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 3.899052209831375
+  },
+  {
+   "travel_time_row": 8,
+   "from_point_index": 4,
+   "to_point_index": 5,
+   "data_dump_rows": [
+    6,
+    7
+   ],
+   "distance_m": 5.151363066264693,
+   "grade": -0.009053903052458628,
+   "grade_rounded": -0.01,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.6181635679517632,
+   "unloaded_distance_m": 5.151363066264693,
+   "unloaded_grade": 0.009053903052458628,
+   "unloaded_grade_rounded": 0.01,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.6181635679517632
+  },
+  {
+   "travel_time_row": 9,
+   "from_point_index": 5,
+   "to_point_index": 6,
+   "data_dump_rows": [
+    7,
+    8
+   ],
+   "distance_m": 0.4551748135249159,
+   "grade": 0.01379111092582911,
+   "grade_rounded": 0.01,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.05462097762298991,
+   "unloaded_distance_m": 0.4551748135249159,
+   "unloaded_grade": -0.01379111092582911,
+   "unloaded_grade_rounded": -0.01,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.05462097762298991
+  },
+  {
+   "travel_time_row": 10,
+   "from_point_index": 6,
+   "to_point_index": 7,
+   "data_dump_rows": [
+    8,
+    9
+   ],
+   "distance_m": 4.697174533446492,
+   "grade": -0.022166609211264635,
+   "grade_rounded": -0.02,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.563660944013579,
+   "unloaded_distance_m": 4.697174533446492,
+   "unloaded_grade": 0.022166609211264635,
+   "unloaded_grade_rounded": 0.02,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.563660944013579
+  },
+  {
+   "travel_time_row": 11,
+   "from_point_index": 7,
+   "to_point_index": 8,
+   "data_dump_rows": [
+    9,
+    10
+   ],
+   "distance_m": 1.6527865868972336,
+   "grade": 0.023781883226551014,
+   "grade_rounded": 0.02,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.19833439042766804,
+   "unloaded_distance_m": 1.6527865868972336,
+   "unloaded_grade": -0.023781883226551014,
+   "unloaded_grade_rounded": -0.02,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.19833439042766804
+  },
+  {
+   "travel_time_row": 12,
+   "from_point_index": 8,
+   "to_point_index": 9,
+   "data_dump_rows": [
+    10,
+    11
+   ],
+   "distance_m": 8.94422806700078,
+   "grade": 0.013228883027097413,
+   "grade_rounded": 0.01,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 1.0733073680400935,
+   "unloaded_distance_m": 8.94422806700078,
+   "unloaded_grade": -0.013228883027097413,
+   "unloaded_grade_rounded": -0.01,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 1.0733073680400935
+  },
+  {
+   "travel_time_row": 13,
+   "from_point_index": 9,
+   "to_point_index": 10,
+   "data_dump_rows": [
+    11,
+    12
+   ],
+   "distance_m": 6.33240577754207,
+   "grade": 0.02545660625440188,
+   "grade_rounded": 0.03,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.7598886933050484,
+   "unloaded_distance_m": 6.33240577754207,
+   "unloaded_grade": -0.02545660625440188,
+   "unloaded_grade_rounded": -0.03,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.7598886933050484
+  },
+  {
+   "travel_time_row": 14,
+   "from_point_index": 10,
+   "to_point_index": 11,
+   "data_dump_rows": [
+    12,
+    13
+   ],
+   "distance_m": 1.6401340157285165,
+   "grade": 0.03413713099605463,
+   "grade_rounded": 0.03,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.19681608188742197,
+   "unloaded_distance_m": 1.6401340157285165,
+   "unloaded_grade": -0.03413713099605463,
+   "unloaded_grade_rounded": -0.03,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.19681608188742197
+  },
+  {
+   "travel_time_row": 15,
+   "from_point_index": 11,
+   "to_point_index": 12,
+   "data_dump_rows": [
+    13,
+    14
+   ],
+   "distance_m": 1.266798008722981,
+   "grade": -0.0920422327846507,
+   "grade_rounded": -0.09,
+   "loaded_speed_kmh": 12,
+   "loaded_time_s": 0.38003940261689434,
+   "unloaded_distance_m": 1.266798008722981,
+   "unloaded_grade": 0.0920422327846507,
+   "unloaded_grade_rounded": 0.09,
+   "unloaded_speed_kmh": 14,
+   "unloaded_time_s": 0.3257480593859094
+  },
+  {
+   "travel_time_row": 16,
+   "from_point_index": 12,
+   "to_point_index": 13,
+   "data_dump_rows": [
+    14,
+    15
+   ],
+   "distance_m": 14.560765967313266,
+   "grade": -0.08899239227276069,
+   "grade_rounded": -0.09,
+   "loaded_speed_kmh": 12,
+   "loaded_time_s": 4.36822979019398,
+   "unloaded_distance_m": 14.560765967313266,
+   "unloaded_grade": 0.08899239227276069,
+   "unloaded_grade_rounded": 0.09,
+   "unloaded_speed_kmh": 14,
+   "unloaded_time_s": 3.744196963023411
+  },
+  {
+   "travel_time_row": 17,
+   "from_point_index": 13,
+   "to_point_index": 14,
+   "data_dump_rows": [
+    15,
+    16
+   ],
+   "distance_m": 5.819440520151805,
+   "grade": -0.07911963268042643,
+   "grade_rounded": -0.08,
+   "loaded_speed_kmh": 12,
+   "loaded_time_s": 1.7458321560455416,
+   "unloaded_distance_m": 5.819440520151805,
+   "unloaded_grade": 0.07911963268042643,
+   "unloaded_grade_rounded": 0.08,
+   "unloaded_speed_kmh": 14,
+   "unloaded_time_s": 1.49642756232475
+  },
+  {
+   "travel_time_row": 18,
+   "from_point_index": 14,
+   "to_point_index": 15,
+   "data_dump_rows": [
+    16,
+    17
+   ],
+   "distance_m": 0.5275756834304578,
+   "grade": -0.08878527602409414,
+   "grade_rounded": -0.09,
+   "loaded_speed_kmh": 12,
+   "loaded_time_s": 0.15827270502913734,
+   "unloaded_distance_m": 0.5275756834304578,
+   "unloaded_grade": 0.08878527602409414,
+   "unloaded_grade_rounded": 0.09,
+   "unloaded_speed_kmh": 14,
+   "unloaded_time_s": 0.13566231859640343
+  },
+  {
+   "travel_time_row": 19,
+   "from_point_index": 15,
+   "to_point_index": 16,
+   "data_dump_rows": [
+    17,
+    18
+   ],
+   "distance_m": 10.43523075856764,
+   "grade": -0.04704450622051913,
+   "grade_rounded": -0.05,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 1.2522276910281167,
+   "unloaded_distance_m": 10.43523075856764,
+   "unloaded_grade": 0.04704450622051913,
+   "unloaded_grade_rounded": 0.05,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 1.2522276910281167
+  },
+  {
+   "travel_time_row": 20,
+   "from_point_index": 16,
+   "to_point_index": 17,
+   "data_dump_rows": [
+    18,
+    19
+   ],
+   "distance_m": 0.6230320269965491,
+   "grade": -0.06091899445363092,
+   "grade_rounded": -0.06,
+   "loaded_speed_kmh": 20,
+   "loaded_time_s": 0.11214576485937885,
+   "unloaded_distance_m": 0.6230320269965491,
+   "unloaded_grade": 0.06091899445363092,
+   "unloaded_grade_rounded": 0.06,
+   "unloaded_speed_kmh": 20,
+   "unloaded_time_s": 0.11214576485937885
+  },
+  {
+   "travel_time_row": 21,
+   "from_point_index": 17,
+   "to_point_index": 18,
+   "data_dump_rows": [
+    19,
+    20
+   ],
+   "distance_m": 55.14400996278158,
+   "grade": 0.006825824874978129,
+   "grade_rounded": 0.01,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 6.61728119553379,
+   "unloaded_distance_m": 55.14400996278158,
+   "unloaded_grade": -0.006825824874978129,
+   "unloaded_grade_rounded": -0.01,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 6.61728119553379
+  },
+  {
+   "travel_time_row": 22,
+   "from_point_index": 18,
+   "to_point_index": 19,
+   "data_dump_rows": [
+    20,
+    21
+   ],
+   "distance_m": 22.3252580397654,
+   "grade": -0.010492030839901953,
+   "grade_rounded": -0.01,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 2.679030964771848,
+   "unloaded_distance_m": 22.3252580397654,
+   "unloaded_grade": 0.010492030839901953,
+   "unloaded_grade_rounded": 0.01,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 2.679030964771848
+  },
+  {
+   "travel_time_row": 23,
+   "from_point_index": 19,
+   "to_point_index": 20,
+   "data_dump_rows": [
+    21,
+    22
+   ],
+   "distance_m": 5.818968793655118,
+   "grade": -0.06938733216601534,
+   "grade_rounded": -0.07,
+   "loaded_speed_kmh": 20,
+   "loaded_time_s": 1.0474143828579212,
+   "unloaded_distance_m": 5.818968793655118,
+   "unloaded_grade": 0.06938733216601534,
+   "unloaded_grade_rounded": 0.07,
+   "unloaded_speed_kmh": 20,
+   "unloaded_time_s": 1.0474143828579212
+  },
+  {
+   "travel_time_row": 24,
+   "from_point_index": 20,
+   "to_point_index": 21,
+   "data_dump_rows": [
+    22,
+    23
+   ],
+   "distance_m": 1.479981225205545,
+   "grade": -0.04931309379945936,
+   "grade_rounded": -0.05,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.1775977470246654,
+   "unloaded_distance_m": 1.479981225205545,
+   "unloaded_grade": 0.04931309379945936,
+   "unloaded_grade_rounded": 0.05,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.1775977470246654
+  },
+  {
+   "travel_time_row": 25,
+   "from_point_index": 21,
+   "to_point_index": 22,
+   "data_dump_rows": [
+    23,
+    24
+   ],
+   "distance_m": 0.5619986610137887,
+   "grade": -0.13209309172745284,
+   "grade_rounded": -0.13,
+   "loaded_speed_kmh": 12,
+   "loaded_time_s": 0.1685995983041366,
+   "unloaded_distance_m": 0.5619986610137887,
+   "unloaded_grade": 0.13209309172745284,
+   "unloaded_grade_rounded": 0.13,
+   "unloaded_speed_kmh": 14,
+   "unloaded_time_s": 0.14451394140354565
+  },
+  {
+   "travel_time_row": 26,
+   "from_point_index": 22,
+   "to_point_index": 23,
+   "data_dump_rows": [
+    24,
+    25
+   ],
+   "distance_m": 1.9173717163483648,
+   "grade": -0.052151882508424424,
+   "grade_rounded": -0.05,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.23008460596180375,
+   "unloaded_distance_m": 1.9173717163483648,
+   "unloaded_grade": 0.052151882508424424,
+   "unloaded_grade_rounded": 0.05,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.23008460596180375
+  },
+  {
+   "travel_time_row": 27,
+   "from_point_index": 23,
+   "to_point_index": 24,
+   "data_dump_rows": [
+    25,
+    26
+   ],
+   "distance_m": 1.489911367583619,
+   "grade": -0.04159567638142328,
+   "grade_rounded": -0.04,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.1787893641100343,
+   "unloaded_distance_m": 1.489911367583619,
+   "unloaded_grade": 0.04159567638142328,
+   "unloaded_grade_rounded": 0.04,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.1787893641100343
+  },
+  {
+   "travel_time_row": 28,
+   "from_point_index": 24,
+   "to_point_index": 25,
+   "data_dump_rows": [
+    26,
+    27
+   ],
+   "distance_m": 0.9865507187504461,
+   "grade": -0.08216861735468907,
+   "grade_rounded": -0.08,
+   "loaded_speed_kmh": 12,
+   "loaded_time_s": 0.29596521562513384,
+   "unloaded_distance_m": 0.9865507187504461,
+   "unloaded_grade": 0.08216861735468907,
+   "unloaded_grade_rounded": 0.08,
+   "unloaded_speed_kmh": 14,
+   "unloaded_time_s": 0.253684470535829
+  },
+  {
+   "travel_time_row": 29,
+   "from_point_index": 25,
+   "to_point_index": 26,
+   "data_dump_rows": [
+    27,
+    28
+   ],
+   "distance_m": 32.150726533276654,
+   "grade": -0.0323730363561056,
+   "grade_rounded": -0.03,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 3.8580871839931987,
+   "unloaded_distance_m": 32.150726533276654,
+   "unloaded_grade": 0.0323730363561056,
+   "unloaded_grade_rounded": 0.03,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 3.8580871839931987
+  },
+  {
+   "travel_time_row": 30,
+   "from_point_index": 26,
+   "to_point_index": 27,
+   "data_dump_rows": [
+    28,
+    29
+   ],
+   "distance_m": 2.71153121434261,
+   "grade": 0.05951668874117205,
+   "grade_rounded": 0.06,
+   "loaded_speed_kmh": 20,
+   "loaded_time_s": 0.48807561858166976,
+   "unloaded_distance_m": 2.71153121434261,
+   "unloaded_grade": -0.05951668874117205,
+   "unloaded_grade_rounded": -0.06,
+   "unloaded_speed_kmh": 20,
+   "unloaded_time_s": 0.48807561858166976
+  },
+  {
+   "travel_time_row": 31,
+   "from_point_index": 27,
+   "to_point_index": 28,
+   "data_dump_rows": [
+    29,
+    30
+   ],
+   "distance_m": 2.7041290878058883,
+   "grade": -0.1445233622648947,
+   "grade_rounded": -0.14,
+   "loaded_speed_kmh": 12,
+   "loaded_time_s": 0.8112387263417665,
+   "unloaded_distance_m": 2.7041290878058883,
+   "unloaded_grade": 0.1445233622648947,
+   "unloaded_grade_rounded": 0.14,
+   "unloaded_speed_kmh": 14,
+   "unloaded_time_s": 0.6953474797215141
+  },
+  {
+   "travel_time_row": 32,
+   "from_point_index": 28,
+   "to_point_index": 29,
+   "data_dump_rows": [
+    30,
+    31
+   ],
+   "distance_m": 11.223234233884021,
+   "grade": -0.02502847140442908,
+   "grade_rounded": -0.03,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 1.3467881080660826,
+   "unloaded_distance_m": 11.223234233884021,
+   "unloaded_grade": 0.02502847140442908,
+   "unloaded_grade_rounded": 0.03,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 1.3467881080660826
+  },
+  {
+   "travel_time_row": 33,
+   "from_point_index": 29,
+   "to_point_index": 30,
+   "data_dump_rows": [
+    31,
+    32
+   ],
+   "distance_m": 9.489682024361404,
+   "grade": 0.055796987921055856,
+   "grade_rounded": 0.06,
+   "loaded_speed_kmh": 20,
+   "loaded_time_s": 1.7081427643850529,
+   "unloaded_distance_m": 9.489682024361404,
+   "unloaded_grade": -0.055796987921055856,
+   "unloaded_grade_rounded": -0.06,
+   "unloaded_speed_kmh": 20,
+   "unloaded_time_s": 1.7081427643850529
+  },
+  {
+   "travel_time_row": 34,
+   "from_point_index": 30,
+   "to_point_index": 31,
+   "data_dump_rows": [
+    32,
+    33
+   ],
+   "distance_m": 48.1294886433337,
+   "grade": -0.08333921065295889,
+   "grade_rounded": -0.08,
+   "loaded_speed_kmh": 12,
+   "loaded_time_s": 14.438846593000111,
+   "unloaded_distance_m": 48.1294886433337,
+   "unloaded_grade": 0.08333921065295889,
+   "unloaded_grade_rounded": 0.08,
+   "unloaded_speed_kmh": 14,
+   "unloaded_time_s": 12.376154222571522
+  },
+  {
+   "travel_time_row": 35,
+   "from_point_index": 31,
+   "to_point_index": 32,
+   "data_dump_rows": [
+    33,
+    34
+   ],
+   "distance_m": 11.856604764427269,
+   "grade": -0.007893309588490405,
+   "grade_rounded": -0.01,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 1.4227925717312724,
+   "unloaded_distance_m": 11.856604764427269,
+   "unloaded_grade": 0.007893309588490405,
+   "unloaded_grade_rounded": 0.01,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 1.4227925717312724
+  },
+  {
+   "travel_time_row": 36,
+   "from_point_index": 32,
+   "to_point_index": 33,
+   "data_dump_rows": [
+    34,
+    35
+   ],
+   "distance_m": 2.6591853402727823,
+   "grade": -0.1663408128109668,
+   "grade_rounded": -0.17,
+   "loaded_speed_kmh": null,
+   "loaded_time_s": null,
+   "unloaded_distance_m": 2.6591853402727823,
+   "unloaded_grade": 0.1663408128109668,
+   "unloaded_grade_rounded": 0.17,
+   "unloaded_speed_kmh": null,
+   "unloaded_time_s": null,
+   "excluded_from_time_totals": true,
+   "excluded_reason": "ROUND(grade,2) outside table range -0.16..+0.16 -> VLOOKUP #N/A -> IFERROR '' -> time '' (ignored by SUM)"
+  },
+  {
+   "travel_time_row": 37,
+   "from_point_index": 33,
+   "to_point_index": 34,
+   "data_dump_rows": [
+    35,
+    36
+   ],
+   "distance_m": 2.55264271675379,
+   "grade": 0.10040915949841334,
+   "grade_rounded": 0.1,
+   "loaded_speed_kmh": 12,
+   "loaded_time_s": 0.7657928150261372,
+   "unloaded_distance_m": 2.55264271675379,
+   "unloaded_grade": -0.10040915949841334,
+   "unloaded_grade_rounded": -0.1,
+   "unloaded_speed_kmh": 14,
+   "unloaded_time_s": 0.6563938414509747
+  },
+  {
+   "travel_time_row": 38,
+   "from_point_index": 34,
+   "to_point_index": 35,
+   "data_dump_rows": [
+    36,
+    37
+   ],
+   "distance_m": 21.07426725377308,
+   "grade": -0.046657918599089146,
+   "grade_rounded": -0.05,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 2.5289120704527694,
+   "unloaded_distance_m": 21.07426725377308,
+   "unloaded_grade": 0.046657918599089146,
+   "unloaded_grade_rounded": 0.05,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 2.5289120704527694
+  },
+  {
+   "travel_time_row": 39,
+   "from_point_index": 35,
+   "to_point_index": 36,
+   "data_dump_rows": [
+    37,
+    38
+   ],
+   "distance_m": 1.5727612392628962,
+   "grade": 0.17833578655931873,
+   "grade_rounded": 0.18,
+   "loaded_speed_kmh": null,
+   "loaded_time_s": null,
+   "unloaded_distance_m": 1.5727612392628962,
+   "unloaded_grade": -0.17833578655931873,
+   "unloaded_grade_rounded": -0.18,
+   "unloaded_speed_kmh": null,
+   "unloaded_time_s": null,
+   "excluded_from_time_totals": true,
+   "excluded_reason": "ROUND(grade,2) outside table range -0.16..+0.16 -> VLOOKUP #N/A -> IFERROR '' -> time '' (ignored by SUM)"
+  },
+  {
+   "travel_time_row": 40,
+   "from_point_index": 36,
+   "to_point_index": 37,
+   "data_dump_rows": [
+    38,
+    39
+   ],
+   "distance_m": 0.0041175490544816135,
+   "grade": -0.31161943500494343,
+   "grade_rounded": -0.31,
+   "loaded_speed_kmh": null,
+   "loaded_time_s": null,
+   "unloaded_distance_m": 0.0041175490544816135,
+   "unloaded_grade": 0.31161943500494343,
+   "unloaded_grade_rounded": 0.31,
+   "unloaded_speed_kmh": null,
+   "unloaded_time_s": null,
+   "excluded_from_time_totals": true,
+   "excluded_reason": "ROUND(grade,2) outside table range -0.16..+0.16 -> VLOOKUP #N/A -> IFERROR '' -> time '' (ignored by SUM)"
+  },
+  {
+   "travel_time_row": 41,
+   "from_point_index": 37,
+   "to_point_index": 38,
+   "data_dump_rows": [
+    39,
+    40
+   ],
+   "distance_m": 0.010413608740832608,
+   "grade": 0.11534336893651403,
+   "grade_rounded": 0.12,
+   "loaded_speed_kmh": 12,
+   "loaded_time_s": 0.0031240826222497823,
+   "unloaded_distance_m": 0.010413608740832608,
+   "unloaded_grade": -0.11534336893651403,
+   "unloaded_grade_rounded": -0.12,
+   "unloaded_speed_kmh": 14,
+   "unloaded_time_s": 0.0026777851047855277
+  },
+  {
+   "travel_time_row": 42,
+   "from_point_index": 38,
+   "to_point_index": 39,
+   "data_dump_rows": [
+    40,
+    41
+   ],
+   "distance_m": 8.617010438694473,
+   "grade": -0.13436053428541334,
+   "grade_rounded": -0.13,
+   "loaded_speed_kmh": 12,
+   "loaded_time_s": 2.585103131608342,
+   "unloaded_distance_m": 8.617010438694473,
+   "unloaded_grade": 0.13436053428541334,
+   "unloaded_grade_rounded": 0.13,
+   "unloaded_speed_kmh": 14,
+   "unloaded_time_s": 2.2158026842357215
+  },
+  {
+   "travel_time_row": 43,
+   "from_point_index": 39,
+   "to_point_index": 40,
+   "data_dump_rows": [
+    41,
+    42
+   ],
+   "distance_m": 5.204343433164362,
+   "grade": -0.042877192285967154,
+   "grade_rounded": -0.04,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.6245212119797234,
+   "unloaded_distance_m": 5.204343433164362,
+   "unloaded_grade": 0.042877192285967154,
+   "unloaded_grade_rounded": 0.04,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.6245212119797234
+  },
+  {
+   "travel_time_row": 44,
+   "from_point_index": 40,
+   "to_point_index": 41,
+   "data_dump_rows": [
+    42,
+    43
+   ],
+   "distance_m": 8.9514811912692,
+   "grade": -0.06904023323277102,
+   "grade_rounded": -0.07,
+   "loaded_speed_kmh": 20,
+   "loaded_time_s": 1.611266614428456,
+   "unloaded_distance_m": 8.9514811912692,
+   "unloaded_grade": 0.06904023323277102,
+   "unloaded_grade_rounded": 0.07,
+   "unloaded_speed_kmh": 20,
+   "unloaded_time_s": 1.611266614428456
+  },
+  {
+   "travel_time_row": 45,
+   "from_point_index": 41,
+   "to_point_index": 42,
+   "data_dump_rows": [
+    43,
+    44
+   ],
+   "distance_m": 4.187338975712638,
+   "grade": 0.011499911563953913,
+   "grade_rounded": 0.01,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.5024806770855166,
+   "unloaded_distance_m": 4.187338975712638,
+   "unloaded_grade": -0.011499911563953913,
+   "unloaded_grade_rounded": -0.01,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.5024806770855166
+  },
+  {
+   "travel_time_row": 46,
+   "from_point_index": 42,
+   "to_point_index": 43,
+   "data_dump_rows": [
+    44,
+    45
+   ],
+   "distance_m": 0.5148659463820497,
+   "grade": -0.2292476452393213,
+   "grade_rounded": -0.23,
+   "loaded_speed_kmh": null,
+   "loaded_time_s": null,
+   "unloaded_distance_m": 0.5148659463820497,
+   "unloaded_grade": 0.2292476452393213,
+   "unloaded_grade_rounded": 0.23,
+   "unloaded_speed_kmh": null,
+   "unloaded_time_s": null,
+   "excluded_from_time_totals": true,
+   "excluded_reason": "ROUND(grade,2) outside table range -0.16..+0.16 -> VLOOKUP #N/A -> IFERROR '' -> time '' (ignored by SUM)"
+  },
+  {
+   "travel_time_row": 47,
+   "from_point_index": 43,
+   "to_point_index": 44,
+   "data_dump_rows": [
+    45,
+    46
+   ],
+   "distance_m": 2.3861146362733407,
+   "grade": -0.11709922365355285,
+   "grade_rounded": -0.12,
+   "loaded_speed_kmh": 12,
+   "loaded_time_s": 0.7158343908820023,
+   "unloaded_distance_m": 2.3861146362733407,
+   "unloaded_grade": 0.11709922365355285,
+   "unloaded_grade_rounded": 0.12,
+   "unloaded_speed_kmh": 14,
+   "unloaded_time_s": 0.6135723350417163
+  },
+  {
+   "travel_time_row": 48,
+   "from_point_index": 44,
+   "to_point_index": 45,
+   "data_dump_rows": [
+    46,
+    47
+   ],
+   "distance_m": 24.532755315833572,
+   "grade": -0.0028301983667212596,
+   "grade_rounded": -0.0,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 2.9439306379000287,
+   "unloaded_distance_m": 24.532755315833572,
+   "unloaded_grade": 0.0028301983667212596,
+   "unloaded_grade_rounded": 0.0,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 2.9439306379000287
+  },
+  {
+   "travel_time_row": 49,
+   "from_point_index": 45,
+   "to_point_index": 46,
+   "data_dump_rows": [
+    47,
+    48
+   ],
+   "distance_m": 9.055988406633855,
+   "grade": 0.01216363781001881,
+   "grade_rounded": 0.01,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 1.0867186087960625,
+   "unloaded_distance_m": 9.055988406633855,
+   "unloaded_grade": -0.01216363781001881,
+   "unloaded_grade_rounded": -0.01,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 1.0867186087960625
+  },
+  {
+   "travel_time_row": 50,
+   "from_point_index": 46,
+   "to_point_index": 47,
+   "data_dump_rows": [
+    48,
+    49
+   ],
+   "distance_m": 6.859864954636183,
+   "grade": 0.022058233753383453,
+   "grade_rounded": 0.02,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.823183794556342,
+   "unloaded_distance_m": 6.859864954636183,
+   "unloaded_grade": -0.022058233753383453,
+   "unloaded_grade_rounded": -0.02,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.823183794556342
+  },
+  {
+   "travel_time_row": 51,
+   "from_point_index": 47,
+   "to_point_index": 48,
+   "data_dump_rows": [
+    49,
+    50
+   ],
+   "distance_m": 12.405088875664434,
+   "grade": 0.031004867866569124,
+   "grade_rounded": 0.03,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 1.4886106650797322,
+   "unloaded_distance_m": 12.405088875664434,
+   "unloaded_grade": -0.031004867866569124,
+   "unloaded_grade_rounded": -0.03,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 1.4886106650797322
+  },
+  {
+   "travel_time_row": 52,
+   "from_point_index": 48,
+   "to_point_index": 49,
+   "data_dump_rows": [
+    50,
+    51
+   ],
+   "distance_m": 8.455261896314783,
+   "grade": 0.05202929368914519,
+   "grade_rounded": 0.05,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 1.014631427557774,
+   "unloaded_distance_m": 8.455261896314783,
+   "unloaded_grade": -0.05202929368914519,
+   "unloaded_grade_rounded": -0.05,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 1.014631427557774
+  },
+  {
+   "travel_time_row": 53,
+   "from_point_index": 49,
+   "to_point_index": 50,
+   "data_dump_rows": [
+    51,
+    52
+   ],
+   "distance_m": 0.051712908039796106,
+   "grade": 0.05629004063647699,
+   "grade_rounded": 0.06,
+   "loaded_speed_kmh": 20,
+   "loaded_time_s": 0.0093083234471633,
+   "unloaded_distance_m": 0.051712908039796106,
+   "unloaded_grade": -0.05629004063647699,
+   "unloaded_grade_rounded": -0.06,
+   "unloaded_speed_kmh": 20,
+   "unloaded_time_s": 0.0093083234471633
+  },
+  {
+   "travel_time_row": 54,
+   "from_point_index": 50,
+   "to_point_index": 51,
+   "data_dump_rows": [
+    52,
+    53
+   ],
+   "distance_m": 16.270353894071064,
+   "grade": 0.05600416890446613,
+   "grade_rounded": 0.06,
+   "loaded_speed_kmh": 20,
+   "loaded_time_s": 2.928663700932792,
+   "unloaded_distance_m": 16.270353894071064,
+   "unloaded_grade": -0.05600416890446613,
+   "unloaded_grade_rounded": -0.06,
+   "unloaded_speed_kmh": 20,
+   "unloaded_time_s": 2.928663700932792
+  },
+  {
+   "travel_time_row": 55,
+   "from_point_index": 51,
+   "to_point_index": 52,
+   "data_dump_rows": [
+    53,
+    54
+   ],
+   "distance_m": 7.850589957006553,
+   "grade": 0.07973081926732868,
+   "grade_rounded": 0.08,
+   "loaded_speed_kmh": 12,
+   "loaded_time_s": 2.355176987101966,
+   "unloaded_distance_m": 7.850589957006553,
+   "unloaded_grade": -0.07973081926732868,
+   "unloaded_grade_rounded": -0.08,
+   "unloaded_speed_kmh": 14,
+   "unloaded_time_s": 2.0187231318016856
+  },
+  {
+   "travel_time_row": 56,
+   "from_point_index": 52,
+   "to_point_index": 53,
+   "data_dump_rows": [
+    54,
+    55
+   ],
+   "distance_m": 5.686724901016048,
+   "grade": 0.07008544556828988,
+   "grade_rounded": 0.07,
+   "loaded_speed_kmh": 20,
+   "loaded_time_s": 1.0236104821828886,
+   "unloaded_distance_m": 5.686724901016048,
+   "unloaded_grade": -0.07008544556828988,
+   "unloaded_grade_rounded": -0.07,
+   "unloaded_speed_kmh": 20,
+   "unloaded_time_s": 1.0236104821828886
+  },
+  {
+   "travel_time_row": 57,
+   "from_point_index": 53,
+   "to_point_index": 54,
+   "data_dump_rows": [
+    55,
+    56
+   ],
+   "distance_m": 15.587265421833738,
+   "grade": 0.05238876826528858,
+   "grade_rounded": 0.05,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 1.8704718506200484,
+   "unloaded_distance_m": 15.587265421833738,
+   "unloaded_grade": -0.05238876826528858,
+   "unloaded_grade_rounded": -0.05,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 1.8704718506200484
+  },
+  {
+   "travel_time_row": 58,
+   "from_point_index": 54,
+   "to_point_index": 55,
+   "data_dump_rows": [
+    56,
+    57
+   ],
+   "distance_m": 0.6321753193690173,
+   "grade": -0.009719780389655366,
+   "grade_rounded": -0.01,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.07586103832428207,
+   "unloaded_distance_m": 0.6321753193690173,
+   "unloaded_grade": 0.009719780389655366,
+   "unloaded_grade_rounded": 0.01,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.07586103832428207
+  },
+  {
+   "travel_time_row": 59,
+   "from_point_index": 55,
+   "to_point_index": 56,
+   "data_dump_rows": [
+    57,
+    58
+   ],
+   "distance_m": 7.605415903754602,
+   "grade": 0.02344992315370864,
+   "grade_rounded": 0.02,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.9126499084505522,
+   "unloaded_distance_m": 7.605415903754602,
+   "unloaded_grade": -0.02344992315370864,
+   "unloaded_grade_rounded": -0.02,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.9126499084505522
+  },
+  {
+   "travel_time_row": 60,
+   "from_point_index": 56,
+   "to_point_index": 57,
+   "data_dump_rows": [
+    58,
+    59
+   ],
+   "distance_m": 0.4958867986621186,
+   "grade": 0.02898547579567027,
+   "grade_rounded": 0.03,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.059506415839454235,
+   "unloaded_distance_m": 0.4958867986621186,
+   "unloaded_grade": -0.02898547579567027,
+   "unloaded_grade_rounded": -0.03,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.059506415839454235
+  },
+  {
+   "travel_time_row": 61,
+   "from_point_index": 57,
+   "to_point_index": 58,
+   "data_dump_rows": [
+    59,
+    60
+   ],
+   "distance_m": 1.181545878384127,
+   "grade": 0.04773384033727031,
+   "grade_rounded": 0.05,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.14178550540609525,
+   "unloaded_distance_m": 1.181545878384127,
+   "unloaded_grade": -0.04773384033727031,
+   "unloaded_grade_rounded": -0.05,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.14178550540609525
+  },
+  {
+   "travel_time_row": 62,
+   "from_point_index": 58,
+   "to_point_index": 59,
+   "data_dump_rows": [
+    60,
+    61
+   ],
+   "distance_m": 1.3016959602169313,
+   "grade": -0.004172156626418265,
+   "grade_rounded": -0.0,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.15620351522603176,
+   "unloaded_distance_m": 1.3016959602169313,
+   "unloaded_grade": 0.004172156626418265,
+   "unloaded_grade_rounded": 0.0,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.15620351522603176
+  },
+  {
+   "travel_time_row": 63,
+   "from_point_index": 59,
+   "to_point_index": 60,
+   "data_dump_rows": [
+    61,
+    62
+   ],
+   "distance_m": 0.11432133541856765,
+   "grade": -0.041647957597004535,
+   "grade_rounded": -0.04,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.013718560250228119,
+   "unloaded_distance_m": 0.11432133541856765,
+   "unloaded_grade": 0.041647957597004535,
+   "unloaded_grade_rounded": 0.04,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.013718560250228119
+  },
+  {
+   "travel_time_row": 64,
+   "from_point_index": 60,
+   "to_point_index": 61,
+   "data_dump_rows": [
+    62,
+    63
+   ],
+   "distance_m": 0.10358403297789075,
+   "grade": 0.020693168477230267,
+   "grade_rounded": 0.02,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.01243008395734689,
+   "unloaded_distance_m": 0.10358403297789075,
+   "unloaded_grade": -0.020693168477230267,
+   "unloaded_grade_rounded": -0.02,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.01243008395734689
+  },
+  {
+   "travel_time_row": 65,
+   "from_point_index": 61,
+   "to_point_index": 62,
+   "data_dump_rows": [
+    63,
+    64
+   ],
+   "distance_m": 5.7007854067487616,
+   "grade": 0.015819245155628853,
+   "grade_rounded": 0.02,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.6840942488098514,
+   "unloaded_distance_m": 5.7007854067487616,
+   "unloaded_grade": -0.015819245155628853,
+   "unloaded_grade_rounded": -0.02,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.6840942488098514
+  },
+  {
+   "travel_time_row": 66,
+   "from_point_index": 62,
+   "to_point_index": 63,
+   "data_dump_rows": [
+    64,
+    65
+   ],
+   "distance_m": 2.1525571652632123,
+   "grade": 0.002820987383295433,
+   "grade_rounded": 0.0,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.25830685983158547,
+   "unloaded_distance_m": 2.1525571652632123,
+   "unloaded_grade": -0.002820987383295433,
+   "unloaded_grade_rounded": -0.0,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.25830685983158547
+  },
+  {
+   "travel_time_row": 67,
+   "from_point_index": 63,
+   "to_point_index": 64,
+   "data_dump_rows": [
+    65,
+    66
+   ],
+   "distance_m": 10.665176249006212,
+   "grade": 0.04087086046455257,
+   "grade_rounded": 0.04,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 1.2798211498807455,
+   "unloaded_distance_m": 10.665176249006212,
+   "unloaded_grade": -0.04087086046455257,
+   "unloaded_grade_rounded": -0.04,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 1.2798211498807455
+  },
+  {
+   "travel_time_row": 68,
+   "from_point_index": 64,
+   "to_point_index": 65,
+   "data_dump_rows": [
+    66,
+    67
+   ],
+   "distance_m": 2.8848357213594165,
+   "grade": 0.06868289616527813,
+   "grade_rounded": 0.07,
+   "loaded_speed_kmh": 20,
+   "loaded_time_s": 0.5192704298446948,
+   "unloaded_distance_m": 2.8848357213594165,
+   "unloaded_grade": -0.06868289616527813,
+   "unloaded_grade_rounded": -0.07,
+   "unloaded_speed_kmh": 20,
+   "unloaded_time_s": 0.5192704298446948
+  },
+  {
+   "travel_time_row": 69,
+   "from_point_index": 65,
+   "to_point_index": 66,
+   "data_dump_rows": [
+    67,
+    68
+   ],
+   "distance_m": 16.260282085919588,
+   "grade": -0.0006205284166483181,
+   "grade_rounded": -0.0,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 1.9512338503103506,
+   "unloaded_distance_m": 16.260282085919588,
+   "unloaded_grade": 0.0006205284166483181,
+   "unloaded_grade_rounded": 0.0,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 1.9512338503103506
+  },
+  {
+   "travel_time_row": 70,
+   "from_point_index": 66,
+   "to_point_index": 67,
+   "data_dump_rows": [
+    68,
+    69
+   ],
+   "distance_m": 11.892293853508049,
+   "grade": 0.015557454936033471,
+   "grade_rounded": 0.02,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 1.427075262420966,
+   "unloaded_distance_m": 11.892293853508049,
+   "unloaded_grade": -0.015557454936033471,
+   "unloaded_grade_rounded": -0.02,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 1.427075262420966
+  },
+  {
+   "travel_time_row": 71,
+   "from_point_index": 67,
+   "to_point_index": 68,
+   "data_dump_rows": [
+    69,
+    70
+   ],
+   "distance_m": 6.5061957911820345,
+   "grade": 0.052925902112829916,
+   "grade_rounded": 0.05,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.7807434949418441,
+   "unloaded_distance_m": 6.5061957911820345,
+   "unloaded_grade": -0.052925902112829916,
+   "unloaded_grade_rounded": -0.05,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.7807434949418441
+  },
+  {
+   "travel_time_row": 72,
+   "from_point_index": 68,
+   "to_point_index": 69,
+   "data_dump_rows": [
+    70,
+    71
+   ],
+   "distance_m": 24.74866723203711,
+   "grade": -0.007698761085096589,
+   "grade_rounded": -0.01,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 2.969840067844453,
+   "unloaded_distance_m": 24.74866723203711,
+   "unloaded_grade": 0.007698761085096589,
+   "unloaded_grade_rounded": 0.01,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 2.969840067844453
+  },
+  {
+   "travel_time_row": 73,
+   "from_point_index": 69,
+   "to_point_index": 70,
+   "data_dump_rows": [
+    71,
+    72
+   ],
+   "distance_m": 5.0776075330145165,
+   "grade": 0.02458443047248835,
+   "grade_rounded": 0.02,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.609312903961742,
+   "unloaded_distance_m": 5.0776075330145165,
+   "unloaded_grade": -0.02458443047248835,
+   "unloaded_grade_rounded": -0.02,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.609312903961742
+  },
+  {
+   "travel_time_row": 74,
+   "from_point_index": 70,
+   "to_point_index": 71,
+   "data_dump_rows": [
+    72,
+    73
+   ],
+   "distance_m": 2.0985018180068353,
+   "grade": 0.031836814639723154,
+   "grade_rounded": 0.03,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.25182021816082023,
+   "unloaded_distance_m": 2.0985018180068353,
+   "unloaded_grade": -0.031836814639723154,
+   "unloaded_grade_rounded": -0.03,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.25182021816082023
+  },
+  {
+   "travel_time_row": 75,
+   "from_point_index": 71,
+   "to_point_index": 72,
+   "data_dump_rows": [
+    73,
+    74
+   ],
+   "distance_m": 10.608492812367434,
+   "grade": 0.05446899072678398,
+   "grade_rounded": 0.05,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 1.2730191374840922,
+   "unloaded_distance_m": 10.608492812367434,
+   "unloaded_grade": -0.05446899072678398,
+   "unloaded_grade_rounded": -0.05,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 1.2730191374840922
+  },
+  {
+   "travel_time_row": 76,
+   "from_point_index": 72,
+   "to_point_index": 73,
+   "data_dump_rows": [
+    74,
+    75
+   ],
+   "distance_m": 1.0141445075333608,
+   "grade": 0.07082038495747252,
+   "grade_rounded": 0.07,
+   "loaded_speed_kmh": 20,
+   "loaded_time_s": 0.18254601135600493,
+   "unloaded_distance_m": 1.0141445075333608,
+   "unloaded_grade": -0.07082038495747252,
+   "unloaded_grade_rounded": -0.07,
+   "unloaded_speed_kmh": 20,
+   "unloaded_time_s": 0.18254601135600493
+  },
+  {
+   "travel_time_row": 77,
+   "from_point_index": 73,
+   "to_point_index": 74,
+   "data_dump_rows": [
+    75,
+    76
+   ],
+   "distance_m": 11.628905646893315,
+   "grade": 0.06496222798848053,
+   "grade_rounded": 0.06,
+   "loaded_speed_kmh": 20,
+   "loaded_time_s": 2.093203016440797,
+   "unloaded_distance_m": 11.628905646893315,
+   "unloaded_grade": -0.06496222798848053,
+   "unloaded_grade_rounded": -0.06,
+   "unloaded_speed_kmh": 20,
+   "unloaded_time_s": 2.093203016440797
+  },
+  {
+   "travel_time_row": 78,
+   "from_point_index": 74,
+   "to_point_index": 75,
+   "data_dump_rows": [
+    76,
+    77
+   ],
+   "distance_m": 6.614145814493964,
+   "grade": 0.08157492778004255,
+   "grade_rounded": 0.08,
+   "loaded_speed_kmh": 12,
+   "loaded_time_s": 1.9842437443481893,
+   "unloaded_distance_m": 6.614145814493964,
+   "unloaded_grade": -0.08157492778004255,
+   "unloaded_grade_rounded": -0.08,
+   "unloaded_speed_kmh": 14,
+   "unloaded_time_s": 1.700780352298448
+  },
+  {
+   "travel_time_row": 79,
+   "from_point_index": 75,
+   "to_point_index": 76,
+   "data_dump_rows": [
+    77,
+    78
+   ],
+   "distance_m": 15.817091088228223,
+   "grade": 0.05670101673261666,
+   "grade_rounded": 0.06,
+   "loaded_speed_kmh": 20,
+   "loaded_time_s": 2.84707639588108,
+   "unloaded_distance_m": 15.817091088228223,
+   "unloaded_grade": -0.05670101673261666,
+   "unloaded_grade_rounded": -0.06,
+   "unloaded_speed_kmh": 20,
+   "unloaded_time_s": 2.84707639588108
+  },
+  {
+   "travel_time_row": 80,
+   "from_point_index": 76,
+   "to_point_index": 77,
+   "data_dump_rows": [
+    78,
+    79
+   ],
+   "distance_m": 5.816064426439541,
+   "grade": 0.05086586740513924,
+   "grade_rounded": 0.05,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.6979277311727449,
+   "unloaded_distance_m": 5.816064426439541,
+   "unloaded_grade": -0.05086586740513924,
+   "unloaded_grade_rounded": -0.05,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.6979277311727449
+  },
+  {
+   "travel_time_row": 81,
+   "from_point_index": 77,
+   "to_point_index": 78,
+   "data_dump_rows": [
+    79,
+    80
+   ],
+   "distance_m": 0.7865732099025814,
+   "grade": 0.07565908598180102,
+   "grade_rounded": 0.08,
+   "loaded_speed_kmh": 12,
+   "loaded_time_s": 0.2359719629707744,
+   "unloaded_distance_m": 0.7865732099025814,
+   "unloaded_grade": -0.07565908598180102,
+   "unloaded_grade_rounded": -0.08,
+   "unloaded_speed_kmh": 14,
+   "unloaded_time_s": 0.20226168254637805
+  },
+  {
+   "travel_time_row": 82,
+   "from_point_index": 78,
+   "to_point_index": 79,
+   "data_dump_rows": [
+    80,
+    81
+   ],
+   "distance_m": 28.130637423792788,
+   "grade": 0.014219804224864753,
+   "grade_rounded": 0.01,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 3.3756764908551347,
+   "unloaded_distance_m": 28.130637423792788,
+   "unloaded_grade": -0.014219804224864753,
+   "unloaded_grade_rounded": -0.01,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 3.3756764908551347
+  },
+  {
+   "travel_time_row": 83,
+   "from_point_index": 79,
+   "to_point_index": 80,
+   "data_dump_rows": [
+    81,
+    82
+   ],
+   "distance_m": 2.2343764466349945,
+   "grade": 0.02438708601501093,
+   "grade_rounded": 0.02,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.2681251735961993,
+   "unloaded_distance_m": 2.2343764466349945,
+   "unloaded_grade": -0.02438708601501093,
+   "unloaded_grade_rounded": -0.02,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.2681251735961993
+  },
+  {
+   "travel_time_row": 84,
+   "from_point_index": 80,
+   "to_point_index": 81,
+   "data_dump_rows": [
+    82,
+    83
+   ],
+   "distance_m": 0.4629748497292057,
+   "grade": 0.024033332742678215,
+   "grade_rounded": 0.02,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.055556981967504686,
+   "unloaded_distance_m": 0.4629748497292057,
+   "unloaded_grade": -0.024033332742678215,
+   "unloaded_grade_rounded": -0.02,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.055556981967504686
+  },
+  {
+   "travel_time_row": 85,
+   "from_point_index": 81,
+   "to_point_index": 82,
+   "data_dump_rows": [
+    83,
+    84
+   ],
+   "distance_m": 10.4493161161737,
+   "grade": 0.027667199189382746,
+   "grade_rounded": 0.03,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 1.253917933940844,
+   "unloaded_distance_m": 10.4493161161737,
+   "unloaded_grade": -0.027667199189382746,
+   "unloaded_grade_rounded": -0.03,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 1.253917933940844
+  },
+  {
+   "travel_time_row": 86,
+   "from_point_index": 82,
+   "to_point_index": 83,
+   "data_dump_rows": [
+    84,
+    85
+   ],
+   "distance_m": 23.658524611949414,
+   "grade": 0.016344487275113336,
+   "grade_rounded": 0.02,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 2.83902295343393,
+   "unloaded_distance_m": 23.658524611949414,
+   "unloaded_grade": -0.016344487275113336,
+   "unloaded_grade_rounded": -0.02,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 2.83902295343393
+  },
+  {
+   "travel_time_row": 87,
+   "from_point_index": 83,
+   "to_point_index": 84,
+   "data_dump_rows": [
+    85,
+    86
+   ],
+   "distance_m": 18.965827930079357,
+   "grade": 0.006962555882498078,
+   "grade_rounded": 0.01,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 2.275899351609523,
+   "unloaded_distance_m": 18.965827930079357,
+   "unloaded_grade": -0.006962555882498078,
+   "unloaded_grade_rounded": -0.01,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 2.275899351609523
+  },
+  {
+   "travel_time_row": 88,
+   "from_point_index": 84,
+   "to_point_index": 85,
+   "data_dump_rows": [
+    86,
+    87
+   ],
+   "distance_m": 17.83075394785711,
+   "grade": 0.009508332599607178,
+   "grade_rounded": 0.01,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 2.1396904737428533,
+   "unloaded_distance_m": 17.83075394785711,
+   "unloaded_grade": -0.009508332599607178,
+   "unloaded_grade_rounded": -0.01,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 2.1396904737428533
+  },
+  {
+   "travel_time_row": 89,
+   "from_point_index": 85,
+   "to_point_index": 86,
+   "data_dump_rows": [
+    87,
+    88
+   ],
+   "distance_m": 0.0019172312275671332,
+   "grade": 0.0007903819680342214,
+   "grade_rounded": 0.0,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.00023006774730805602,
+   "unloaded_distance_m": 0.0019172312275671332,
+   "unloaded_grade": -0.0007903819680342214,
+   "unloaded_grade_rounded": -0.0,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.00023006774730805602
+  },
+  {
+   "travel_time_row": 90,
+   "from_point_index": 86,
+   "to_point_index": 87,
+   "data_dump_rows": [
+    88,
+    89
+   ],
+   "distance_m": 7.324139703540021,
+   "grade": -0.006712150398801288,
+   "grade_rounded": -0.01,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.8788967644248025,
+   "unloaded_distance_m": 7.324139703540021,
+   "unloaded_grade": 0.006712150398801288,
+   "unloaded_grade_rounded": 0.01,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.8788967644248025
+  },
+  {
+   "travel_time_row": 91,
+   "from_point_index": 87,
+   "to_point_index": 88,
+   "data_dump_rows": [
+    89,
+    90
+   ],
+   "distance_m": 26.300240541063545,
+   "grade": -0.0031893376606213155,
+   "grade_rounded": -0.0,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 3.156028864927625,
+   "unloaded_distance_m": 26.300240541063545,
+   "unloaded_grade": 0.0031893376606213155,
+   "unloaded_grade_rounded": 0.0,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 3.156028864927625
+  },
+  {
+   "travel_time_row": 92,
+   "from_point_index": 88,
+   "to_point_index": 89,
+   "data_dump_rows": [
+    90,
+    91
+   ],
+   "distance_m": 1.0810057707071867,
+   "grade": 0.0277931461377498,
+   "grade_rounded": 0.03,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.1297206924848624,
+   "unloaded_distance_m": 1.0810057707071867,
+   "unloaded_grade": -0.0277931461377498,
+   "unloaded_grade_rounded": -0.03,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.1297206924848624
+  },
+  {
+   "travel_time_row": 93,
+   "from_point_index": 89,
+   "to_point_index": 90,
+   "data_dump_rows": [
+    91,
+    92
+   ],
+   "distance_m": 9.219551986740054,
+   "grade": 0.00048240236200430955,
+   "grade_rounded": 0.0,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 1.1063462384088065,
+   "unloaded_distance_m": 9.219551986740054,
+   "unloaded_grade": -0.00048240236200430955,
+   "unloaded_grade_rounded": -0.0,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 1.1063462384088065
+  },
+  {
+   "travel_time_row": 94,
+   "from_point_index": 90,
+   "to_point_index": 91,
+   "data_dump_rows": [
+    92,
+    93
+   ],
+   "distance_m": 25.707664566046425,
+   "grade": -0.0039055560229164215,
+   "grade_rounded": -0.0,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 3.084919747925571,
+   "unloaded_distance_m": 25.707664566046425,
+   "unloaded_grade": 0.0039055560229164215,
+   "unloaded_grade_rounded": 0.0,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 3.084919747925571
+  },
+  {
+   "travel_time_row": 95,
+   "from_point_index": 91,
+   "to_point_index": 92,
+   "data_dump_rows": [
+    93,
+    94
+   ],
+   "distance_m": 10.348845857455688,
+   "grade": -0.03355450613246849,
+   "grade_rounded": -0.03,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 1.2418615028946824,
+   "unloaded_distance_m": 10.348845857455688,
+   "unloaded_grade": 0.03355450613246849,
+   "unloaded_grade_rounded": 0.03,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 1.2418615028946824
+  },
+  {
+   "travel_time_row": 96,
+   "from_point_index": 92,
+   "to_point_index": 93,
+   "data_dump_rows": [
+    94,
+    95
+   ],
+   "distance_m": 20.637200224032256,
+   "grade": -0.05979132358347223,
+   "grade_rounded": -0.06,
+   "loaded_speed_kmh": 20,
+   "loaded_time_s": 3.7146960403258062,
+   "unloaded_distance_m": 20.637200224032256,
+   "unloaded_grade": 0.05979132358347223,
+   "unloaded_grade_rounded": 0.06,
+   "unloaded_speed_kmh": 20,
+   "unloaded_time_s": 3.7146960403258062
+  },
+  {
+   "travel_time_row": 97,
+   "from_point_index": 93,
+   "to_point_index": 94,
+   "data_dump_rows": [
+    95,
+    96
+   ],
+   "distance_m": 0.8100369270845652,
+   "grade": -0.060779431913265736,
+   "grade_rounded": -0.06,
+   "loaded_speed_kmh": 20,
+   "loaded_time_s": 0.14580664687522174,
+   "unloaded_distance_m": 0.8100369270845652,
+   "unloaded_grade": 0.060779431913265736,
+   "unloaded_grade_rounded": 0.06,
+   "unloaded_speed_kmh": 20,
+   "unloaded_time_s": 0.14580664687522174
+  },
+  {
+   "travel_time_row": 98,
+   "from_point_index": 94,
+   "to_point_index": 95,
+   "data_dump_rows": [
+    96,
+    97
+   ],
+   "distance_m": 27.5490990509775,
+   "grade": -0.048376981002533306,
+   "grade_rounded": -0.05,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 3.3058918861173,
+   "unloaded_distance_m": 27.5490990509775,
+   "unloaded_grade": 0.048376981002533306,
+   "unloaded_grade_rounded": 0.05,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 3.3058918861173
+  },
+  {
+   "travel_time_row": 99,
+   "from_point_index": 95,
+   "to_point_index": 96,
+   "data_dump_rows": [
+    97,
+    98
+   ],
+   "distance_m": 7.4105712868222255,
+   "grade": -0.010325018773388282,
+   "grade_rounded": -0.01,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.889268554418667,
+   "unloaded_distance_m": 7.4105712868222255,
+   "unloaded_grade": 0.010325018773388282,
+   "unloaded_grade_rounded": 0.01,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.889268554418667
+  },
+  {
+   "travel_time_row": 100,
+   "from_point_index": 96,
+   "to_point_index": 97,
+   "data_dump_rows": [
+    98,
+    99
+   ],
+   "distance_m": 7.200503809325958,
+   "grade": -0.01326851223649881,
+   "grade_rounded": -0.01,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.8640604571191148,
+   "unloaded_distance_m": 7.200503809325958,
+   "unloaded_grade": 0.01326851223649881,
+   "unloaded_grade_rounded": 0.01,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.8640604571191148
+  },
+  {
+   "travel_time_row": 101,
+   "from_point_index": 97,
+   "to_point_index": 98,
+   "data_dump_rows": [
+    99,
+    100
+   ],
+   "distance_m": 6.6389957986129655,
+   "grade": -0.04523549979632868,
+   "grade_rounded": -0.05,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.7966794958335559,
+   "unloaded_distance_m": 6.6389957986129655,
+   "unloaded_grade": 0.04523549979632868,
+   "unloaded_grade_rounded": 0.05,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.7966794958335559
+  },
+  {
+   "travel_time_row": 102,
+   "from_point_index": 98,
+   "to_point_index": 99,
+   "data_dump_rows": [
+    100,
+    101
+   ],
+   "distance_m": 10.30034530844916,
+   "grade": -0.004800331350392888,
+   "grade_rounded": -0.0,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 1.236041437013899,
+   "unloaded_distance_m": 10.30034530844916,
+   "unloaded_grade": 0.004800331350392888,
+   "unloaded_grade_rounded": 0.0,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 1.236041437013899
+  },
+  {
+   "travel_time_row": 103,
+   "from_point_index": 99,
+   "to_point_index": 100,
+   "data_dump_rows": [
+    101,
+    102
+   ],
+   "distance_m": 2.820144831673697,
+   "grade": 9.84448783959313e-05,
+   "grade_rounded": 0.0,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.33841737980084363,
+   "unloaded_distance_m": 2.820144831673697,
+   "unloaded_grade": -9.84448783959313e-05,
+   "unloaded_grade_rounded": -0.0,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.33841737980084363
+  },
+  {
+   "travel_time_row": 104,
+   "from_point_index": 100,
+   "to_point_index": 101,
+   "data_dump_rows": [
+    102,
+    103
+   ],
+   "distance_m": 0.6176163220015332,
+   "grade": -0.02681107654074104,
+   "grade_rounded": -0.03,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.07411395864018398,
+   "unloaded_distance_m": 0.6176163220015332,
+   "unloaded_grade": 0.02681107654074104,
+   "unloaded_grade_rounded": 0.03,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.07411395864018398
+  },
+  {
+   "travel_time_row": 105,
+   "from_point_index": 101,
+   "to_point_index": 102,
+   "data_dump_rows": [
+    103,
+    104
+   ],
+   "distance_m": 33.71986158279449,
+   "grade": -0.027349939707184506,
+   "grade_rounded": -0.03,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 4.046383389935339,
+   "unloaded_distance_m": 33.71986158279449,
+   "unloaded_grade": 0.027349939707184506,
+   "unloaded_grade_rounded": 0.03,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 4.046383389935339
+  },
+  {
+   "travel_time_row": 106,
+   "from_point_index": 102,
+   "to_point_index": 103,
+   "data_dump_rows": [
+    104,
+    105
+   ],
+   "distance_m": 0.37116523236448185,
+   "grade": -0.13989474702197693,
+   "grade_rounded": -0.14,
+   "loaded_speed_kmh": 12,
+   "loaded_time_s": 0.11134956970934456,
+   "unloaded_distance_m": 0.37116523236448185,
+   "unloaded_grade": 0.13989474702197693,
+   "unloaded_grade_rounded": 0.14,
+   "unloaded_speed_kmh": 14,
+   "unloaded_time_s": 0.09544248832229532
+  },
+  {
+   "travel_time_row": 107,
+   "from_point_index": 103,
+   "to_point_index": 104,
+   "data_dump_rows": [
+    105,
+    106
+   ],
+   "distance_m": 1.4737925745972968,
+   "grade": -0.06483474898433343,
+   "grade_rounded": -0.06,
+   "loaded_speed_kmh": 20,
+   "loaded_time_s": 0.26528266342751344,
+   "unloaded_distance_m": 1.4737925745972968,
+   "unloaded_grade": 0.06483474898433343,
+   "unloaded_grade_rounded": 0.06,
+   "unloaded_speed_kmh": 20,
+   "unloaded_time_s": 0.26528266342751344
+  },
+  {
+   "travel_time_row": 108,
+   "from_point_index": 104,
+   "to_point_index": 105,
+   "data_dump_rows": [
+    106,
+    107
+   ],
+   "distance_m": 1.0063033191431554,
+   "grade": -0.01127409234191543,
+   "grade_rounded": -0.01,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.12075639829717864,
+   "unloaded_distance_m": 1.0063033191431554,
+   "unloaded_grade": 0.01127409234191543,
+   "unloaded_grade_rounded": 0.01,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.12075639829717864
+  },
+  {
+   "travel_time_row": 109,
+   "from_point_index": 105,
+   "to_point_index": 106,
+   "data_dump_rows": [
+    107,
+    108
+   ],
+   "distance_m": 14.788365486112477,
+   "grade": -0.08291363177678397,
+   "grade_rounded": -0.08,
+   "loaded_speed_kmh": 12,
+   "loaded_time_s": 4.436509645833744,
+   "unloaded_distance_m": 14.788365486112477,
+   "unloaded_grade": 0.08291363177678397,
+   "unloaded_grade_rounded": 0.08,
+   "unloaded_speed_kmh": 14,
+   "unloaded_time_s": 3.8027225535717797
+  },
+  {
+   "travel_time_row": 110,
+   "from_point_index": 106,
+   "to_point_index": 107,
+   "data_dump_rows": [
+    108,
+    109
+   ],
+   "distance_m": 16.848267634415233,
+   "grade": -0.08919815849549051,
+   "grade_rounded": -0.09,
+   "loaded_speed_kmh": 12,
+   "loaded_time_s": 5.05448029032457,
+   "unloaded_distance_m": 16.848267634415233,
+   "unloaded_grade": 0.08919815849549051,
+   "unloaded_grade_rounded": 0.09,
+   "unloaded_speed_kmh": 14,
+   "unloaded_time_s": 4.33241167742106
+  },
+  {
+   "travel_time_row": 111,
+   "from_point_index": 107,
+   "to_point_index": 108,
+   "data_dump_rows": [
+    109,
+    110
+   ],
+   "distance_m": 3.2736104331255427,
+   "grade": -0.10267862135508768,
+   "grade_rounded": -0.1,
+   "loaded_speed_kmh": 12,
+   "loaded_time_s": 0.9820831299376629,
+   "unloaded_distance_m": 3.2736104331255427,
+   "unloaded_grade": 0.10267862135508768,
+   "unloaded_grade_rounded": 0.1,
+   "unloaded_speed_kmh": 14,
+   "unloaded_time_s": 0.841785539946568
+  },
+  {
+   "travel_time_row": 112,
+   "from_point_index": 108,
+   "to_point_index": 109,
+   "data_dump_rows": [
+    110,
+    111
+   ],
+   "distance_m": 34.18786519682264,
+   "grade": -0.09416920999841234,
+   "grade_rounded": -0.09,
+   "loaded_speed_kmh": 12,
+   "loaded_time_s": 10.256359559046793,
+   "unloaded_distance_m": 34.18786519682264,
+   "unloaded_grade": 0.09416920999841234,
+   "unloaded_grade_rounded": 0.09,
+   "unloaded_speed_kmh": 14,
+   "unloaded_time_s": 8.791165336325822
+  },
+  {
+   "travel_time_row": 113,
+   "from_point_index": 109,
+   "to_point_index": 110,
+   "data_dump_rows": [
+    111,
+    112
+   ],
+   "distance_m": 5.152316030974874,
+   "grade": -0.08954999038572306,
+   "grade_rounded": -0.09,
+   "loaded_speed_kmh": 12,
+   "loaded_time_s": 1.5456948092924623,
+   "unloaded_distance_m": 5.152316030974874,
+   "unloaded_grade": 0.08954999038572306,
+   "unloaded_grade_rounded": 0.09,
+   "unloaded_speed_kmh": 14,
+   "unloaded_time_s": 1.3248812651078248
+  },
+  {
+   "travel_time_row": 114,
+   "from_point_index": 110,
+   "to_point_index": 111,
+   "data_dump_rows": [
+    112,
+    113
+   ],
+   "distance_m": 22.34366662057252,
+   "grade": -0.03460234246518602,
+   "grade_rounded": -0.03,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 2.681239994468702,
+   "unloaded_distance_m": 22.34366662057252,
+   "unloaded_grade": 0.03460234246518602,
+   "unloaded_grade_rounded": 0.03,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 2.681239994468702
+  },
+  {
+   "travel_time_row": 115,
+   "from_point_index": 111,
+   "to_point_index": 112,
+   "data_dump_rows": [
+    113,
+    114
+   ],
+   "distance_m": 8.570640217899598,
+   "grade": -0.012742685451191284,
+   "grade_rounded": -0.01,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 1.0284768261479518,
+   "unloaded_distance_m": 8.570640217899598,
+   "unloaded_grade": 0.012742685451191284,
+   "unloaded_grade_rounded": 0.01,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 1.0284768261479518
+  },
+  {
+   "travel_time_row": 116,
+   "from_point_index": 112,
+   "to_point_index": 113,
+   "data_dump_rows": [
+    114,
+    115
+   ],
+   "distance_m": 8.570693112045939,
+   "grade": -0.013218140402527377,
+   "grade_rounded": -0.01,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 1.0284831734455127,
+   "unloaded_distance_m": 8.570693112045939,
+   "unloaded_grade": 0.013218140402527377,
+   "unloaded_grade_rounded": 0.01,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 1.0284831734455127
+  },
+  {
+   "travel_time_row": 117,
+   "from_point_index": 113,
+   "to_point_index": 114,
+   "data_dump_rows": [
+    115,
+    116
+   ],
+   "distance_m": 22.053061687515406,
+   "grade": -0.013219984121163965,
+   "grade_rounded": -0.01,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 2.6463674025018484,
+   "unloaded_distance_m": 22.053061687515406,
+   "unloaded_grade": 0.013219984121163965,
+   "unloaded_grade_rounded": 0.01,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 2.6463674025018484
+  },
+  {
+   "travel_time_row": 118,
+   "from_point_index": 114,
+   "to_point_index": 115,
+   "data_dump_rows": [
+    116,
+    117
+   ],
+   "distance_m": 0.8020769548125166,
+   "grade": -0.008135049275291913,
+   "grade_rounded": -0.01,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.096249234577502,
+   "unloaded_distance_m": 0.8020769548125166,
+   "unloaded_grade": 0.008135049275291913,
+   "unloaded_grade_rounded": 0.01,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.096249234577502
+  },
+  {
+   "travel_time_row": 119,
+   "from_point_index": 115,
+   "to_point_index": 116,
+   "data_dump_rows": [
+    117,
+    118
+   ],
+   "distance_m": 1.7696593521913815,
+   "grade": -0.014012875297342598,
+   "grade_rounded": -0.01,
+   "loaded_speed_kmh": 30,
+   "loaded_time_s": 0.2123591222629658,
+   "unloaded_distance_m": 1.7696593521913815,
+   "unloaded_grade": 0.014012875297342598,
+   "unloaded_grade_rounded": 0.01,
+   "unloaded_speed_kmh": 30,
+   "unloaded_time_s": 0.2123591222629658
+  }
+ ],
+ "segment_count": 116,
+ "segments_excluded_from_time": [
+  36,
+  39,
+  40,
+  46
+ ],
+ "travel_time_totals": {
+  "F15": {
+   "cell": "Travel Time!F15",
+   "value": 171.56703384077264,
+   "formula": "=SUM(D:D)",
+   "label": "Dump (loaded) total time",
+   "unit": "s"
+  },
+  "F16": {
+   "cell": "Travel Time!F16",
+   "value": 2.859450564012877,
+   "formula": "=F15/60",
+   "label": "Dump (loaded) total time",
+   "unit": "min"
+  },
+  "H15": {
+   "cell": "Travel Time!H15",
+   "value": 163.93864122564963,
+   "formula": "=SUM(M:M)",
+   "label": "Return (unloaded) total time",
+   "unit": "s"
+  },
+  "H16": {
+   "cell": "Travel Time!H16",
+   "value": 2.7323106870941607,
+   "formula": "=H15/60",
+   "label": "Return (unloaded) total time",
+   "unit": "min"
+  },
+  "total_distance_m_one_way": 1115.5477237303662,
+  "timed_distance_m_one_way": 1110.796793655394
+ },
+ "expected": {
+  "C4": {
+   "cell": "ActiveRoute!C4",
+   "value": 171.56703384077264,
+   "formula": "='Travel Time'!F15",
+   "label": "Travel Time (Dump)",
+   "unit": "s"
+  },
+  "C5": {
+   "cell": "ActiveRoute!C5",
+   "value": 163.93864122564963,
+   "formula": "='Travel Time'!H15",
+   "label": "Travel Time (Return)",
+   "unit": "s"
+  },
+  "C7": {
+   "cell": "ActiveRoute!C7",
+   "value": 394.7125589016733,
+   "formula": "=SUM(C4,C5)/C6",
+   "label": "Haul Time",
+   "unit": "s"
+  },
+  "C8": {
+   "cell": "ActiveRoute!C8",
+   "value": 60,
+   "formula": "{array C8} =INDEX($I$4:$I$32,MATCH($B$3,$H$4:$H$32,0) + 1)",
+   "label": "Dump Time",
+   "unit": "s"
+  },
+  "C9": {
+   "cell": "ActiveRoute!C9",
+   "value": 30,
+   "formula": "{array C9} =INDEX($I$4:$I$32,MATCH($B$3,$H$4:$H$32,0) + 2)",
+   "label": "Spot Time",
+   "unit": "s"
+  },
+  "C10": {
+   "cell": "ActiveRoute!C10",
+   "value": 110,
+   "formula": "{array C10} =INDEX($I$4:$I$32,MATCH($B$3,$H$4:$H$32,0) + 3)",
+   "label": "Loading Time",
+   "unit": "s"
+  },
+  "C12": {
+   "cell": "ActiveRoute!C12",
+   "value": 120,
+   "formula": "=60*C11",
+   "label": "Stop Sign + Start/Stop Accel",
+   "unit": "s"
+  },
+  "C14": {
+   "cell": "ActiveRoute!C14",
+   "value": 714.7125589016732,
+   "formula": "=SUM(C7:C10,C12)",
+   "label": "Total Time (s)",
+   "unit": "s"
+  },
+  "C15": {
+   "cell": "ActiveRoute!C15",
+   "value": 11.911875981694553,
+   "formula": "=C14/60",
+   "label": "Total Time (min)",
+   "unit": "min"
+  },
+  "C16": {
+   "cell": "ActiveRoute!C16",
+   "value": 523.8469582448014,
+   "formula": "=(60/C15)*C21",
+   "label": "Truck Productivity (bcm/pt)",
+   "unit": "bcm/truck-PT-hr"
+  },
+  "C17": {
+   "cell": "ActiveRoute!C17",
+   "value": 68.7223614328532,
+   "formula": "=C20/C16",
+   "label": "Truck Hours Required",
+   "unit": "truck PT hrs/day"
+  },
+  "C19": {
+   "cell": "ActiveRoute!C19",
+   "value": 36000,
+   "formula": "{array C19} =INDEX($I$4:$I$32,MATCH($B$3,$H$4:$H$32,0) + 4)* $I$34",
+   "label": "Ideal Daily Volume",
+   "unit": "bcm/day"
+  },
+  "C20": {
+   "cell": "ActiveRoute!C20",
+   "value": 36000,
+   "label": "Desired Daily Vol",
+   "unit": "bcm/day"
+  },
+  "C21": {
+   "cell": "ActiveRoute!C21",
+   "value": 104,
+   "formula": "=IF(C3=\"CAT789C (OB)\",N12,IF(C3=\"KOM1500HD (OB)\",N13,IF(C3=\"CAT789C (COAL)\",N16,IF(C3=\"KOM1500HD (COAL)\",N17,IF(C3=\"CAT789D (OB)\",N14,IF(C3=\"CAT789D (COAL)\",N18,\"\"))))))",
+   "label": "Truck Load",
+   "unit": "bcm/load"
+  },
+  "C22": {
+   "cell": "ActiveRoute!C22",
+   "value": 20,
+   "formula": "=I34",
+   "label": "Truck Production Time",
+   "unit": "hrs/day"
+  },
+  "C24": {
+   "cell": "ActiveRoute!C24",
+   "value": 3.4361180716426603,
+   "formula": "=C17/C22",
+   "label": "Trucks Needed",
+   "unit": "trucks"
+  },
+  "C26": {
+   "cell": "ActiveRoute!C26",
+   "value": 20,
+   "formula": "=C20/(IF(B$3=H4,I8,IF(B$3=H10,I14,IF(B$3=H16,I20,IF(B$3=H22,I26,IF(B$3=H28,I32,\"\"))))))",
+   "label": "Excavator PT @ Planned Rate",
+   "unit": "hrs/day"
+  },
+  "C28": {
+   "cell": "ActiveRoute!C28",
+   "value": 0,
+   "formula": "=(C22/2)-(C26/2)",
+   "label": "Lost PT/shift",
+   "unit": "hrs lost per shift"
+  }
+ },
+ "macro_truck_buttons": {
+  "location": "ActiveRoute row 28, nine Form Buttons captioned 1..9 (shapes 'Button 6'..'Button 15', across A28:C29) - NOT checkboxes; no linked cells.",
+  "vba": "Sub Macro_n(): Range(\"C24\").GoalSeek Goal:=n, ChangingCell:=Range(\"C20\"): If Range(\"C20\").Value > Range(\"C19\").Value Then Range(\"C20\").Value = Range(\"C19\").Value",
+  "closed_form": "C20 = MIN(n * C22 * C16, C19)  (C24 is linear in C20, so goal seek converges to this to within Excel's goal-seek tolerance ~0.001 on C24)",
+  "derived_not_cached": true,
+  "table": [
+   {
+    "button": 1,
+    "macro": "Macro_1",
+    "goal_seek_C20_uncapped": 10476.939164896028,
+    "capped_at_C19": false,
+    "C20": 10476.939164896028,
+    "C17": 20.0,
+    "C24": 1.0,
+    "C26": 5.8205217582755715,
+    "C28": 7.089739120862214
+   },
+   {
+    "button": 2,
+    "macro": "Macro_2",
+    "goal_seek_C20_uncapped": 20953.878329792056,
+    "capped_at_C19": false,
+    "C20": 20953.878329792056,
+    "C17": 40.0,
+    "C24": 2.0,
+    "C26": 11.641043516551143,
+    "C28": 4.1794782417244285
+   },
+   {
+    "button": 3,
+    "macro": "Macro_3",
+    "goal_seek_C20_uncapped": 31430.817494688083,
+    "capped_at_C19": false,
+    "C20": 31430.817494688083,
+    "C17": 60.0,
+    "C24": 3.0,
+    "C26": 17.46156527482671,
+    "C28": 1.2692173625866445
+   },
+   {
+    "button": 4,
+    "macro": "Macro_4",
+    "goal_seek_C20_uncapped": 41907.75665958411,
+    "capped_at_C19": true,
+    "C20": 36000,
+    "C17": 68.7223614328532,
+    "C24": 3.4361180716426603,
+    "C26": 20.0,
+    "C28": 0.0
+   },
+   {
+    "button": 5,
+    "macro": "Macro_5",
+    "goal_seek_C20_uncapped": 52384.695824480135,
+    "capped_at_C19": true,
+    "C20": 36000,
+    "C17": 68.7223614328532,
+    "C24": 3.4361180716426603,
+    "C26": 20.0,
+    "C28": 0.0
+   },
+   {
+    "button": 6,
+    "macro": "Macro_6",
+    "goal_seek_C20_uncapped": 62861.634989376165,
+    "capped_at_C19": true,
+    "C20": 36000,
+    "C17": 68.7223614328532,
+    "C24": 3.4361180716426603,
+    "C26": 20.0,
+    "C28": 0.0
+   },
+   {
+    "button": 7,
+    "macro": "Macro_7",
+    "goal_seek_C20_uncapped": 73338.5741542722,
+    "capped_at_C19": true,
+    "C20": 36000,
+    "C17": 68.7223614328532,
+    "C24": 3.4361180716426603,
+    "C26": 20.0,
+    "C28": 0.0
+   },
+   {
+    "button": 8,
+    "macro": "Macro_8",
+    "goal_seek_C20_uncapped": 83815.51331916823,
+    "capped_at_C19": true,
+    "C20": 36000,
+    "C17": 68.7223614328532,
+    "C24": 3.4361180716426603,
+    "C26": 20.0,
+    "C28": 0.0
+   },
+   {
+    "button": 9,
+    "macro": "Macro_9",
+    "goal_seek_C20_uncapped": 94292.45248406426,
+    "capped_at_C19": true,
+    "C20": 36000,
+    "C17": 68.7223614328532,
+    "C24": 3.4361180716426603,
+    "C26": 20.0,
+    "C28": 0.0
+   }
+  ]
+ },
+ "conditional_formats": [
+  {
+   "range": "ActiveRoute!C26:C27",
+   "rule": "cell value > $C$22",
+   "style": "bold red text on light red fill (FF9999)",
+   "meaning": "excavator PT needed exceeds truck production time available"
+  },
+  {
+   "range": "ActiveRoute!C28",
+   "rule": "cell value > 17.76",
+   "style": "bold red text on light red fill (FF9999)",
+   "meaning": "unclear; can never trigger while C22 <= 35.52 because C28 <= C22/2"
+  }
+ ]
+}

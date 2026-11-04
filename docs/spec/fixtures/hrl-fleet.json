@@ -1,0 +1,1203 @@
+{
+ "_source": "Haul Road Lab haulroad.html, FLEET library script block (char offset ~189321), extracted verbatim 2026-11-04",
+ "_note": "OEM brochures / spec sheets (links per machine). Eye heights are estimated unless an OEM drawing gives them; \"seen from\" heights are assumptions. Site models and unit IDs: maintenance workbook to Sep 2026. Excavators excluded.",
+ "meta": "OEM brochures / spec sheets (links per machine). Eye heights are estimated unless an OEM drawing gives them; \"seen from\" heights are assumptions. Site models and unit IDs: maintenance workbook to Sep 2026. Excavators excluded.",
+ "defaults": {
+  "observer": "HILUX",
+  "target": "HILUX",
+  "largest": "KOM_HD785-7"
+ },
+ "machines": [
+  {
+   "id": "CAT_789C",
+   "siteModel": "CAT 789C",
+   "make": "Cat",
+   "model": "789C",
+   "specModel": "Caterpillar 789C",
+   "classLabel": "Haul truck",
+   "road": "HV",
+   "shape": "truck",
+   "units": [
+    "DT124",
+    "DT125",
+    "DT126",
+    "DT127",
+    "DT128",
+    "DT129",
+    "DT130",
+    "DT197",
+    "DT198",
+    "DT199"
+   ],
+   "width": 7.674,
+   "toolWidth": null,
+   "length": 12.177,
+   "height": 6.15,
+   "eyeH": 4.52,
+   "visH": 3.08,
+   "eyeBack": 3.29,
+   "eyeRight": -2.79,
+   "tyre": "37.00-R57 (E4)",
+   "estimated": [
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "http://directminingservices.com/wp-content/uploads/Equipment/Caterpillar/789c.pdf",
+     "title": "Cat 789C Mining Truck specalog AEHQ5321-01 (2-99)"
+    },
+    {
+     "url": "https://h-cpc.cat.com/cmms/v2?f=product&it=product&cid=406&lid=en&sc=US&gid=715&pid=18090266&nc=1",
+     "title": "Cat 789C Mining Trucks (cat.com non-current spec page)"
+    }
+   ]
+  },
+  {
+   "id": "CAT_789XD",
+   "siteModel": "CAT 789XD",
+   "make": "Cat",
+   "model": "789D",
+   "specModel": "Caterpillar 789D (site label '789XD')",
+   "classLabel": "Haul truck",
+   "road": "HV",
+   "shape": "truck",
+   "units": [
+    "DT189",
+    "DT190",
+    "DT191",
+    "DT192",
+    "DT193",
+    "DT194",
+    "DT195",
+    "DT196"
+   ],
+   "width": 7.645,
+   "toolWidth": null,
+   "length": 12.697,
+   "height": 6.496,
+   "eyeH": 4.8,
+   "visH": 3.25,
+   "eyeBack": 3.43,
+   "eyeRight": -2.77,
+   "tyre": "37.00-R57 (optional 40.00-R57)",
+   "estimated": [
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://ccmodels.com/wp-content/uploads/2015/08/789D_Spec_Sheet.pdf",
+     "title": "Cat 789D Mining Truck specalog AEHQ6237-03 (04-2012)"
+    },
+    {
+     "url": "https://www.cat.com/en_US/products/new/equipment/off-highway-trucks/mining-trucks/116180.html",
+     "title": "Cat 789 (current) product page; web search for '789XD' returned no such model"
+    }
+   ]
+  },
+  {
+   "id": "KOM_HD1500-7",
+   "siteModel": "KOM HD1500-7",
+   "make": "Komatsu",
+   "model": "HD1500-7",
+   "specModel": "Komatsu HD1500-7",
+   "classLabel": "Haul truck",
+   "road": "HV",
+   "shape": "truck",
+   "units": [
+    "DT102",
+    "DT103",
+    "DT105",
+    "DT106",
+    "DT107"
+   ],
+   "width": 6.89,
+   "toolWidth": null,
+   "length": 11.37,
+   "height": 5.85,
+   "eyeH": 4.435,
+   "visH": 2.92,
+   "eyeBack": 3.07,
+   "eyeRight": -2.39,
+   "tyre": "33.00R51",
+   "estimated": [
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://www.smsequipment.com/getmedia/06e2d3ec-91dd-456b-bcd2-f56f1ef4ab69/HD1500-7_1.pdf",
+     "title": "Komatsu HD1500-7 Mechanical Drive Truck brochure AESS727-04 (Komatsu America)"
+    }
+   ]
+  },
+  {
+   "id": "KOM_HD785-7",
+   "siteModel": "KOM HD785-7",
+   "make": "Komatsu",
+   "model": "HD785-7",
+   "specModel": "Komatsu HD785-7",
+   "classLabel": "Water cart",
+   "road": "HV",
+   "shape": "watercart",
+   "units": [
+    "WT607"
+   ],
+   "width": 6.885,
+   "toolWidth": null,
+   "length": 10.29,
+   "height": 5.05,
+   "eyeH": 3.85,
+   "visH": 2.52,
+   "eyeBack": 2.78,
+   "eyeRight": -2.39,
+   "tyre": "27.00 R49",
+   "estimated": [
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://www.komatsu.com.br/uploads/produtos/catalogo/8624a04e19.pdf",
+     "title": "Komatsu HD785-7 brochure CEN00136-10 (Printed in Japan 2019-11)"
+    },
+    {
+     "url": "https://cdn.machine.market/specifications/komatsu-off-highway-dump-trucks-spec-283b2a.pdf",
+     "title": "Komatsu HD785-7 spec sheet, Komatsu Europe (max GVW 166,000 kg)"
+    }
+   ]
+  },
+  {
+   "id": "CAT_773E",
+   "siteModel": "CAT 773E",
+   "make": "Cat",
+   "model": "773E",
+   "specModel": "Caterpillar 773E",
+   "classLabel": "Water cart",
+   "road": "HV",
+   "shape": "watercart",
+   "units": [
+    "WT609"
+   ],
+   "width": 5.076,
+   "toolWidth": null,
+   "length": 9.338,
+   "height": 4.393,
+   "eyeH": 3.19,
+   "visH": 2.2,
+   "eyeBack": 2.52,
+   "eyeRight": -1.49,
+   "tyre": "24.00R35 (E4)",
+   "estimated": [
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://s7d2.scene7.com/is/content/Caterpillar/CM20161205-54187-14085",
+     "title": "Cat 773E Off-Highway Truck specalog AEHQ7983-02 (03-2019)"
+    }
+   ]
+  },
+  {
+   "id": "CAT_775F",
+   "siteModel": "CAT 775F",
+   "make": "Cat",
+   "model": "775F",
+   "specModel": "Caterpillar 775F",
+   "classLabel": "Service truck",
+   "road": "HV",
+   "shape": "service",
+   "units": [
+    "ST004",
+    "ST052"
+   ],
+   "width": 5.255,
+   "toolWidth": null,
+   "length": 10.334,
+   "height": 4.428,
+   "eyeH": 3.18,
+   "visH": 2.21,
+   "eyeBack": 2.79,
+   "eyeRight": -1.73,
+   "tyre": "24.00R35 (E4)",
+   "estimated": [
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://www.kellytractor.com/eng/images/pdf/earthmoving/offhighway_trucks/775F.pdf",
+     "title": "Cat 775F Off-Highway Truck specalog AEHQ5748-01 (8-10), Kelly Tractor copy"
+    },
+    {
+     "url": "https://h-cpc.cat.com/cmms/v2?cid=406&f=product&gid=307&it=product&lid=en&nc=1&pid=14127755&sc=US",
+     "title": "Cat 775F Off-Highway Trucks (cat.com non-current spec page)"
+    }
+   ]
+  },
+  {
+   "id": "CAT_773D",
+   "siteModel": "CAT 773D",
+   "make": "Cat",
+   "model": "773D",
+   "specModel": "Caterpillar 773D",
+   "classLabel": "Service truck",
+   "road": "HV",
+   "shape": "service",
+   "units": [
+    "LT052"
+   ],
+   "width": 5.076,
+   "toolWidth": null,
+   "length": 9.12,
+   "height": 4.393,
+   "eyeH": 3.19,
+   "visH": 2.2,
+   "eyeBack": 2.46,
+   "eyeRight": -1.64,
+   "tyre": "24.00R35 (E4)",
+   "estimated": [
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://www.worthyparts.com/core/wp-content/uploads/2024/01/CAT-773D-Specs.pdf",
+     "title": "Cat 773D Off-Highway Truck specalog AEHQ5854-01 (6-07) (parts-dealer copy of Cat document)"
+    }
+   ]
+  },
+  {
+   "id": "KOM_WA900-8R_HL",
+   "siteModel": "KOM WA900-8R HL",
+   "make": "Komatsu",
+   "model": "WA900-8R",
+   "specModel": "Komatsu WA900-8R",
+   "classLabel": "Wheel loader",
+   "road": "HV",
+   "shape": "loader",
+   "units": [
+    "LD408",
+    "LD409"
+   ],
+   "width": 4.585,
+   "toolWidth": 4.935,
+   "length": 15.355,
+   "height": 5.6,
+   "eyeH": 5.0,
+   "visH": 2.8,
+   "eyeBack": 6.91,
+   "eyeRight": 0.0,
+   "tyre": "45/65 R45 (L-5)",
+   "estimated": [
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://www.komatsu.com/content/dam/komatsu/websites/oceania/documents/brochures/wheel-loaders/wa900-8r.pdf",
+     "title": "Komatsu WA900-8R Wheel Loader brochure (Komatsu Oceania)"
+    }
+   ]
+  },
+  {
+   "id": "KOM_WA900-3EO_HL",
+   "siteModel": "KOM WA900-3EO HL",
+   "make": "Komatsu",
+   "model": "WA900-3",
+   "specModel": "Komatsu WA900-3 (EO)",
+   "classLabel": "Wheel loader",
+   "road": "HV",
+   "shape": "loader",
+   "units": [
+    "LD401",
+    "LD402",
+    "LD407"
+   ],
+   "width": 4.585,
+   "toolWidth": 4.81,
+   "length": 14.49,
+   "height": 5.275,
+   "eyeH": 4.675,
+   "visH": 2.64,
+   "eyeBack": 6.52,
+   "eyeRight": 0.0,
+   "tyre": "45/65-45-58 PR L5",
+   "estimated": [
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://www.komatsu.eu/Assets/GetBrochureByProductName.aspx?id=WA900-3&langID=en",
+     "title": "Komatsu WA800-3 / WA900-3 Wheel Loader brochure (Komatsu Europe, EPA Tier 2)"
+    }
+   ]
+  },
+  {
+   "id": "KOM_WA700-7_WP",
+   "siteModel": "KOM WA700-7 WP",
+   "make": "Komatsu",
+   "model": "WA700-8",
+   "specModel": "Komatsu WA700-8 (WA700-7 not found)",
+   "classLabel": "Wheel loader",
+   "road": "HV",
+   "shape": "loader",
+   "units": [
+    "LD413"
+   ],
+   "width": 4.38,
+   "toolWidth": 4.71,
+   "length": 14.13,
+   "height": 5.24,
+   "eyeH": 4.64,
+   "visH": 2.62,
+   "eyeBack": 6.36,
+   "eyeRight": 0.0,
+   "tyre": "45/65 R39 (L-5)",
+   "estimated": [
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://www.komatsu.com/content/dam/komatsu/websites/en-us/miscellaneous-web-site-assets/WheelLoader_WA700-8_Brochure_EN-W700-8-BRO01-0325-V2.pdf",
+     "title": "Komatsu WA700-8 Wheel Loader brochure W700-8-BRO01-0325 (Komatsu America)"
+    }
+   ]
+  },
+  {
+   "id": "KOM_WA600-6_WP",
+   "siteModel": "KOM WA600-6 WP",
+   "make": "Komatsu",
+   "model": "WA600-6",
+   "specModel": "Komatsu WA600-6",
+   "classLabel": "Wheel loader",
+   "road": "HV",
+   "shape": "loader",
+   "units": [
+    "LD403"
+   ],
+   "width": 3.54,
+   "toolWidth": 3.685,
+   "length": 11.985,
+   "height": 4.46,
+   "eyeH": 3.86,
+   "visH": 2.23,
+   "eyeBack": 5.39,
+   "eyeRight": 0.0,
+   "tyre": "35/65-33-36PR (L-4)",
+   "estimated": [
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://www.komatsu.eu/Assets/GetBrochureByProductName.aspx?id=WA600-6&langID=en",
+     "title": "Komatsu WA600-6 Wheel Loader brochure (Komatsu Europe)"
+    }
+   ]
+  },
+  {
+   "id": "KOM_WA500-6_WP",
+   "siteModel": "KOM WA500-6 WP",
+   "make": "Komatsu",
+   "model": "WA500-6",
+   "specModel": "Komatsu WA500-6",
+   "classLabel": "Wheel loader",
+   "road": "HV",
+   "shape": "loader",
+   "units": [
+    "LD411"
+   ],
+   "width": 3.15,
+   "toolWidth": 3.43,
+   "length": 9.58,
+   "height": 3.795,
+   "eyeH": 3.195,
+   "visH": 1.9,
+   "eyeBack": 4.31,
+   "eyeRight": 0.0,
+   "tyre": "29.5 R25",
+   "estimated": [
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://www.komatsu.eu/Assets/GetBrochureByProductName.aspx?id=WA500-6&langID=en",
+     "title": "Komatsu WA500-6 Wheel Loader brochure (Komatsu Europe)"
+    },
+    {
+     "url": "https://webklat.s3.amazonaws.com/wp-content/uploads/2018/10/05192440/Cat%C3%A1logo-Cargador-Frontal-WA500-6-ingl%C3%A9s-digital.pdf",
+     "title": "Komatsu WA500-6 Wheel Loader brochure (Komatsu Latin America, English)"
+    }
+   ]
+  },
+  {
+   "id": "CAT_992K_WP",
+   "siteModel": "CAT 992K WP",
+   "make": "Cat",
+   "model": "992K",
+   "specModel": "Caterpillar 992K",
+   "classLabel": "Wheel loader",
+   "road": "HV",
+   "shape": "loader",
+   "units": [
+    "LD405"
+   ],
+   "width": 4.884,
+   "toolWidth": 4.884,
+   "length": 15.818,
+   "height": 5.678,
+   "eyeH": 5.078,
+   "visH": 2.84,
+   "eyeBack": 7.12,
+   "eyeRight": 0.0,
+   "tyre": "45/65-45 L-5 (58 ply basis for dimensions)",
+   "estimated": [
+    "width",
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://s7d2.scene7.com/is/content/Caterpillar/C725888",
+     "title": "Cat 992K Wheel Loader specalog AEHQ5939-02"
+    },
+    {
+     "url": "https://s7d2.scene7.com/is/content/Caterpillar/C646334",
+     "title": "Cat 992K Wheel Loader specalog (earlier edition)"
+    },
+    {
+     "url": "https://www.avesco.ch/fileadmin/avescoproducts/4601ef33b8a2e82fc99bcf525f7ab587.pdf",
+     "title": "Cat 992K specalog Tier 4 Final (dealer Avesco copy)"
+    }
+   ]
+  },
+  {
+   "id": "CAT_980M_WP",
+   "siteModel": "CAT 980M WP",
+   "make": "Cat",
+   "model": "980M",
+   "specModel": "Caterpillar 980M",
+   "classLabel": "Wheel loader",
+   "road": "HV",
+   "shape": "loader",
+   "units": [
+    "LD491"
+   ],
+   "width": 3.296,
+   "toolWidth": 3.447,
+   "length": 9.493,
+   "height": 3.813,
+   "eyeH": 3.213,
+   "visH": 1.91,
+   "eyeBack": 4.27,
+   "eyeRight": 0.0,
+   "tyre": "29.5R25 (Michelin XLDD1 L4)",
+   "estimated": [
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://brookshire.com.au/BrooksHire/media/Media/Spec%20Sheets/CAT-980-982M-LOADER.pdf",
+     "title": "Cat 980M/982M Wheel Loaders specalog AEHQ7244-01 (05-2016), dealer-hosted copy"
+    },
+    {
+     "url": "https://www.petersoncat.com/sites/cat/files/products/documents/18581480-32671.pdf",
+     "title": "Cat 980M Wheel Loader spec sheet (Peterson Cat)"
+    }
+   ]
+  },
+  {
+   "id": "KOM_WA250PZ-6_IT",
+   "siteModel": "KOM WA250PZ-6 IT",
+   "make": "Komatsu",
+   "model": "WA250PZ-6",
+   "specModel": "Komatsu WA250PZ-6",
+   "classLabel": "Wheel loader",
+   "road": "HV",
+   "shape": "loader",
+   "units": [
+    "IT001"
+   ],
+   "width": 2.47,
+   "toolWidth": 2.55,
+   "length": 7.38,
+   "height": 3.2,
+   "eyeH": 2.6,
+   "visH": 1.6,
+   "eyeBack": 3.32,
+   "eyeRight": 0.0,
+   "tyre": "20.5 R25",
+   "estimated": [
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://www.komatsu.eu/Assets/GetBrochureByProductName.aspx?id=WA250PZ-6&langID=en",
+     "title": "Komatsu WA250PZ-6 Wheel Loader brochure (Komatsu Europe)"
+    }
+   ]
+  },
+  {
+   "id": "CAT_D11_KSN",
+   "siteModel": "CAT D11 KSN",
+   "make": "Cat",
+   "model": "D11",
+   "specModel": "Caterpillar D11 (current, C32B; site 'D11 KSN')",
+   "classLabel": "Dozer",
+   "road": "HV",
+   "shape": "dozer",
+   "units": [
+    "DZ215",
+    "DZ216",
+    "DZ217",
+    "DZ218",
+    "DZ219"
+   ],
+   "width": 3.782,
+   "toolWidth": 6.34,
+   "length": 10.525,
+   "height": 4.723,
+   "eyeH": 3.805,
+   "visH": 2.36,
+   "eyeBack": 5.26,
+   "eyeRight": 0.0,
+   "tyre": null,
+   "estimated": [
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://s7d2.scene7.com/is/content/Caterpillar/CM20260708-06692-98e10",
+     "title": "Cat D11/D11 XE Dozers Technical Specifications (Caterpillar, scene7)"
+    }
+   ]
+  },
+  {
+   "id": "CAT_D11T",
+   "siteModel": "CAT D11T",
+   "make": "Cat",
+   "model": "D11T",
+   "specModel": "Caterpillar D11T",
+   "classLabel": "Dozer",
+   "road": "HV",
+   "shape": "dozer",
+   "units": [
+    "DZ375",
+    "DZ427"
+   ],
+   "width": 3.782,
+   "toolWidth": 6.335,
+   "length": 10.525,
+   "height": 4.698,
+   "eyeH": 3.794,
+   "visH": 2.35,
+   "eyeBack": 5.26,
+   "eyeRight": 0.0,
+   "tyre": null,
+   "estimated": [
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://elibrarywcl.wordpress.com/wp-content/uploads/2015/02/track-type-tractors-d11t.pdf",
+     "title": "Cat D11T/D11T CD Track-Type Tractor specalog AEHQ6785-01 (08-2012) (Caterpillar document, third-party host)"
+    }
+   ]
+  },
+  {
+   "id": "CAT_D10T",
+   "siteModel": "CAT D10T",
+   "make": "Cat",
+   "model": "D10T2",
+   "specModel": "Caterpillar D10T2 (used in place of D10T)",
+   "classLabel": "Dozer",
+   "road": "HV",
+   "shape": "dozer",
+   "units": [
+    "DZ226"
+   ],
+   "width": 3.292,
+   "toolWidth": 5.26,
+   "length": 9.158,
+   "height": 4.406,
+   "eyeH": 3.498,
+   "visH": 2.2,
+   "eyeBack": 4.58,
+   "eyeRight": 0.0,
+   "tyre": null,
+   "estimated": [
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://ccmodels.com/wp-content/uploads/2015/06/D10T2_Spec_Sheet.pdf",
+     "title": "Cat D10T2 Dozer specalog AEHQ7127 (10-2013) (Caterpillar document, third-party host)"
+    }
+   ]
+  },
+  {
+   "id": "KOM_D475SD-5EO",
+   "siteModel": "KOM D475SD-5EO",
+   "make": "Komatsu",
+   "model": "D475A-5 Super Dozer",
+   "specModel": "Komatsu D475A-5 Super Dozer (D475ASD-5 / site 'D475SD-5EO')",
+   "classLabel": "Dozer",
+   "road": "HV",
+   "shape": "dozer",
+   "units": [
+    "DZ201",
+    "DZ202",
+    "DZ203",
+    "DZ209",
+    "DZ210"
+   ],
+   "width": 3.58,
+   "toolWidth": 6.465,
+   "length": 10.525,
+   "height": 4.646,
+   "eyeH": 4.046,
+   "visH": 2.32,
+   "eyeBack": 5.26,
+   "eyeRight": 0.0,
+   "tyre": null,
+   "estimated": [
+    "width",
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://www.komatsu.com.br/uploads/produtos/catalogo/e5f409686a.pdf",
+     "title": "Komatsu Crawler Dozer D475A-5 Super Dozer brochure AESS725-00 (Komatsu America, 01/07)"
+    },
+    {
+     "url": "https://www.komatsu.eu/Assets/GetBrochureByProductName.aspx?id=D475A-5&langID=en",
+     "title": "Komatsu D475A-5 Crawler Dozer brochure (Komatsu Europe)"
+    }
+   ]
+  },
+  {
+   "id": "KOM_D375A-5",
+   "siteModel": "KOM D375A-5",
+   "make": "Komatsu",
+   "model": "D375A-5",
+   "specModel": "Komatsu D375A-5",
+   "classLabel": "Dozer",
+   "road": "HV",
+   "shape": "dozer",
+   "units": [
+    "DZ225"
+   ],
+   "width": 3.11,
+   "toolWidth": 5.14,
+   "length": 10.41,
+   "height": 4.285,
+   "eyeH": 3.685,
+   "visH": 2.14,
+   "eyeBack": 5.21,
+   "eyeRight": 0.0,
+   "tyre": null,
+   "estimated": [
+    "width",
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://www.komatsu.eu/Assets/GetBrochureByProductName.aspx?id=D375A-5&langID=en",
+     "title": "Komatsu D375A-5 Crawler Dozer brochure (Komatsu Europe)"
+    }
+   ]
+  },
+  {
+   "id": "KOM_D375A-6",
+   "siteModel": "KOM D375A-6",
+   "make": "Komatsu",
+   "model": "D375A-6",
+   "specModel": "Komatsu D375A-6",
+   "classLabel": "Dozer",
+   "road": "HV",
+   "shape": "dozer",
+   "units": [
+    "DZ204"
+   ],
+   "width": 3.11,
+   "toolWidth": 5.215,
+   "length": 10.485,
+   "height": 4.285,
+   "eyeH": 3.685,
+   "visH": 2.14,
+   "eyeBack": 5.24,
+   "eyeRight": 0.0,
+   "tyre": null,
+   "estimated": [
+    "width",
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://www.komatsu.com/content/dam/komatsu/websites/south-africa/documents/product-spec-sheets/tracked_dozer_d375a-6_spec_sheet.pdf",
+     "title": "Komatsu D375A-6 Crawler Dozer brochure CEN00372-03 (printed 2018-04)"
+    }
+   ]
+  },
+  {
+   "id": "KOM_D375A-8",
+   "siteModel": "KOM D375A-8",
+   "make": "Komatsu",
+   "model": "D375A-8",
+   "specModel": "Komatsu D375A-8",
+   "classLabel": "Dozer",
+   "road": "HV",
+   "shape": "dozer",
+   "units": [
+    "DZ227"
+   ],
+   "width": 3.11,
+   "toolWidth": 5.215,
+   "length": 10.56,
+   "height": 4.278,
+   "eyeH": 3.678,
+   "visH": 2.14,
+   "eyeBack": 5.28,
+   "eyeRight": 0.0,
+   "tyre": null,
+   "estimated": [
+    "width",
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://mchalekomatsu.com/app/uploads/2017/08/Brochure_Main_EN-D375.pdf",
+     "title": "Komatsu D375A-8 brochure EENSS20325 02/2024 (Komatsu Europe, dealer-hosted)"
+    }
+   ]
+  },
+  {
+   "id": "KOM_WD900-3",
+   "siteModel": "KOM WD900-3",
+   "make": "Komatsu",
+   "model": "WD900-3",
+   "specModel": "Komatsu WD900-3",
+   "classLabel": "Wheel dozer",
+   "road": "HV",
+   "shape": "wheeldozer",
+   "units": [
+    "WD207"
+   ],
+   "width": 4.46,
+   "toolWidth": 6.47,
+   "length": 12.035,
+   "height": 5.215,
+   "eyeH": 4.615,
+   "visH": 2.61,
+   "eyeBack": 5.42,
+   "eyeRight": 0.0,
+   "tyre": "45/65 R45 XLDD (L4)",
+   "estimated": [
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://webklat.s3.amazonaws.com/wp-content/uploads/2018/11/26110405/Cat%C3%A1logo-Tractor-Sobre-Ruedas-WD900-3-ingl%C3%A9s-digital.pdf",
+     "title": "Komatsu Wheel Dozer WD900-3 brochure (English, Komatsu dealer-hosted)"
+    }
+   ]
+  },
+  {
+   "id": "CAT_18M",
+   "siteModel": "CAT 18M",
+   "make": "Cat",
+   "model": "18M3",
+   "specModel": "Caterpillar 18M3 (used for '18M')",
+   "classLabel": "Grader",
+   "road": "HV",
+   "shape": "grader",
+   "units": [
+    "GR309",
+    "GR310",
+    "HEQ33"
+   ],
+   "width": 3.411,
+   "toolWidth": 5.5,
+   "length": 10.593,
+   "height": 3.746,
+   "eyeH": 3.146,
+   "visH": 1.87,
+   "eyeBack": 6.57,
+   "eyeRight": 0.0,
+   "tyre": "23.5R25",
+   "estimated": [
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://s7d2.scene7.com/is/content/Caterpillar/C10833431",
+     "title": "Cat 18M3 Motor Grader specalog AEHQ7748 (12-2015)"
+    },
+    {
+     "url": "https://www.petersoncat.com/sites/cat/files/products/documents/1496159051.pdf",
+     "title": "Cat 18M3 Motor Grader specalog (dealer copy, metric + imperial)"
+    }
+   ]
+  },
+  {
+   "id": "CAT_16M",
+   "siteModel": "CAT 16M",
+   "make": "Cat",
+   "model": "16M",
+   "specModel": "Caterpillar 16M",
+   "classLabel": "Grader",
+   "road": "HV",
+   "shape": "grader",
+   "units": [
+    "GR308"
+   ],
+   "width": 3.096,
+   "toolWidth": 4.877,
+   "length": 9.963,
+   "height": 3.703,
+   "eyeH": 3.103,
+   "visH": 1.85,
+   "eyeBack": 6.18,
+   "eyeRight": 0.0,
+   "tyre": "18.00-25 12PR (G-2)",
+   "estimated": [
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://crosscountryis.com/pdf/CAT16MMotorGrader.pdf",
+     "title": "Cat 16M Motor Grader specalog AEHQ5734-03 (06-10) (third-party host)"
+    }
+   ]
+  },
+  {
+   "id": "HILUX",
+   "siteModel": "HILUX",
+   "make": "Toyota",
+   "model": "HiLux 4x4 Double-Cab Pick-Up",
+   "specModel": "Toyota HiLux 4x4 Double-Cab Pick-Up (9th gen, built from Aug 2025; WorkMate / SR)",
+   "classLabel": "Light vehicle",
+   "road": "LV",
+   "shape": "ute",
+   "units": [
+    "LV034",
+    "LV036",
+    "LV037",
+    "LV038",
+    "LV040",
+    "LV042"
+   ],
+   "width": 1.855,
+   "toolWidth": null,
+   "length": 5.32,
+   "height": 1.865,
+   "eyeH": 1.5,
+   "visH": 1.25,
+   "eyeBack": 2.39,
+   "eyeRight": 0.4,
+   "tyre": "265/65R17 (WorkMate, SR); 265/60R18 (SR5 and above)",
+   "estimated": [
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://www.toyota.com.au/-/media/toyota/main-site/vehicle-hubs/hilux/files/20260928_hilux_spec_sheet_gto010309.pdf",
+     "title": "Toyota HiLux Spec Table, September 2026 (GTO-010309-00), Toyota Australia"
+    },
+    {
+     "url": "https://www.carexpert.com.au/toyota/hilux/2026/sr/exterior-and-dimensions",
+     "title": "CarExpert 2026 Toyota HiLux SR Exterior & Dimensions (third-party)"
+    }
+   ]
+  },
+  {
+   "id": "Landcruiser",
+   "siteModel": "Landcruiser",
+   "make": "Toyota",
+   "model": "LandCruiser 79 Series Double-Cab Cab-Chassis",
+   "specModel": "Toyota LandCruiser 79 Series Double-Cab Cab-Chassis (2.8L)",
+   "classLabel": "Light vehicle",
+   "road": "LV",
+   "shape": "ute",
+   "units": [
+    "LV027",
+    "LV046"
+   ],
+   "width": 1.79,
+   "toolWidth": null,
+   "length": 5.235,
+   "height": 1.96,
+   "eyeH": 1.5,
+   "visH": 1.25,
+   "eyeBack": 2.36,
+   "eyeRight": 0.4,
+   "tyre": null,
+   "estimated": [
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://www.toyota.com.au/-/media/toyota/main-site/vehicle-hubs/lc70/files/20251021_lc70_spec_table_gto009454.pdf",
+     "title": "Toyota LandCruiser 70 spec table, October 2025 (Toyota Australia)"
+    }
+   ]
+  },
+  {
+   "id": "LANDCRUISER_78_SERIES",
+   "siteModel": "LANDCRUISER 78 SERIES",
+   "make": "Toyota",
+   "model": "LandCruiser 78 Series Troop Carrier",
+   "specModel": "Toyota LandCruiser 78 Series Troop Carrier (2.8L)",
+   "classLabel": "Light vehicle",
+   "road": "LV",
+   "shape": "wagon",
+   "units": [
+    "LV011"
+   ],
+   "width": 1.8,
+   "toolWidth": null,
+   "length": 5.235,
+   "height": 2.115,
+   "eyeH": 1.5,
+   "visH": 1.25,
+   "eyeBack": 2.36,
+   "eyeRight": 0.4,
+   "tyre": null,
+   "estimated": [
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://www.toyota.com.au/-/media/toyota/main-site/vehicle-hubs/lc70/files/20251021_lc70_spec_table_gto009454.pdf",
+     "title": "Toyota LandCruiser 70 spec table, October 2025 (Toyota Australia)"
+    }
+   ]
+  },
+  {
+   "id": "PRADO",
+   "siteModel": "PRADO",
+   "make": "Toyota",
+   "model": "LandCruiser Prado",
+   "specModel": "Toyota LandCruiser Prado (250 Series)",
+   "classLabel": "Light vehicle",
+   "road": "LV",
+   "shape": "wagon",
+   "units": [
+    "LV026",
+    "LV030",
+    "LV043",
+    "LV044"
+   ],
+   "width": 1.98,
+   "toolWidth": null,
+   "length": 4.99,
+   "height": 1.925,
+   "eyeH": 1.5,
+   "visH": 1.25,
+   "eyeBack": 2.25,
+   "eyeRight": 0.4,
+   "tyre": null,
+   "estimated": [
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://www.toyota.com.au/-/media/toyota/main-site/vehicle-hubs/prado/files/20260626-landcruiser-prado-spec-sheet-010021.pdf",
+     "title": "Toyota LandCruiser Prado spec sheet, June 2026 (Toyota Australia)"
+    }
+   ]
+  },
+  {
+   "id": "ISUZU",
+   "siteModel": "ISUZU",
+   "make": "Isuzu",
+   "model": "NPR 75-190 MWB",
+   "specModel": "Isuzu NPR 75-190 MWB (typical N Series light truck)",
+   "classLabel": "Light truck",
+   "road": "LV",
+   "shape": "lighttruck",
+   "units": [
+    "LV002"
+   ],
+   "width": 2.115,
+   "toolWidth": null,
+   "length": 5.985,
+   "height": 2.27,
+   "eyeH": 1.67,
+   "visH": 1.14,
+   "eyeBack": 0.72,
+   "eyeRight": 0.4,
+   "tyre": "205/75R17.5 124/122M",
+   "estimated": [
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://www.isuzu.com.au/media/Isuzu_Files/Spec_Sheets/Current_spec_sheets/NPR%2075-190.pdf",
+     "title": "Isuzu NPR 75-190 spec sheet MY22 09.22 (Isuzu Australia)"
+    }
+   ]
+  },
+  {
+   "id": "WESTERN_STAR",
+   "siteModel": "WESTERN STAR",
+   "make": "Western Star",
+   "model": "4800FXC / 4900FXC",
+   "specModel": "Western Star 4800FXC / 4900FXC (Australian spec)",
+   "classLabel": "Service truck (road)",
+   "road": "LV",
+   "shape": "lighttruck",
+   "units": [
+    "ST002"
+   ],
+   "width": 2.5,
+   "toolWidth": null,
+   "length": 8.5,
+   "height": 3.092,
+   "eyeH": 2.49,
+   "visH": 1.55,
+   "eyeBack": 1.02,
+   "eyeRight": 0.4,
+   "tyre": "Front 295/80R22.5; rear 11R22.5",
+   "estimated": [
+    "width",
+    "length",
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://www.westernstar.com.au/wp-content/uploads/2016/04/4800-4900FXC-Detroit-Spec-Sheet.pdf",
+     "title": "Western Star 4800/4900FXC Detroit spec sheet (Western Star Australia, 2016)"
+    },
+    {
+     "url": "https://www.westernstar.com.au/wp-content/uploads/2020/04/4900-FXT-Spec-Sheet.pdf",
+     "title": "Western Star 4900 FXT spec sheet (2020)"
+    }
+   ]
+  },
+  {
+   "id": "25T_Crane",
+   "siteModel": "25T Crane",
+   "make": "Franna",
+   "model": "Terex MAC25",
+   "specModel": "Terex Franna MAC25 (MAC25-5 current; dimensions from MAC25-3). No 'AT-25' model found.",
+   "classLabel": "Mobile crane",
+   "road": "LV",
+   "shape": "crane",
+   "units": [
+    "CRA01"
+   ],
+   "width": 2.72,
+   "toolWidth": null,
+   "length": 9.985,
+   "height": 3.075,
+   "eyeH": 2.475,
+   "visH": 1.54,
+   "eyeBack": 2.5,
+   "eyeRight": 0.0,
+   "tyre": "14.00 x 20 (MAC25-5 sheet prints '14.00 x 2.0'; MAC25-3: 14.00 x 20 bias ply duals)",
+   "estimated": [
+    "eyeH",
+    "visH",
+    "eyeBack",
+    "eyeRight"
+   ],
+   "sources": [
+    {
+     "url": "https://www.terex.com/docs/librariesprovider22/default-document-library/mac25-5_en_2025.pdf",
+     "title": "Terex Franna MAC25-5 Pick and Carry Crane Technical Datasheet (2025)"
+    },
+    {
+     "url": "https://universalcranes.com/wp-content/uploads/2023/07/25T-FRANNA-MAC25-SL-1.pdf",
+     "title": "Franna MAC 25-3 Datasheet - Metric (Terex, hosted by Universal Cranes)"
+    }
+   ]
+  }
+ ]
+}

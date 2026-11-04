@@ -1,0 +1,997 @@
+{
+ "meta": {
+  "source_workbook": "calc.xlsm (Haulage Calculator Spreadsheet, Short Term Planning)",
+  "extracted": "2026-11-04",
+  "extractor": "openpyxl cached values (data_only=True) + formulas (data_only=False)",
+  "float_note": "All numbers are IEEE-754 doubles exactly as cached by Excel (JSON repr round-trips).",
+  "description": "All lookup/assumption tables of the haulage calculator in clean JSON."
+ },
+ "speed_tables": {
+  "applies_to_all_truck_types": true,
+  "note": "There is exactly ONE loaded and ONE unloaded grade->speed table. The truck type selected in ActiveRoute!C3 does NOT change speeds. 'Travel Time'!AG2 ('CAT789C') and AM2 ('KOM1500HD') are bare labels with no table beneath them.",
+  "grade_units": "fraction (0.01 = 1 %), positive = uphill in the direction of travel",
+  "lookup": "VLOOKUP(ROUND(grade,2), table, 2, FALSE) -> exact match on grade rounded half-away-from-zero to 2 dp; no match (|rounded grade| > 0.16) -> '' (segment time excluded from totals)",
+  "loaded": {
+   "source_range": "'Travel Time'!P3:Q35",
+   "header": [
+    "Grade (%)",
+    "Max Speed (km/h)"
+   ],
+   "rows": [
+    {
+     "grade": -0.16,
+     "max_speed_kmh": 12
+    },
+    {
+     "grade": -0.15,
+     "max_speed_kmh": 12
+    },
+    {
+     "grade": -0.14,
+     "max_speed_kmh": 12
+    },
+    {
+     "grade": -0.13,
+     "max_speed_kmh": 12
+    },
+    {
+     "grade": -0.12,
+     "max_speed_kmh": 12
+    },
+    {
+     "grade": -0.11,
+     "max_speed_kmh": 12
+    },
+    {
+     "grade": -0.1,
+     "max_speed_kmh": 12
+    },
+    {
+     "grade": -0.09,
+     "max_speed_kmh": 12
+    },
+    {
+     "grade": -0.08,
+     "max_speed_kmh": 12
+    },
+    {
+     "grade": -0.07,
+     "max_speed_kmh": 20
+    },
+    {
+     "grade": -0.06,
+     "max_speed_kmh": 20
+    },
+    {
+     "grade": -0.05,
+     "max_speed_kmh": 30
+    },
+    {
+     "grade": -0.04,
+     "max_speed_kmh": 30
+    },
+    {
+     "grade": -0.03,
+     "max_speed_kmh": 30
+    },
+    {
+     "grade": -0.02,
+     "max_speed_kmh": 30
+    },
+    {
+     "grade": -0.01,
+     "max_speed_kmh": 30
+    },
+    {
+     "grade": 0,
+     "max_speed_kmh": 30
+    },
+    {
+     "grade": 0.01,
+     "max_speed_kmh": 30
+    },
+    {
+     "grade": 0.02,
+     "max_speed_kmh": 30
+    },
+    {
+     "grade": 0.03,
+     "max_speed_kmh": 30
+    },
+    {
+     "grade": 0.04,
+     "max_speed_kmh": 30
+    },
+    {
+     "grade": 0.05,
+     "max_speed_kmh": 30
+    },
+    {
+     "grade": 0.06,
+     "max_speed_kmh": 20
+    },
+    {
+     "grade": 0.07,
+     "max_speed_kmh": 20
+    },
+    {
+     "grade": 0.08,
+     "max_speed_kmh": 12
+    },
+    {
+     "grade": 0.09,
+     "max_speed_kmh": 12
+    },
+    {
+     "grade": 0.1,
+     "max_speed_kmh": 12
+    },
+    {
+     "grade": 0.11,
+     "max_speed_kmh": 12
+    },
+    {
+     "grade": 0.12,
+     "max_speed_kmh": 12
+    },
+    {
+     "grade": 0.13,
+     "max_speed_kmh": 12
+    },
+    {
+     "grade": 0.14,
+     "max_speed_kmh": 12
+    },
+    {
+     "grade": 0.15,
+     "max_speed_kmh": 12
+    },
+    {
+     "grade": 0.16,
+     "max_speed_kmh": 12
+    }
+   ]
+  },
+  "unloaded": {
+   "source_range": "'Travel Time'!S3:T35",
+   "header": [
+    "Grade (%)",
+    "Max Speed (km/h)"
+   ],
+   "rows": [
+    {
+     "grade": -0.16,
+     "max_speed_kmh": 14
+    },
+    {
+     "grade": -0.15,
+     "max_speed_kmh": 14
+    },
+    {
+     "grade": -0.14,
+     "max_speed_kmh": 14
+    },
+    {
+     "grade": -0.13,
+     "max_speed_kmh": 14
+    },
+    {
+     "grade": -0.12,
+     "max_speed_kmh": 14
+    },
+    {
+     "grade": -0.11,
+     "max_speed_kmh": 14
+    },
+    {
+     "grade": -0.1,
+     "max_speed_kmh": 14
+    },
+    {
+     "grade": -0.09,
+     "max_speed_kmh": 14
+    },
+    {
+     "grade": -0.08,
+     "max_speed_kmh": 14
+    },
+    {
+     "grade": -0.07,
+     "max_speed_kmh": 20,
+     "formula": "=Q12"
+    },
+    {
+     "grade": -0.06,
+     "max_speed_kmh": 20,
+     "formula": "=Q13"
+    },
+    {
+     "grade": -0.05,
+     "max_speed_kmh": 30,
+     "formula": "=Q14"
+    },
+    {
+     "grade": -0.04,
+     "max_speed_kmh": 30,
+     "formula": "=Q15"
+    },
+    {
+     "grade": -0.03,
+     "max_speed_kmh": 30,
+     "formula": "=Q16"
+    },
+    {
+     "grade": -0.02,
+     "max_speed_kmh": 30,
+     "formula": "=Q17"
+    },
+    {
+     "grade": -0.01,
+     "max_speed_kmh": 30,
+     "formula": "=Q18"
+    },
+    {
+     "grade": 0,
+     "max_speed_kmh": 30,
+     "formula": "=Q19"
+    },
+    {
+     "grade": 0.01,
+     "max_speed_kmh": 30,
+     "formula": "=Q20"
+    },
+    {
+     "grade": 0.02,
+     "max_speed_kmh": 30,
+     "formula": "=Q21"
+    },
+    {
+     "grade": 0.03,
+     "max_speed_kmh": 30,
+     "formula": "=Q22"
+    },
+    {
+     "grade": 0.04,
+     "max_speed_kmh": 30,
+     "formula": "=Q23"
+    },
+    {
+     "grade": 0.05,
+     "max_speed_kmh": 30,
+     "formula": "=Q24"
+    },
+    {
+     "grade": 0.06,
+     "max_speed_kmh": 20,
+     "formula": "=Q25"
+    },
+    {
+     "grade": 0.07,
+     "max_speed_kmh": 20,
+     "formula": "=Q26"
+    },
+    {
+     "grade": 0.08,
+     "max_speed_kmh": 14
+    },
+    {
+     "grade": 0.09,
+     "max_speed_kmh": 14
+    },
+    {
+     "grade": 0.1,
+     "max_speed_kmh": 14
+    },
+    {
+     "grade": 0.11,
+     "max_speed_kmh": 14
+    },
+    {
+     "grade": 0.12,
+     "max_speed_kmh": 14
+    },
+    {
+     "grade": 0.13,
+     "max_speed_kmh": 14
+    },
+    {
+     "grade": 0.14,
+     "max_speed_kmh": 14
+    },
+    {
+     "grade": 0.15,
+     "max_speed_kmh": 14
+    },
+    {
+     "grade": 0.16,
+     "max_speed_kmh": 14
+    }
+   ],
+   "note": "T12:T26 are formulas =Q12..=Q26 (linked to the loaded table); T3:T11 and T27:T35 are constants 14."
+  }
+ },
+ "excavator_assumptions": {
+  "source": "ActiveRoute!H2:J34 ('EXCAVATOR ASSUMPTIONS', planned rates from 2025 Budget SPRY)",
+  "units": {
+   "times": "s",
+   "planned_rate": "bcm per production-time hour (bcm/PT)"
+  },
+  "ideal_avg_hours_pt_per_day": {
+   "cell": "ActiveRoute!I34",
+   "value": 20,
+   "label": "Ideal Avg Hours",
+   "unit": "PT/day"
+  },
+  "excavators": {
+   "EX04": {
+    "source_rows": "ActiveRoute!H4:J8",
+    "model": "KOM PC4000 (400-ton class)",
+    "dump_time_s": 60,
+    "spot_time_s": 30,
+    "loading_time_s": 116,
+    "planned_rate_bcm_per_pt_hr": 1300,
+    "unlabelled_note": {
+     "cell": "ActiveRoute!K7",
+     "value": 155,
+     "comment": "Unlabelled value beside EX04 loading time (116 s). Not referenced by any formula. Equals EX06 loading time and the 155 s used in the hidden TABLE sheet."
+    }
+   },
+   "EX07": {
+    "source_rows": "ActiveRoute!H10:J14",
+    "model": "LIEB R996B (600-ton class)",
+    "dump_time_s": 60,
+    "spot_time_s": 30,
+    "loading_time_s": 110,
+    "planned_rate_bcm_per_pt_hr": 1800
+   },
+   "EX06": {
+    "source_rows": "ActiveRoute!H16:J20",
+    "model": "HIT EX2600 (250-ton class)",
+    "dump_time_s": 60,
+    "spot_time_s": 30,
+    "loading_time_s": 155,
+    "planned_rate_bcm_per_pt_hr": 900
+   },
+   "LDR": {
+    "source_rows": "ActiveRoute!H22:J26",
+    "model": "KOM WA900 (100-ton class)",
+    "dump_time_s": 60,
+    "spot_time_s": 30,
+    "loading_time_s": 245,
+    "planned_rate_bcm_per_pt_hr": 650
+   },
+   "EX09": {
+    "source_rows": "ActiveRoute!H28:J32",
+    "model": "HIT EX5600 (550-ton class)",
+    "dump_time_s": 60,
+    "spot_time_s": 30,
+    "loading_time_s": 110,
+    "planned_rate_bcm_per_pt_hr": 1800
+   }
+  },
+  "dropdown_B3_source": {
+   "range": "ActiveRoute!U5:U9",
+   "values": [
+    "EX04",
+    "EX07",
+    "EX06",
+    "LDR",
+    "EX09"
+   ]
+  }
+ },
+ "truck_fleets": {
+  "source": "ActiveRoute!M4:O10",
+  "rows": [
+   {
+    "truck_type": "CAT789C (OB)",
+    "num_trucks_note": "(3)",
+    "truck_class": "180t"
+   },
+   {
+    "truck_type": "KOM1500HD (OB)",
+    "num_trucks_note": "(3)",
+    "truck_class": "140t"
+   },
+   {
+    "truck_type": "CAT789C (COAL)",
+    "num_trucks_note": "(3)",
+    "truck_class": "180t"
+   },
+   {
+    "truck_type": "KOM1500HD (COAL)",
+    "num_trucks_note": "(3)",
+    "truck_class": "140t"
+   },
+   {
+    "truck_type": "CAT789D (OB)",
+    "num_trucks_note": "(8)",
+    "truck_class": "190t"
+   },
+   {
+    "truck_type": "CAT789D (COAL)",
+    "num_trucks_note": "(8)",
+    "truck_class": "190t"
+   }
+  ],
+  "dropdown_C3_source": {
+   "range": "ActiveRoute!M5:M10",
+   "values": [
+    "CAT789C (OB)",
+    "KOM1500HD (OB)",
+    "CAT789C (COAL)",
+    "KOM1500HD (COAL)",
+    "CAT789D (OB)",
+    "CAT789D (COAL)"
+   ]
+  },
+  "comments": {
+   "M5": "CAT-789C Dual Slope",
+   "O5": "177metric tonnes (195 short ton US)",
+   "O6": "144 metric tonnes (160 short ton US)",
+   "O7": "177metric tonnes (195 short ton US)",
+   "O8": "144 metric tonnes (160 short ton US)"
+  }
+ },
+ "truck_load_bcm": {
+  "source": "ActiveRoute!M12:O18",
+  "rows": [
+   {
+    "cell": "ActiveRoute!N12",
+    "label": "Truck Load BCM (789C)",
+    "bcm": 104,
+    "material": "OB"
+   },
+   {
+    "cell": "ActiveRoute!N13",
+    "label": "Truck Load BCM (1500)",
+    "bcm": 89,
+    "material": "OB"
+   },
+   {
+    "cell": "ActiveRoute!N14",
+    "label": "Truck Load BCM (789D)",
+    "bcm": 104,
+    "material": "OB"
+   },
+   {
+    "cell": "ActiveRoute!N15",
+    "label": null,
+    "bcm": null,
+    "material": null
+   },
+   {
+    "cell": "ActiveRoute!N16",
+    "label": "Truck Load BCM (789C)",
+    "bcm": 100,
+    "material": "CL"
+   },
+   {
+    "cell": "ActiveRoute!N17",
+    "label": "Truck Load BCM (1500)",
+    "bcm": 100,
+    "material": "CL"
+   },
+   {
+    "cell": "ActiveRoute!N18",
+    "label": "Truck Load BCM (789D)",
+    "bcm": 100,
+    "material": "CL"
+   }
+  ],
+  "truck_type_to_load": {
+   "formula": "=IF(C3=\"CAT789C (OB)\",N12,IF(C3=\"KOM1500HD (OB)\",N13,IF(C3=\"CAT789C (COAL)\",N16,IF(C3=\"KOM1500HD (COAL)\",N17,IF(C3=\"CAT789D (OB)\",N14,IF(C3=\"CAT789D (COAL)\",N18,\"\"))))))",
+   "map": {
+    "CAT789C (OB)": {
+     "cell": "N12",
+     "bcm": 104
+    },
+    "KOM1500HD (OB)": {
+     "cell": "N13",
+     "bcm": 89
+    },
+    "CAT789C (COAL)": {
+     "cell": "N16",
+     "bcm": 100
+    },
+    "KOM1500HD (COAL)": {
+     "cell": "N17",
+     "bcm": 100
+    },
+    "CAT789D (OB)": {
+     "cell": "N14",
+     "bcm": 104
+    },
+    "CAT789D (COAL)": {
+     "cell": "N18",
+     "bcm": 100
+    }
+   },
+   "fallback": "\"\" (empty string -> downstream #VALUE!)"
+  }
+ },
+ "material_density_t_per_cbm": {
+  "source": "ActiveRoute!M22:O23",
+  "OB": 1.53,
+  "COAL": 1.05,
+  "note": "Informational; not referenced by any formula."
+ },
+ "excavator_bucket_capacity": {
+  "source": "ActiveRoute!Q4:R8 ('Bucket Capacity TBC'; R5 comment: 'cbm before swell')",
+  "rows": [
+   {
+    "unit": "EX04",
+    "bucket": "22cbm"
+   },
+   {
+    "unit": "EX07",
+    "bucket": "34cbm"
+   },
+   {
+    "unit": "EX06",
+    "bucket": "15cbm"
+   },
+   {
+    "unit": "LDR401/402",
+    "bucket": "18cbm"
+   }
+  ]
+ },
+ "truck_bcm_transcale_vs_spec": {
+  "source": "ActiveRoute!Q10:R16",
+  "header": [
+   "Transcale Study (2024)",
+   "Spec Sheet (nominal only)"
+  ],
+  "rows": [
+   {
+    "row": 12,
+    "transcale_bcm": 104,
+    "spec_sheet_bcm": 105
+   },
+   {
+    "row": 13,
+    "transcale_bcm": 89,
+    "spec_sheet_bcm": 78
+   },
+   {
+    "row": 15,
+    "transcale_bcm": 98,
+    "spec_sheet_bcm": "-"
+   },
+   {
+    "row": 16,
+    "transcale_bcm": 100,
+    "spec_sheet_bcm": "-"
+   }
+  ],
+  "comments": {
+   "R12": "Heaped bcm - CAT spec sheet",
+   "R13": "Heaped bcm - KOM spec sheet"
+  },
+  "note": "Rows align with M12 (789C OB) and M13 (1500 OB); Q15=98 / Q16=100 appear to be the CAT789 / KOM1500 coal round-ups from AA20 / AA19. Informational only."
+ },
+ "swell_factor": {
+  "cell": "ActiveRoute!AD4",
+  "value": 1.2,
+  "label": "LCM density -> BCM density multiplier ('Swelled to get bank density', t/m3)"
+ },
+ "transcale_2024": {
+  "source": "ActiveRoute!W4:AE15",
+  "rows": [
+   {
+    "row": 7,
+    "truck_type": "Komatsu HD1500",
+    "seam": "Rejects",
+    "avg_density_t_per_lcm": 1.35,
+    "avg_volume_cbm": 72.6,
+    "avg_weight_t": 98.5,
+    "truck_tonnage_t": 144,
+    "bcm_density_t_per_bcm": 1.62,
+    "bcm_per_load": 88.88888888888889,
+    "formulas": {
+     "AD": "=Y7*$AD$4",
+     "AE": "=AC7/AD7"
+    }
+   },
+   {
+    "row": 8,
+    "truck_type": "Komatsu HD1500",
+    "seam": "Overburden",
+    "avg_density_t_per_lcm": 1.44,
+    "avg_volume_cbm": 91.02,
+    "avg_weight_t": 131.5,
+    "truck_tonnage_t": 144,
+    "bcm_density_t_per_bcm": 1.728,
+    "bcm_per_load": 83.33333333333333,
+    "formulas": {
+     "AD": "=Y8*$AD$4",
+     "AE": "=AC8/AD8"
+    }
+   },
+   {
+    "row": 9,
+    "truck_type": "Cat 789C",
+    "seam": "Overburden",
+    "avg_density_t_per_lcm": 1.46,
+    "avg_volume_cbm": 104.85,
+    "avg_weight_t": 153.2,
+    "truck_tonnage_t": 177,
+    "bcm_density_t_per_bcm": 1.752,
+    "bcm_per_load": 101.02739726027397,
+    "formulas": {
+     "AD": "=Y9*$AD$4",
+     "AE": "=AC9/AD9"
+    }
+   },
+   {
+    "row": 10,
+    "truck_type": "Cat 789C",
+    "seam": "Interburden",
+    "avg_density_t_per_lcm": 1.62,
+    "avg_volume_cbm": 102.16,
+    "avg_weight_t": 165.3,
+    "truck_tonnage_t": 177,
+    "bcm_density_t_per_bcm": 1.944,
+    "bcm_per_load": 91.04938271604938,
+    "formulas": {
+     "AD": "=Y10*$AD$4",
+     "AE": "=AC10/AD10"
+    }
+   },
+   {
+    "row": 11,
+    "truck_type": "Komatsu HD1500",
+    "seam": "Interburden",
+    "avg_density_t_per_lcm": 1.63,
+    "avg_volume_cbm": 86.28,
+    "avg_weight_t": 140.89,
+    "truck_tonnage_t": 144,
+    "bcm_density_t_per_bcm": 1.9559999999999997,
+    "bcm_per_load": 73.6196319018405,
+    "formulas": {
+     "AD": "=Y11*$AD$4",
+     "AE": "=AC11/AD11"
+    }
+   },
+   {
+    "row": 12,
+    "truck_type": "Komatsu HD1500",
+    "seam": "Coal - MA2B",
+    "avg_density_t_per_lcm": 0.98,
+    "avg_volume_cbm": 99.27,
+    "avg_weight_t": 97.5,
+    "truck_tonnage_t": 144,
+    "bcm_density_t_per_bcm": 1.176,
+    "bcm_per_load": 122.44897959183675,
+    "formulas": {
+     "AD": "=Y12*$AD$4",
+     "AE": "=AC12/AD12"
+    }
+   },
+   {
+    "row": 13,
+    "truck_type": "Komatsu HD1500",
+    "seam": "Coal - MA3",
+    "avg_density_t_per_lcm": 1.04,
+    "avg_volume_cbm": 97.6,
+    "avg_weight_t": 100,
+    "truck_tonnage_t": 144,
+    "bcm_density_t_per_bcm": 1.248,
+    "bcm_per_load": 115.38461538461539,
+    "formulas": {
+     "AD": "=Y13*$AD$4",
+     "AE": "=AC13/AD13"
+    }
+   },
+   {
+    "row": 14,
+    "truck_type": "Cat 789C",
+    "seam": "Coal - MA3",
+    "avg_density_t_per_lcm": 1.06,
+    "avg_volume_cbm": 97.8,
+    "avg_weight_t": 104.36,
+    "truck_tonnage_t": 177,
+    "bcm_density_t_per_bcm": 1.272,
+    "bcm_per_load": 139.1509433962264,
+    "formulas": {
+     "AD": "=Y14*$AD$4",
+     "AE": "=AC14/AD14"
+    }
+   }
+  ],
+  "summary_rows_X16_AE20": [
+   {
+    "row": 17,
+    "label_X": "OB",
+    "label_AB": "KOM1500 Waste",
+    "avg_density": {
+     "cell": "ActiveRoute!Y17",
+     "value": 1.5374999999999999,
+     "formula": "=AVERAGE(Y8:Y11)"
+    },
+    "avg_bcm": {
+     "cell": "ActiveRoute!Z17",
+     "value": 88.65,
+     "formula": "=(Z8+Z11)/2"
+    },
+    "round_up": {
+     "cell": "ActiveRoute!AA17",
+     "value": 89,
+     "formula": "=ROUNDUP(Z17,0)"
+    },
+    "truck_tonnage_t": 140,
+    "bcm_density": {
+     "cell": "ActiveRoute!AD17",
+     "value": 1.8449999999999998,
+     "formula": "=Y17*$AD$4"
+    },
+    "bcm_per_load": {
+     "cell": "ActiveRoute!AE17",
+     "value": 75.88075880758808,
+     "formula": "=AC17/AD17"
+    }
+   },
+   {
+    "row": 18,
+    "label_X": "CL",
+    "label_AB": "CAT789 Waste",
+    "avg_density": {
+     "cell": "ActiveRoute!Y18",
+     "value": 1.0266666666666666,
+     "formula": "=AVERAGE(Y12:Y14)"
+    },
+    "avg_bcm": {
+     "cell": "ActiveRoute!Z18",
+     "value": 103.505,
+     "formula": "=(Z9+Z10)/2"
+    },
+    "round_up": {
+     "cell": "ActiveRoute!AA18",
+     "value": 104,
+     "formula": "=ROUNDUP(Z18,0)"
+    },
+    "truck_tonnage_t": 180,
+    "bcm_density": {
+     "cell": "ActiveRoute!AD18",
+     "value": 1.232,
+     "formula": "=Y18*$AD$4"
+    },
+    "bcm_per_load": {
+     "cell": "ActiveRoute!AE18",
+     "value": 146.10389610389612,
+     "formula": "=AC18/AD18"
+    }
+   },
+   {
+    "row": 19,
+    "label_X": "OB",
+    "label_AB": "KOM1500 Coal",
+    "avg_density": {
+     "cell": "ActiveRoute!Y19",
+     "value": 1.3175000000000001,
+     "formula": "=AVERAGE(Y10:Y13)"
+    },
+    "avg_bcm": {
+     "cell": "ActiveRoute!Z19",
+     "value": 99.27,
+     "formula": "=Z12"
+    },
+    "round_up": {
+     "cell": "ActiveRoute!AA19",
+     "value": 100,
+     "formula": "=ROUNDUP(Z19,0)"
+    },
+    "truck_tonnage_t": 140,
+    "bcm_density": {
+     "cell": "ActiveRoute!AD19",
+     "value": 1.5810000000000002,
+     "formula": "=Y19*$AD$4"
+    },
+    "bcm_per_load": {
+     "cell": "ActiveRoute!AE19",
+     "value": 88.55154965211891,
+     "formula": "=AC19/AD19"
+    }
+   },
+   {
+    "row": 20,
+    "label_X": "CL",
+    "label_AB": "CAT789 Coal",
+    "avg_density": {
+     "cell": "ActiveRoute!Y20",
+     "value": 1.06,
+     "formula": "=AVERAGE(Y14:Y16)"
+    },
+    "avg_bcm": {
+     "cell": "ActiveRoute!Z20",
+     "value": 97.8,
+     "formula": "=Z14"
+    },
+    "round_up": {
+     "cell": "ActiveRoute!AA20",
+     "value": 98,
+     "formula": "=ROUNDUP(Z20,0)"
+    },
+    "truck_tonnage_t": 180,
+    "bcm_density": {
+     "cell": "ActiveRoute!AD20",
+     "value": 1.272,
+     "formula": "=Y20*$AD$4"
+    },
+    "bcm_per_load": {
+     "cell": "ActiveRoute!AE20",
+     "value": 141.50943396226415,
+     "formula": "=AC20/AD20"
+    }
+   }
+  ],
+  "note": "Informational only - no ActiveRoute calc references this block (N12:N18 are typed constants)."
+ },
+ "transcale_2025_cat789d_custom_tray": {
+  "source": "ActiveRoute!AG4:AK14",
+  "rows": [
+   {
+    "row": 7,
+    "material": "Parting",
+    "samples": 36,
+    "lcm_density_t_per_lcm": 1.63,
+    "bcm_density": {
+     "cell": "ActiveRoute!AJ7",
+     "value": 1.9559999999999997,
+     "formula": "=AI7*$AD$4"
+    },
+    "bcm_per_load_custom_tray": {
+     "cell": "ActiveRoute!AK7",
+     "value": 92.99591002044991,
+     "formula": "=$AI$13/AJ7"
+    }
+   },
+   {
+    "row": 8,
+    "material": "Overburden",
+    "samples": 35,
+    "lcm_density_t_per_lcm": 1.44,
+    "bcm_density": {
+     "cell": "ActiveRoute!AJ8",
+     "value": 1.728,
+     "formula": "=AI8*$AD$4"
+    },
+    "bcm_per_load_custom_tray": {
+     "cell": "ActiveRoute!AK8",
+     "value": 105.26620370370371,
+     "formula": "=$AI$13/AJ8"
+    }
+   },
+   {
+    "row": 9,
+    "material": "MA1 Coal",
+    "samples": 5,
+    "lcm_density_t_per_lcm": 0.98,
+    "bcm_density": {
+     "cell": "ActiveRoute!AJ9",
+     "value": 1.176,
+     "formula": "=AI9*$AD$4"
+    },
+    "bcm_per_load_custom_tray": {
+     "cell": "ActiveRoute!AK9",
+     "value": 154.67687074829934,
+     "formula": "=$AI$13/AJ9"
+    }
+   },
+   {
+    "row": 10,
+    "material": "MA2 Coal",
+    "samples": 20,
+    "lcm_density_t_per_lcm": 0.9,
+    "bcm_density": {
+     "cell": "ActiveRoute!AJ10",
+     "value": 1.08,
+     "formula": "=AI10*$AD$4"
+    },
+    "bcm_per_load_custom_tray": {
+     "cell": "ActiveRoute!AK10",
+     "value": 168.42592592592592,
+     "formula": "=$AI$13/AJ10"
+    }
+   }
+  ],
+  "truck_tonnage_transcale_actual_t": {
+   "cell": "ActiveRoute!AI13",
+   "value": 181.9
+  },
+  "truck_tonnage_nominal_design_t": {
+   "cell": "ActiveRoute!AI14",
+   "value": 185.5
+  },
+  "scratch_calcs": [
+   {
+    "cell": "ActiveRoute!AG22",
+    "value": 65.17,
+    "formula": "=0.98*66.5"
+   },
+   {
+    "cell": "ActiveRoute!AH22",
+    "value": 89
+   },
+   {
+    "cell": "ActiveRoute!AI22",
+    "value": 1.3656590455731163,
+    "formula": "=AH22/AG22"
+   },
+   {
+    "cell": "ActiveRoute!AG23",
+    "value": 63.57142857142858,
+    "formula": "=89/1.4"
+   }
+  ]
+ },
+ "daily_volume_guide_bcm_per_day": {
+  "source": "ActiveRoute!BR3:BT10 ('Daily Vol Guide *', assumed from 2025 Budget)",
+  "EX04": {
+   "cell": "ActiveRoute!BS5",
+   "value": 18942
+  },
+  "EX07": {
+   "cell": "ActiveRoute!BS6",
+   "value": 27892
+  },
+  "EX06": {
+   "cell": "ActiveRoute!BS7",
+   "value": 18942,
+   "formula": "=BS5"
+  },
+  "LDR": {
+   "cell": "ActiveRoute!BS8",
+   "value": 9943
+  },
+  "footnote": "* check whether I pulled this above from Schedule export which assumes wet-weather and avail/util applied ",
+  "comments": {
+   "BS5": "Full production day Budget",
+   "BS6": "Full production day Budget",
+   "BS7": "Not loading in Budget so assumption made.",
+   "BS8": "Max 24hrs in Budget"
+  }
+ },
+ "fleet_availability_notes": {
+  "source": "ActiveRoute!H36:I42",
+  "lines": [
+   "8 x CAT789's - Owned",
+   "3 x CAT789's - Hired",
+   "3 x KOM1500HD's - Hired",
+   "14 x Trucks Total "
+  ],
+  "at_92pct": {
+   "cell": "ActiveRoute!H41",
+   "value": 12.88,
+   "formula": "=14*0.92",
+   "label": "~13 @92% Availability"
+  },
+  "at_85pct": {
+   "cell": "ActiveRoute!H42",
+   "value": 11.9,
+   "formula": "=14*0.85",
+   "label": "~12 @85% Availability"
+  }
+ },
+ "stop_sign_penalty": {
+  "seconds_per_stop": 60,
+  "cell": "ActiveRoute!C12",
+  "formula": "=60*C11",
+  "comment_B12": "Test from moment truck reduces speed, stops, and accelerates back up to full speed."
+ },
+ "cycle_time_definitions": {
+  "Dump Time": "Starts when truck stops in postion and raises dump bed. Finishes when truck moves forward. ",
+  "Spot Time": "Starts when truck meneuvers into position (i.e. U-Turn). Finishes when stops under excavator. ",
+  "Loading Time": "Starts when first bucket of material is placed in truck bed. Finishes when last load complete and operator signals truck driver (i.e. horn)"
+ },
+ "haul_efficiency_guidance": {
+  "source": "ActiveRoute!W27:X29 and comment on B6",
+  "lines": [
+   "Highly efficient operations: 90-95%",
+   "Moderate efficiency: 80-90%",
+   "Challenging conditions: 70-80% (e.g., poor roads, weather, frequent delays)"
+  ],
+  "how_to_guide": "typically 0.83 or 0.85"
+ }
+}

@@ -1,0 +1,6534 @@
+{
+ "meta": {
+  "source_workbook": "calc.xlsm (Haulage Calculator Spreadsheet, Short Term Planning)",
+  "extracted": "2026-11-04",
+  "extractor": "openpyxl cached values (data_only=True) + formulas (data_only=False)",
+  "float_note": "All numbers are IEEE-754 doubles exactly as cached by Excel (JSON repr round-trips).",
+  "description": "Every haul string in the 'Raw Data' sheet (rolling history of Deswik/Vulcan string exports), parsed into named options. Use as demo haul strings.",
+  "format_note": "Each block = title row (col A title, col I/J truck note, col M/P flags) + header row ('No.','T','ype','Colour','X','Y','Z','W Name' - Vulcan export split oddly by text-to-columns) + point rows. Only X/Y/Z (cols E/F/G) are meaningful; col B holds the point number mis-parsed as a time, col C the Vulcan point type (0=first/move, 1=draw), col D '...', col H 0. Blocks from row 835 onwards contain only E/F/G.",
+  "geometry_summary_note": "length/net rise computed by the extractor (not cells in the workbook)."
+ },
+ "string_count": 23,
+ "strings": [
+  {
+   "id": "ex07-s51-haul-west-from-mid-point-option-1-front-dump-tier",
+   "order": 1,
+   "title_row": 1,
+   "title": "EX07 - S51 Haul West from Mid Point (Option 1 - FRONT DUMP TIER)",
+   "loading_unit": "EX07",
+   "description": "S51 Haul West from Mid Point (Option 1 - FRONT DUMP TIER)",
+   "duplicate_title_of": null,
+   "truck_note_raw": {
+    "I1": "5 trucks"
+   },
+   "trucks_required": null,
+   "trucks_required_rounded": 5,
+   "truck_note": "5 trucks",
+   "flags": [],
+   "point_format": [
+    "easting_m",
+    "northing_m",
+    "elevation_m"
+   ],
+   "source_columns": "Raw Data E (X = easting), F (Y = northing), G (Z = RL)",
+   "first_point_row": 3,
+   "last_point_row": 19,
+   "point_count": 17,
+   "geometry_summary": {
+    "length_3d_m": 2106.107131306979,
+    "length_2d_m": 2103.5270556378077,
+    "start_rl_m": 329.06,
+    "end_rl_m": 345,
+    "net_rise_m": 15.939999999999998
+   },
+   "is_current_data_dump": false,
+   "spreadsheet_mode_travel": {
+    "derived_not_cached": true,
+    "loaded_time_s": 330.98392211928126,
+    "unloaded_time_s": 314.99400124125606,
+    "segments": 16,
+    "segments_excluded_out_of_range": 0,
+    "distance_m": 2106.107131306979,
+    "timed_distance_m": 2106.107131306979
+   },
+   "points": [
+    [
+     236037.82,
+     7051810.44,
+     329.06
+    ],
+    [
+     235827.46,
+     7051950.95,
+     330.65
+    ],
+    [
+     235633.26,
+     7052118.99,
+     330.81
+    ],
+    [
+     235452.33,
+     7052238.91,
+     335.53
+    ],
+    [
+     235371.88,
+     7052333.88,
+     334.92
+    ],
+    [
+     235301.36,
+     7052406.92,
+     334.52
+    ],
+    [
+     235281.9,
+     7052485.41,
+     335.31
+    ],
+    [
+     235312.87,
+     7052563.89,
+     336.09
+    ],
+    [
+     235345.76,
+     7052609.44,
+     335.99
+    ],
+    [
+     235456.82,
+     7052733.84,
+     337.04
+    ],
+    [
+     235514.31,
+     7052831.04,
+     338.53
+    ],
+    [
+     235551.24,
+     7052854.46,
+     338.96
+    ],
+    [
+     235620.74,
+     7052790.98,
+     333.32
+    ],
+    [
+     235722.81,
+     7052723.08,
+     320.86
+    ],
+    [
+     235796.28,
+     7052670.33,
+     315.68
+    ],
+    [
+     235827.73,
+     7052631.04,
+     317.51
+    ],
+    [
+     236012.53,
+     7052465.116,
+     345
+    ]
+   ]
+  },
+  {
+   "id": "ex07-s51-haul-west-from-mid-point-option-2-fl-level",
+   "order": 2,
+   "title_row": 21,
+   "title": "EX07 - S51 Haul West from Mid Point (Option 2 - FL LEVEL)",
+   "loading_unit": "EX07",
+   "description": "S51 Haul West from Mid Point (Option 2 - FL LEVEL)",
+   "duplicate_title_of": null,
+   "truck_note_raw": {
+    "I21": "5 trucks"
+   },
+   "trucks_required": null,
+   "trucks_required_rounded": 5,
+   "truck_note": "5 trucks",
+   "flags": [],
+   "point_format": [
+    "easting_m",
+    "northing_m",
+    "elevation_m"
+   ],
+   "source_columns": "Raw Data E (X = easting), F (Y = northing), G (Z = RL)",
+   "first_point_row": 23,
+   "last_point_row": 51,
+   "point_count": 29,
+   "geometry_summary": {
+    "length_3d_m": 2473.8328093234104,
+    "length_2d_m": 2473.190131743067,
+    "start_rl_m": 329.06,
+    "end_rl_m": 342.91,
+    "net_rise_m": 13.850000000000023
+   },
+   "is_current_data_dump": false,
+   "spreadsheet_mode_travel": {
+    "derived_not_cached": true,
+    "loaded_time_s": 316.3526896803482,
+    "unloaded_time_s": 313.0290358025145,
+    "segments": 28,
+    "segments_excluded_out_of_range": 0,
+    "distance_m": 2473.8328093234104,
+    "timed_distance_m": 2473.8328093234104
+   },
+   "points": [
+    [
+     236037.82,
+     7051810.44,
+     329.06
+    ],
+    [
+     236037.82,
+     7051810.44,
+     329.06
+    ],
+    [
+     235827.46,
+     7051950.95,
+     330.65
+    ],
+    [
+     235633.26,
+     7052118.99,
+     330.81
+    ],
+    [
+     235452.33,
+     7052238.91,
+     335.53
+    ],
+    [
+     235371.88,
+     7052333.88,
+     334.92
+    ],
+    [
+     235301.36,
+     7052406.92,
+     334.52
+    ],
+    [
+     235281.9,
+     7052485.41,
+     335.31
+    ],
+    [
+     235312.87,
+     7052563.89,
+     336.09
+    ],
+    [
+     235345.76,
+     7052609.44,
+     335.99
+    ],
+    [
+     235456.82,
+     7052733.84,
+     337.04
+    ],
+    [
+     235514.31,
+     7052831.04,
+     338.53
+    ],
+    [
+     235551.24,
+     7052854.46,
+     338.96
+    ],
+    [
+     235586.75,
+     7052928.37,
+     339.93
+    ],
+    [
+     235631.77,
+     7052976.9,
+     340.8
+    ],
+    [
+     235659.133,
+     7053015.233,
+     341.398
+    ],
+    [
+     235686.83,
+     7052999.7,
+     340.88
+    ],
+    [
+     235757.69,
+     7052940.97,
+     334.98
+    ],
+    [
+     235814.691,
+     7052901.362,
+     336.461
+    ],
+    [
+     235848.42,
+     7052880.42,
+     340.22
+    ],
+    [
+     235879.89,
+     7052859.95,
+     343.36
+    ],
+    [
+     235913.8,
+     7052822.99,
+     344.59
+    ],
+    [
+     235952.78,
+     7052774.92,
+     344.51
+    ],
+    [
+     235995.2,
+     7052731.35,
+     344.55
+    ],
+    [
+     236037.23,
+     7052695.84,
+     344.43
+    ],
+    [
+     236076.25,
+     7052661.41,
+     344.05
+    ],
+    [
+     236127.31,
+     7052574.4,
+     342.58
+    ],
+    [
+     236145.32,
+     7052524.57,
+     342.91
+    ],
+    [
+     236093.63,
+     7052468.87,
+     342.91
+    ]
+   ]
+  },
+  {
+   "id": "ex07-s51-haul-west-from-mid-point-option-3-fl-level-long-haul-option",
+   "order": 3,
+   "title_row": 53,
+   "title": "EX07 - S51 Haul West from Mid Point (Option 3 - FL LEVEL - LONG HAUL OPTION)",
+   "loading_unit": "EX07",
+   "description": "S51 Haul West from Mid Point (Option 3 - FL LEVEL - LONG HAUL OPTION)",
+   "duplicate_title_of": null,
+   "truck_note_raw": {
+    "I53": "6 trucks"
+   },
+   "trucks_required": null,
+   "trucks_required_rounded": 6,
+   "truck_note": "6 trucks",
+   "flags": [],
+   "point_format": [
+    "easting_m",
+    "northing_m",
+    "elevation_m"
+   ],
+   "source_columns": "Raw Data E (X = easting), F (Y = northing), G (Z = RL)",
+   "first_point_row": 55,
+   "last_point_row": 87,
+   "point_count": 33,
+   "geometry_summary": {
+    "length_3d_m": 2842.4517193548604,
+    "length_2d_m": 2841.7991050180653,
+    "start_rl_m": 329.06,
+    "end_rl_m": 342.11,
+    "net_rise_m": 13.050000000000011
+   },
+   "is_current_data_dump": false,
+   "spreadsheet_mode_travel": {
+    "derived_not_cached": true,
+    "loaded_time_s": 360.5869588841222,
+    "unloaded_time_s": 357.2633050062885,
+    "segments": 32,
+    "segments_excluded_out_of_range": 0,
+    "distance_m": 2842.451719354861,
+    "timed_distance_m": 2842.451719354861
+   },
+   "points": [
+    [
+     236037.82,
+     7051810.44,
+     329.06
+    ],
+    [
+     236037.82,
+     7051810.44,
+     329.06
+    ],
+    [
+     235827.46,
+     7051950.95,
+     330.65
+    ],
+    [
+     235633.26,
+     7052118.99,
+     330.81
+    ],
+    [
+     235452.33,
+     7052238.91,
+     335.53
+    ],
+    [
+     235371.88,
+     7052333.88,
+     334.92
+    ],
+    [
+     235301.36,
+     7052406.92,
+     334.52
+    ],
+    [
+     235281.9,
+     7052485.41,
+     335.31
+    ],
+    [
+     235312.87,
+     7052563.89,
+     336.09
+    ],
+    [
+     235345.76,
+     7052609.44,
+     335.99
+    ],
+    [
+     235456.82,
+     7052733.84,
+     337.04
+    ],
+    [
+     235514.31,
+     7052831.04,
+     338.53
+    ],
+    [
+     235551.24,
+     7052854.46,
+     338.96
+    ],
+    [
+     235586.75,
+     7052928.37,
+     339.93
+    ],
+    [
+     235631.77,
+     7052976.9,
+     340.8
+    ],
+    [
+     235659.133,
+     7053015.233,
+     341.398
+    ],
+    [
+     235686.83,
+     7052999.7,
+     340.88
+    ],
+    [
+     235757.69,
+     7052940.97,
+     334.98
+    ],
+    [
+     235814.691,
+     7052901.362,
+     336.461
+    ],
+    [
+     235848.42,
+     7052880.42,
+     340.22
+    ],
+    [
+     235879.89,
+     7052859.95,
+     343.36
+    ],
+    [
+     235898.71,
+     7052839.463,
+     344.043
+    ],
+    [
+     235913.8,
+     7052822.99,
+     344.59
+    ],
+    [
+     235952.78,
+     7052774.92,
+     344.51
+    ],
+    [
+     235995.2,
+     7052731.35,
+     344.55
+    ],
+    [
+     236037.23,
+     7052695.84,
+     344.43
+    ],
+    [
+     236076.25,
+     7052661.41,
+     344.05
+    ],
+    [
+     236127.31,
+     7052574.4,
+     342.58
+    ],
+    [
+     236145.32,
+     7052524.57,
+     342.91
+    ],
+    [
+     236266.21,
+     7052455.45,
+     343.52
+    ],
+    [
+     236326.73,
+     7052410.45,
+     342.4
+    ],
+    [
+     236436.37,
+     7052311.48,
+     342.11
+    ],
+    [
+     236381.28,
+     7052250.44,
+     342.11
+    ]
+   ]
+  },
+  {
+   "id": "ex07-s51-haul-east-from-mid-point-option-1-short-haul",
+   "order": 4,
+   "title_row": 89,
+   "title": "EX07 - S51 Haul East from Mid Point (Option 1 - SHORT HAUL)",
+   "loading_unit": "EX07",
+   "description": "S51 Haul East from Mid Point (Option 1 - SHORT HAUL)",
+   "duplicate_title_of": null,
+   "truck_note_raw": {
+    "I89": "5 trucks"
+   },
+   "trucks_required": null,
+   "trucks_required_rounded": 5,
+   "truck_note": "5 trucks",
+   "flags": [],
+   "point_format": [
+    "easting_m",
+    "northing_m",
+    "elevation_m"
+   ],
+   "source_columns": "Raw Data E (X = easting), F (Y = northing), G (Z = RL)",
+   "first_point_row": 91,
+   "last_point_row": 115,
+   "point_count": 25,
+   "geometry_summary": {
+    "length_3d_m": 2007.337423629419,
+    "length_2d_m": 2005.0229148991848,
+    "start_rl_m": 314.3,
+    "end_rl_m": 345,
+    "net_rise_m": 30.69999999999999
+   },
+   "is_current_data_dump": false,
+   "spreadsheet_mode_travel": {
+    "derived_not_cached": true,
+    "loaded_time_s": 314.64781430319846,
+    "unloaded_time_s": 303.1067849578657,
+    "segments": 24,
+    "segments_excluded_out_of_range": 0,
+    "distance_m": 2007.337423629419,
+    "timed_distance_m": 2007.337423629419
+   },
+   "points": [
+    [
+     236105.87,
+     7051890.43,
+     314.3
+    ],
+    [
+     236372.78,
+     7051690.47,
+     314.3
+    ],
+    [
+     236489.83,
+     7051602.13,
+     314.62
+    ],
+    [
+     236585.27,
+     7051541.33,
+     314.43
+    ],
+    [
+     236643.19,
+     7051496.03,
+     313.71
+    ],
+    [
+     236696.26,
+     7051457.5,
+     313.33
+    ],
+    [
+     236778.33,
+     7051407.55,
+     312.54
+    ],
+    [
+     236848.41,
+     7051404.47,
+     305.99
+    ],
+    [
+     236904.45,
+     7051413.23,
+     299.83
+    ],
+    [
+     236950.73,
+     7051402.45,
+     296.71
+    ],
+    [
+     237013.25,
+     7051377.31,
+     297.2
+    ],
+    [
+     237058.1,
+     7051372.35,
+     298.35
+    ],
+    [
+     237085.64,
+     7051384.37,
+     299.87
+    ],
+    [
+     237122.79,
+     7051417.92,
+     302.98
+    ],
+    [
+     237150.331,
+     7051437.337,
+     303.936
+    ],
+    [
+     237170.82,
+     7051465.4,
+     304.28
+    ],
+    [
+     237200.005,
+     7051492.698,
+     305.448
+    ],
+    [
+     237179.2,
+     7051515.92,
+     306.59
+    ],
+    [
+     237117.91,
+     7051563.97,
+     313.98
+    ],
+    [
+     237071.29,
+     7051606.87,
+     319.01
+    ],
+    [
+     237028.24,
+     7051645.99,
+     321.57
+    ],
+    [
+     236989.3,
+     7051675.89,
+     322.77
+    ],
+    [
+     236957.8,
+     7051719.95,
+     322.84
+    ],
+    [
+     236927.33,
+     7051751.98,
+     323.13
+    ],
+    [
+     236695.938,
+     7051977.438,
+     345
+    ]
+   ]
+  },
+  {
+   "id": "ex07-s51-haul-east-from-mid-point-option-2-long-haul",
+   "order": 5,
+   "title_row": 117,
+   "title": "EX07 - S51 Haul East from Mid Point (Option 2 - LONG HAUL)",
+   "loading_unit": "EX07",
+   "description": "S51 Haul East from Mid Point (Option 2 - LONG HAUL)",
+   "duplicate_title_of": null,
+   "truck_note_raw": {
+    "I117": "6 trucks"
+   },
+   "trucks_required": null,
+   "trucks_required_rounded": 6,
+   "truck_note": "6 trucks",
+   "flags": [],
+   "point_format": [
+    "easting_m",
+    "northing_m",
+    "elevation_m"
+   ],
+   "source_columns": "Raw Data E (X = easting), F (Y = northing), G (Z = RL)",
+   "first_point_row": 119,
+   "last_point_row": 161,
+   "point_count": 43,
+   "geometry_summary": {
+    "length_3d_m": 2504.1263181707322,
+    "length_2d_m": 2502.015432517188,
+    "start_rl_m": 314.3,
+    "end_rl_m": 341.43,
+    "net_rise_m": 27.129999999999995
+   },
+   "is_current_data_dump": false,
+   "spreadsheet_mode_travel": {
+    "derived_not_cached": true,
+    "loaded_time_s": 375.24866251023116,
+    "unloaded_time_s": 361.04554088842673,
+    "segments": 42,
+    "segments_excluded_out_of_range": 0,
+    "distance_m": 2504.1263181707322,
+    "timed_distance_m": 2504.1263181707322
+   },
+   "points": [
+    [
+     236105.87,
+     7051890.43,
+     314.3
+    ],
+    [
+     236105.87,
+     7051890.43,
+     314.3
+    ],
+    [
+     236372.78,
+     7051690.47,
+     314.3
+    ],
+    [
+     236489.83,
+     7051602.13,
+     314.62
+    ],
+    [
+     236585.27,
+     7051541.33,
+     314.43
+    ],
+    [
+     236643.19,
+     7051496.03,
+     313.71
+    ],
+    [
+     236696.26,
+     7051457.5,
+     313.33
+    ],
+    [
+     236778.33,
+     7051407.55,
+     312.54
+    ],
+    [
+     236848.41,
+     7051404.47,
+     305.99
+    ],
+    [
+     236904.45,
+     7051413.23,
+     299.83
+    ],
+    [
+     236950.73,
+     7051402.45,
+     296.71
+    ],
+    [
+     237013.25,
+     7051377.31,
+     297.2
+    ],
+    [
+     237058.1,
+     7051372.35,
+     298.35
+    ],
+    [
+     237085.64,
+     7051384.37,
+     299.87
+    ],
+    [
+     237122.79,
+     7051417.92,
+     302.98
+    ],
+    [
+     237150.331,
+     7051437.337,
+     303.936
+    ],
+    [
+     237170.82,
+     7051465.4,
+     304.28
+    ],
+    [
+     237200.005,
+     7051492.698,
+     305.448
+    ],
+    [
+     237179.2,
+     7051515.92,
+     306.59
+    ],
+    [
+     237117.91,
+     7051563.97,
+     313.98
+    ],
+    [
+     237071.29,
+     7051606.87,
+     319.01
+    ],
+    [
+     237028.24,
+     7051645.99,
+     321.57
+    ],
+    [
+     237005.37,
+     7051672.99,
+     322.33
+    ],
+    [
+     237004.78,
+     7051688.805,
+     322.595
+    ],
+    [
+     237008.23,
+     7051700.49,
+     322.65
+    ],
+    [
+     237022.23,
+     7051710.97,
+     322.42
+    ],
+    [
+     237045.27,
+     7051707.99,
+     322.52
+    ],
+    [
+     237067.77,
+     7051690.33,
+     322.58
+    ],
+    [
+     237100.03,
+     7051672.55,
+     324.76
+    ],
+    [
+     237118.34,
+     7051659.44,
+     325.61
+    ],
+    [
+     237140.8,
+     7051650.94,
+     325.42
+    ],
+    [
+     237153.29,
+     7051654.51,
+     325.61
+    ],
+    [
+     237154.8,
+     7051668.88,
+     325.8
+    ],
+    [
+     237119.795,
+     7051720.857,
+     329.779
+    ],
+    [
+     237087.77,
+     7051764.46,
+     333.18
+    ],
+    [
+     237050.991,
+     7051814.264,
+     338.2
+    ],
+    [
+     236999.81,
+     7051882.07,
+     339.07
+    ],
+    [
+     236949.13,
+     7051921.97,
+     339.11
+    ],
+    [
+     236918.547,
+     7051972.185,
+     339.56
+    ],
+    [
+     236826.38,
+     7052036.01,
+     339.62
+    ],
+    [
+     236731.85,
+     7052080.31,
+     341.19
+    ],
+    [
+     236711.85,
+     7052098.35,
+     341.43
+    ],
+    [
+     236637.71,
+     7052155.54,
+     341.43
+    ]
+   ]
+  },
+  {
+   "id": "ex07-s51-haul-west-from-mid-point-option-3-fl-level-long-haul-option-2",
+   "order": 6,
+   "title_row": 163,
+   "title": "EX07 - S51 Haul West from Mid Point (Option 3 - FL LEVEL - LONG HAUL OPTION)",
+   "loading_unit": "EX07",
+   "description": "S51 Haul West from Mid Point (Option 3 - FL LEVEL - LONG HAUL OPTION)",
+   "duplicate_title_of": "ex07-s51-haul-west-from-mid-point-option-3-fl-level-long-haul-option",
+   "truck_note_raw": {
+    "I163": "7 trucks"
+   },
+   "trucks_required": null,
+   "trucks_required_rounded": 7,
+   "truck_note": "7 trucks",
+   "flags": [],
+   "point_format": [
+    "easting_m",
+    "northing_m",
+    "elevation_m"
+   ],
+   "source_columns": "Raw Data E (X = easting), F (Y = northing), G (Z = RL)",
+   "first_point_row": 165,
+   "last_point_row": 204,
+   "point_count": 40,
+   "geometry_summary": {
+    "length_3d_m": 3433.5347316179173,
+    "length_2d_m": 3432.723768641001,
+    "start_rl_m": 329.06,
+    "end_rl_m": 339,
+    "net_rise_m": 9.939999999999998
+   },
+   "is_current_data_dump": false,
+   "spreadsheet_mode_travel": {
+    "derived_not_cached": true,
+    "loaded_time_s": 431.516920355689,
+    "unloaded_time_s": 428.1932664778553,
+    "segments": 39,
+    "segments_excluded_out_of_range": 0,
+    "distance_m": 3433.5347316179173,
+    "timed_distance_m": 3433.5347316179173
+   },
+   "points": [
+    [
+     236037.82,
+     7051810.44,
+     329.06
+    ],
+    [
+     236037.82,
+     7051810.44,
+     329.06
+    ],
+    [
+     235827.46,
+     7051950.95,
+     330.65
+    ],
+    [
+     235633.26,
+     7052118.99,
+     330.81
+    ],
+    [
+     235452.33,
+     7052238.91,
+     335.53
+    ],
+    [
+     235371.88,
+     7052333.88,
+     334.92
+    ],
+    [
+     235301.36,
+     7052406.92,
+     334.52
+    ],
+    [
+     235281.9,
+     7052485.41,
+     335.31
+    ],
+    [
+     235312.87,
+     7052563.89,
+     336.09
+    ],
+    [
+     235345.76,
+     7052609.44,
+     335.99
+    ],
+    [
+     235456.82,
+     7052733.84,
+     337.04
+    ],
+    [
+     235514.31,
+     7052831.04,
+     338.53
+    ],
+    [
+     235551.24,
+     7052854.46,
+     338.96
+    ],
+    [
+     235586.75,
+     7052928.37,
+     339.93
+    ],
+    [
+     235631.77,
+     7052976.9,
+     340.8
+    ],
+    [
+     235659.133,
+     7053015.233,
+     341.398
+    ],
+    [
+     235686.83,
+     7052999.7,
+     340.88
+    ],
+    [
+     235757.69,
+     7052940.97,
+     334.98
+    ],
+    [
+     235814.691,
+     7052901.362,
+     336.461
+    ],
+    [
+     235848.42,
+     7052880.42,
+     340.22
+    ],
+    [
+     235879.89,
+     7052859.95,
+     343.36
+    ],
+    [
+     235898.71,
+     7052839.463,
+     344.043
+    ],
+    [
+     235913.8,
+     7052822.99,
+     344.59
+    ],
+    [
+     235952.78,
+     7052774.92,
+     344.51
+    ],
+    [
+     235995.2,
+     7052731.35,
+     344.55
+    ],
+    [
+     236037.23,
+     7052695.84,
+     344.43
+    ],
+    [
+     236076.25,
+     7052661.41,
+     344.05
+    ],
+    [
+     236127.31,
+     7052574.4,
+     342.58
+    ],
+    [
+     236145.32,
+     7052524.57,
+     342.91
+    ],
+    [
+     236266.21,
+     7052455.45,
+     343.52
+    ],
+    [
+     236326.73,
+     7052410.45,
+     342.4
+    ],
+    [
+     236436.37,
+     7052311.48,
+     342.11
+    ],
+    [
+     236501.37,
+     7052268.54,
+     340.12
+    ],
+    [
+     236554.71,
+     7052224.42,
+     339.56
+    ],
+    [
+     236590.77,
+     7052203.51,
+     339.4
+    ],
+    [
+     236732.23,
+     7052098.51,
+     343.56
+    ],
+    [
+     236806.32,
+     7052036.38,
+     339.67
+    ],
+    [
+     236865.361,
+     7051990.768,
+     339.093
+    ],
+    [
+     236909.815,
+     7051965.872,
+     339.281
+    ],
+    [
+     236858.73,
+     7051896.79,
+     339
+    ]
+   ]
+  },
+  {
+   "id": "ex07-eastern-corner-ramp-to-rl336-adjacent-to-b107-b105",
+   "order": 7,
+   "title_row": 205,
+   "title": "EX07 - Eastern Corner Ramp to RL336 (adjacent to B107-B105)",
+   "loading_unit": "EX07",
+   "description": "Eastern Corner Ramp to RL336 (adjacent to B107-B105)",
+   "duplicate_title_of": null,
+   "truck_note_raw": {
+    "I205": 4.6,
+    "J205": "Trucks req at 20hrs PT",
+    "I206": 5
+   },
+   "trucks_required": 4.6,
+   "trucks_required_rounded": 5,
+   "truck_note": "Trucks req at 20hrs PT",
+   "flags": [],
+   "point_format": [
+    "easting_m",
+    "northing_m",
+    "elevation_m"
+   ],
+   "source_columns": "Raw Data E (X = easting), F (Y = northing), G (Z = RL)",
+   "first_point_row": 207,
+   "last_point_row": 226,
+   "point_count": 20,
+   "geometry_summary": {
+    "length_3d_m": 1432.5203829135417,
+    "length_2d_m": 1430.189404019517,
+    "start_rl_m": 320.7,
+    "end_rl_m": 336,
+    "net_rise_m": 15.300000000000011
+   },
+   "is_current_data_dump": false,
+   "spreadsheet_mode_travel": {
+    "derived_not_cached": true,
+    "loaded_time_s": 279.2058579329686,
+    "unloaded_time_s": 253.65742650836302,
+    "segments": 19,
+    "segments_excluded_out_of_range": 0,
+    "distance_m": 1432.5203829135417,
+    "timed_distance_m": 1432.5203829135417
+   },
+   "points": [
+    [
+     237500.2,
+     7050893.2,
+     320.7
+    ],
+    [
+     237372,
+     7050724.1,
+     324.5
+    ],
+    [
+     237350.3,
+     7050710.4,
+     325.1
+    ],
+    [
+     237319.3,
+     7050725.8,
+     325.1
+    ],
+    [
+     237276.721,
+     7050760.235,
+     325.588
+    ],
+    [
+     237253.5,
+     7050780.3,
+     324.5
+    ],
+    [
+     237319,
+     7050857.6,
+     324.3
+    ],
+    [
+     237355.8,
+     7050918.3,
+     323.1
+    ],
+    [
+     237397.7,
+     7050981.3,
+     316.5
+    ],
+    [
+     237427.993,
+     7051033.325,
+     311.6
+    ],
+    [
+     237448.4,
+     7051080.6,
+     306.5
+    ],
+    [
+     237450.7,
+     7051114.2,
+     303.9
+    ],
+    [
+     237422,
+     7051149,
+     302.6
+    ],
+    [
+     237391.5,
+     7051181.2,
+     302.8
+    ],
+    [
+     237368.8,
+     7051206.9,
+     302.8
+    ],
+    [
+     237411.453,
+     7051264.952,
+     304.9
+    ],
+    [
+     237473.2,
+     7051351.6,
+     315.8
+    ],
+    [
+     237575.2,
+     7051597.8,
+     336.6
+    ],
+    [
+     237548,
+     7051622.1,
+     336.6
+    ],
+    [
+     237493.3,
+     7051671.6,
+     336
+    ]
+   ]
+  },
+  {
+   "id": "ex04-b10-b07-ob-to-rl325-dump",
+   "order": 8,
+   "title_row": 227,
+   "title": "EX04 - B10-B07 OB to RL325 DUMP",
+   "loading_unit": "EX04",
+   "description": "B10-B07 OB to RL325 DUMP",
+   "duplicate_title_of": null,
+   "truck_note_raw": {
+    "I227": 2.4,
+    "J227": "Trucks req at 20hrs PT",
+    "I228": 3
+   },
+   "trucks_required": 2.4,
+   "trucks_required_rounded": 3,
+   "truck_note": "Trucks req at 20hrs PT",
+   "flags": [],
+   "point_format": [
+    "easting_m",
+    "northing_m",
+    "elevation_m"
+   ],
+   "source_columns": "Raw Data E (X = easting), F (Y = northing), G (Z = RL)",
+   "first_point_row": 229,
+   "last_point_row": 243,
+   "point_count": 15,
+   "geometry_summary": {
+    "length_3d_m": 755.3482538929112,
+    "length_2d_m": 753.5544322003151,
+    "start_rl_m": 328.167,
+    "end_rl_m": 310.549,
+    "net_rise_m": -17.617999999999995
+   },
+   "is_current_data_dump": false,
+   "spreadsheet_mode_travel": {
+    "derived_not_cached": true,
+    "loaded_time_s": 158.480612925175,
+    "unloaded_time_s": 142.3285123399308,
+    "segments": 14,
+    "segments_excluded_out_of_range": 0,
+    "distance_m": 755.3482538929111,
+    "timed_distance_m": 755.3482538929111
+   },
+   "points": [
+    [
+     236668.934,
+     7051300.448,
+     328.167
+    ],
+    [
+     236775.021,
+     7051228.168,
+     315.329
+    ],
+    [
+     236800.905,
+     7051207.795,
+     314.075
+    ],
+    [
+     236828.478,
+     7051246.233,
+     311.914
+    ],
+    [
+     236904.7,
+     7051352.1,
+     298.9
+    ],
+    [
+     236937.814,
+     7051395.092,
+     298.708
+    ],
+    [
+     236965.453,
+     7051403.578,
+     299.365
+    ],
+    [
+     236998.109,
+     7051386.694,
+     299.554
+    ],
+    [
+     237041.339,
+     7051355.816,
+     303.781
+    ],
+    [
+     237086.005,
+     7051324.041,
+     305
+    ],
+    [
+     237108.585,
+     7051302.641,
+     305
+    ],
+    [
+     237139.86,
+     7051319.126,
+     305
+    ],
+    [
+     237152.111,
+     7051350.296,
+     305
+    ],
+    [
+     237131.335,
+     7051361.095,
+     305
+    ],
+    [
+     237087.011,
+     7051406.198,
+     310.549
+    ]
+   ]
+  },
+  {
+   "id": "ex04-b07-b10-ob-to-rl325-dump-hauling-west-to-western-rl325-dump",
+   "order": 9,
+   "title_row": 244,
+   "title": "EX04 - B07-B10 OB to RL325 DUMP (hauling west to western rl325 dump)",
+   "loading_unit": "EX04",
+   "description": "B07-B10 OB to RL325 DUMP (hauling west to western rl325 dump)",
+   "duplicate_title_of": null,
+   "truck_note_raw": {
+    "I244": 4.7,
+    "J244": "Trucks req at 20hrs PT",
+    "I245": 5
+   },
+   "trucks_required": 4.7,
+   "trucks_required_rounded": 5,
+   "truck_note": "Trucks req at 20hrs PT",
+   "flags": [],
+   "point_format": [
+    "easting_m",
+    "northing_m",
+    "elevation_m"
+   ],
+   "source_columns": "Raw Data E (X = easting), F (Y = northing), G (Z = RL)",
+   "first_point_row": 246,
+   "last_point_row": 274,
+   "point_count": 29,
+   "geometry_summary": {
+    "length_3d_m": 2906.7984385952973,
+    "length_2d_m": 2903.6132861385954,
+    "start_rl_m": 310.545,
+    "end_rl_m": 325,
+    "net_rise_m": 14.454999999999984
+   },
+   "is_current_data_dump": false,
+   "spreadsheet_mode_travel": {
+    "derived_not_cached": true,
+    "loaded_time_s": 449.5774775048209,
+    "unloaded_time_s": 430.1986353000701,
+    "segments": 28,
+    "segments_excluded_out_of_range": 0,
+    "distance_m": 2906.7984385952973,
+    "timed_distance_m": 2906.7984385952973
+   },
+   "points": [
+    [
+     236501.311,
+     7051470.437,
+     310.545
+    ],
+    [
+     236402.976,
+     7051532.182,
+     322.139
+    ],
+    [
+     236360.27,
+     7051559.61,
+     326.97
+    ],
+    [
+     236195.964,
+     7051681.348,
+     327.512
+    ],
+    [
+     236042.396,
+     7051797.354,
+     328.599
+    ],
+    [
+     235854.1,
+     7051940.632,
+     329.424
+    ],
+    [
+     235615,
+     7052124.6,
+     330.7
+    ],
+    [
+     235394.89,
+     7052295.47,
+     332.361
+    ],
+    [
+     235320.23,
+     7052357.627,
+     332.474
+    ],
+    [
+     235284.428,
+     7052403.716,
+     332.868
+    ],
+    [
+     235281.854,
+     7052458.748,
+     336.306
+    ],
+    [
+     235296.6,
+     7052526,
+     335.9
+    ],
+    [
+     235341.9,
+     7052595.2,
+     336.1
+    ],
+    [
+     235413.9,
+     7052670.4,
+     336.1
+    ],
+    [
+     235467.1,
+     7052738.5,
+     337.3
+    ],
+    [
+     235515,
+     7052813.5,
+     338.2
+    ],
+    [
+     235559.3,
+     7052867.1,
+     339.2
+    ],
+    [
+     235612.1,
+     7052824.7,
+     335.8
+    ],
+    [
+     235678.4,
+     7052771.9,
+     327.4
+    ],
+    [
+     235756.6,
+     7052710.2,
+     317.3
+    ],
+    [
+     235774,
+     7052694.2,
+     316
+    ],
+    [
+     235754.8,
+     7052658.8,
+     315.1
+    ],
+    [
+     235728.3,
+     7052618,
+     312.7
+    ],
+    [
+     235687.8,
+     7052568.7,
+     306.6
+    ],
+    [
+     235673.6,
+     7052536.7,
+     303.9
+    ],
+    [
+     235694.114,
+     7052480.589,
+     304.775
+    ],
+    [
+     235722,
+     7052437.4,
+     308.3
+    ],
+    [
+     235734.2,
+     7052419.7,
+     309.2
+    ],
+    [
+     235917.79,
+     7052306.785,
+     325
+    ]
+   ]
+  },
+  {
+   "id": "ex07-b11-b12-ob-to-rl336-dump-adjacent-to-b107-b105",
+   "order": 10,
+   "title_row": 275,
+   "title": "EX07 - B11-B12 OB to RL336 DUMP (adjacent to B107-B105)",
+   "loading_unit": "EX07",
+   "description": "B11-B12 OB to RL336 DUMP (adjacent to B107-B105)",
+   "duplicate_title_of": null,
+   "truck_note_raw": {
+    "I275": 4.7,
+    "J275": "Trucks req at 20hrs PT",
+    "I276": 5
+   },
+   "trucks_required": 4.7,
+   "trucks_required_rounded": 5,
+   "truck_note": "Trucks req at 20hrs PT",
+   "flags": [],
+   "point_format": [
+    "easting_m",
+    "northing_m",
+    "elevation_m"
+   ],
+   "source_columns": "Raw Data E (X = easting), F (Y = northing), G (Z = RL)",
+   "first_point_row": 277,
+   "last_point_row": 292,
+   "point_count": 16,
+   "geometry_summary": {
+    "length_3d_m": 1266.157862029006,
+    "length_2d_m": 1264.1800898007195,
+    "start_rl_m": 297.6,
+    "end_rl_m": 336,
+    "net_rise_m": 38.39999999999998
+   },
+   "is_current_data_dump": false,
+   "spreadsheet_mode_travel": {
+    "derived_not_cached": true,
+    "loaded_time_s": 239.12068114569556,
+    "unloaded_time_s": 219.71997067538962,
+    "segments": 15,
+    "segments_excluded_out_of_range": 0,
+    "distance_m": 1266.157862029006,
+    "timed_distance_m": 1266.157862029006
+   },
+   "points": [
+    [
+     237192.432,
+     7050976.174,
+     297.6
+    ],
+    [
+     237054.15,
+     7051078.35,
+     298.53
+    ],
+    [
+     237114.4,
+     7051151.5,
+     292.2
+    ],
+    [
+     237215.1,
+     7051288.2,
+     296.3
+    ],
+    [
+     237259.8,
+     7051352.3,
+     302.9
+    ],
+    [
+     237282,
+     7051371.7,
+     303.5
+    ],
+    [
+     237312.2,
+     7051337.8,
+     303.9
+    ],
+    [
+     237332.054,
+     7051303.625,
+     304.978
+    ],
+    [
+     237339.9,
+     7051274.9,
+     304.8
+    ],
+    [
+     237353.5,
+     7051248.6,
+     303.8
+    ],
+    [
+     237378.967,
+     7051220.737,
+     303.301
+    ],
+    [
+     237411.453,
+     7051264.952,
+     304.9
+    ],
+    [
+     237473.2,
+     7051351.6,
+     315.8
+    ],
+    [
+     237575.2,
+     7051597.8,
+     336.6
+    ],
+    [
+     237548,
+     7051622.1,
+     336.6
+    ],
+    [
+     237493.3,
+     7051671.6,
+     336
+    ]
+   ]
+  },
+  {
+   "id": "ex04-b10-b07-ob-to-rl336-dump-hauling-east-note-requires-s53-blast-replacing-dzr-dirt-for-ex",
+   "order": 11,
+   "title_row": 293,
+   "title": "EX04 - B10-B07 OB to RL336 DUMP - hauling East - NOTE: requires S53 blast (replacing DZR dirt for EX)",
+   "loading_unit": "EX04",
+   "description": "B10-B07 OB to RL336 DUMP - hauling East - NOTE: requires S53 blast (replacing DZR dirt for EX)",
+   "duplicate_title_of": null,
+   "truck_note_raw": {
+    "I293": 4.7,
+    "J293": "Trucks req at 20hrs PT"
+   },
+   "trucks_required": 4.7,
+   "trucks_required_rounded": null,
+   "truck_note": "Trucks req at 20hrs PT",
+   "flags": [],
+   "point_format": [
+    "easting_m",
+    "northing_m",
+    "elevation_m"
+   ],
+   "source_columns": "Raw Data E (X = easting), F (Y = northing), G (Z = RL)",
+   "first_point_row": 295,
+   "last_point_row": 323,
+   "point_count": 29,
+   "geometry_summary": {
+    "length_3d_m": 1870.6337383079235,
+    "length_2d_m": 1867.9364946868209,
+    "start_rl_m": 314.075,
+    "end_rl_m": 336,
+    "net_rise_m": 21.92500000000001
+   },
+   "is_current_data_dump": false,
+   "spreadsheet_mode_travel": {
+    "derived_not_cached": true,
+    "loaded_time_s": 358.44265576306026,
+    "unloaded_time_s": 326.54584453303426,
+    "segments": 28,
+    "segments_excluded_out_of_range": 0,
+    "distance_m": 1870.6337383079235,
+    "timed_distance_m": 1870.6337383079235
+   },
+   "points": [
+    [
+     236800.905,
+     7051207.795,
+     314.075
+    ],
+    [
+     236756.881,
+     7051147.753,
+     314.075
+    ],
+    [
+     236872.4,
+     7051055.7,
+     325.2
+    ],
+    [
+     236914.7,
+     7051027.7,
+     325
+    ],
+    [
+     236929.5,
+     7050975.1,
+     325.2
+    ],
+    [
+     236980.9,
+     7050926.5,
+     325.1
+    ],
+    [
+     236966.4,
+     7050893.5,
+     325.3
+    ],
+    [
+     237054.6,
+     7050838.8,
+     325
+    ],
+    [
+     237107.5,
+     7050801.1,
+     324.9
+    ],
+    [
+     237171.5,
+     7050756.5,
+     324.5
+    ],
+    [
+     237209.8,
+     7050729.9,
+     324.5
+    ],
+    [
+     237229.3,
+     7050744.1,
+     324.6
+    ],
+    [
+     237243.9,
+     7050770.3,
+     324.9
+    ],
+    [
+     237253.5,
+     7050780.3,
+     324.5
+    ],
+    [
+     237253.5,
+     7050780.3,
+     324.5
+    ],
+    [
+     237319,
+     7050857.6,
+     324.3
+    ],
+    [
+     237355.8,
+     7050918.3,
+     323.1
+    ],
+    [
+     237397.7,
+     7050981.3,
+     316.5
+    ],
+    [
+     237427.993,
+     7051033.325,
+     311.6
+    ],
+    [
+     237448.4,
+     7051080.6,
+     306.5
+    ],
+    [
+     237450.7,
+     7051114.2,
+     303.9
+    ],
+    [
+     237422,
+     7051149,
+     302.6
+    ],
+    [
+     237391.5,
+     7051181.2,
+     302.8
+    ],
+    [
+     237368.8,
+     7051206.9,
+     302.8
+    ],
+    [
+     237411.453,
+     7051264.952,
+     304.9
+    ],
+    [
+     237473.2,
+     7051351.6,
+     315.8
+    ],
+    [
+     237575.2,
+     7051597.8,
+     336.6
+    ],
+    [
+     237548,
+     7051622.1,
+     336.6
+    ],
+    [
+     237493.3,
+     7051671.6,
+     336
+    ]
+   ]
+  },
+  {
+   "id": "ex04-b10-b07-ob-to-rl325-dump-2",
+   "order": 12,
+   "title_row": 324,
+   "title": "EX04 - B10-B07 OB to RL325 DUMP",
+   "loading_unit": "EX04",
+   "description": "B10-B07 OB to RL325 DUMP",
+   "duplicate_title_of": "ex04-b10-b07-ob-to-rl325-dump",
+   "truck_note_raw": {
+    "I324": 2.6,
+    "J324": "Trucks req at 20hrs PT",
+    "M324": "CENTROID ADJUSTED",
+    "I325": 3
+   },
+   "trucks_required": 2.6,
+   "trucks_required_rounded": 3,
+   "truck_note": "Trucks req at 20hrs PT",
+   "flags": [
+    "CENTROID ADJUSTED"
+   ],
+   "point_format": [
+    "easting_m",
+    "northing_m",
+    "elevation_m"
+   ],
+   "source_columns": "Raw Data E (X = easting), F (Y = northing), G (Z = RL)",
+   "first_point_row": 326,
+   "last_point_row": 341,
+   "point_count": 16,
+   "geometry_summary": {
+    "length_3d_m": 1018.2952552657646,
+    "length_2d_m": 1016.4741328885202,
+    "start_rl_m": 328.167,
+    "end_rl_m": 306.76,
+    "net_rise_m": -21.406999999999982
+   },
+   "is_current_data_dump": false,
+   "spreadsheet_mode_travel": {
+    "derived_not_cached": true,
+    "loaded_time_s": 190.0342530899174,
+    "unloaded_time_s": 173.8821525046732,
+    "segments": 15,
+    "segments_excluded_out_of_range": 0,
+    "distance_m": 1018.2952552657644,
+    "timed_distance_m": 1018.2952552657644
+   },
+   "points": [
+    [
+     236668.934,
+     7051300.448,
+     328.167
+    ],
+    [
+     236775.021,
+     7051228.168,
+     315.329
+    ],
+    [
+     236800.905,
+     7051207.795,
+     314.075
+    ],
+    [
+     236828.478,
+     7051246.233,
+     311.914
+    ],
+    [
+     236904.7,
+     7051352.1,
+     298.9
+    ],
+    [
+     236937.814,
+     7051395.092,
+     298.708
+    ],
+    [
+     236965.453,
+     7051403.578,
+     299.365
+    ],
+    [
+     236998.109,
+     7051386.694,
+     299.554
+    ],
+    [
+     237041.339,
+     7051355.816,
+     303.781
+    ],
+    [
+     237086.005,
+     7051324.041,
+     305
+    ],
+    [
+     237108.585,
+     7051302.641,
+     305
+    ],
+    [
+     237139.86,
+     7051319.126,
+     305
+    ],
+    [
+     237152.111,
+     7051350.296,
+     305
+    ],
+    [
+     237131.335,
+     7051361.095,
+     305
+    ],
+    [
+     237087.011,
+     7051406.198,
+     310.549
+    ],
+    [
+     236878.332,
+     7051566.135,
+     306.76
+    ]
+   ]
+  },
+  {
+   "id": "ex04-b07-b10-ob-to-rl325-dump-hauling-west-to-western-rl325-dump-2",
+   "order": 13,
+   "title_row": 342,
+   "title": "EX04 - B07-B10 OB to RL325 DUMP (hauling west to western rl325 dump)",
+   "loading_unit": "EX04",
+   "description": "B07-B10 OB to RL325 DUMP (hauling west to western rl325 dump)",
+   "duplicate_title_of": "ex04-b07-b10-ob-to-rl325-dump-hauling-west-to-western-rl325-dump",
+   "truck_note_raw": {
+    "I342": 4.7,
+    "J342": "Trucks req at 20hrs PT",
+    "M342": "CENTROID ADJUSTED"
+   },
+   "trucks_required": 4.7,
+   "trucks_required_rounded": null,
+   "truck_note": "Trucks req at 20hrs PT",
+   "flags": [
+    "CENTROID ADJUSTED"
+   ],
+   "point_format": [
+    "easting_m",
+    "northing_m",
+    "elevation_m"
+   ],
+   "source_columns": "Raw Data E (X = easting), F (Y = northing), G (Z = RL)",
+   "first_point_row": 344,
+   "last_point_row": 373,
+   "point_count": 30,
+   "geometry_summary": {
+    "length_3d_m": 3017.415475099556,
+    "length_2d_m": 3013.812962930247,
+    "start_rl_m": 310.545,
+    "end_rl_m": 315.4,
+    "net_rise_m": 4.854999999999961
+   },
+   "is_current_data_dump": false,
+   "spreadsheet_mode_travel": {
+    "derived_not_cached": true,
+    "loaded_time_s": 482.7625884560985,
+    "unloaded_time_s": 458.64301611545096,
+    "segments": 29,
+    "segments_excluded_out_of_range": 0,
+    "distance_m": 3017.415475099556,
+    "timed_distance_m": 3017.415475099556
+   },
+   "points": [
+    [
+     236501.311,
+     7051470.437,
+     310.545
+    ],
+    [
+     236402.976,
+     7051532.182,
+     322.139
+    ],
+    [
+     236360.27,
+     7051559.61,
+     326.97
+    ],
+    [
+     236195.964,
+     7051681.348,
+     327.512
+    ],
+    [
+     236042.396,
+     7051797.354,
+     328.599
+    ],
+    [
+     235854.1,
+     7051940.632,
+     329.424
+    ],
+    [
+     235615,
+     7052124.6,
+     330.7
+    ],
+    [
+     235394.89,
+     7052295.47,
+     332.361
+    ],
+    [
+     235320.23,
+     7052357.627,
+     332.474
+    ],
+    [
+     235284.428,
+     7052403.716,
+     332.868
+    ],
+    [
+     235281.854,
+     7052458.748,
+     336.306
+    ],
+    [
+     235296.6,
+     7052526,
+     335.9
+    ],
+    [
+     235341.9,
+     7052595.2,
+     336.1
+    ],
+    [
+     235413.9,
+     7052670.4,
+     336.1
+    ],
+    [
+     235467.1,
+     7052738.5,
+     337.3
+    ],
+    [
+     235515,
+     7052813.5,
+     338.2
+    ],
+    [
+     235559.3,
+     7052867.1,
+     339.2
+    ],
+    [
+     235612.1,
+     7052824.7,
+     335.8
+    ],
+    [
+     235678.4,
+     7052771.9,
+     327.4
+    ],
+    [
+     235756.6,
+     7052710.2,
+     317.3
+    ],
+    [
+     235774,
+     7052694.2,
+     316
+    ],
+    [
+     235754.8,
+     7052658.8,
+     315.1
+    ],
+    [
+     235728.3,
+     7052618,
+     312.7
+    ],
+    [
+     235687.8,
+     7052568.7,
+     306.6
+    ],
+    [
+     235673.6,
+     7052536.7,
+     303.9
+    ],
+    [
+     235694.114,
+     7052480.589,
+     304.775
+    ],
+    [
+     235722,
+     7052437.4,
+     308.3
+    ],
+    [
+     235734.2,
+     7052419.7,
+     309.2
+    ],
+    [
+     235917.79,
+     7052306.785,
+     325
+    ],
+    [
+     236022.553,
+     7052272.599,
+     315.4
+    ]
+   ]
+  },
+  {
+   "id": "ex09-b1-2-ob-to-western-rl340-dump",
+   "order": 14,
+   "title_row": 374,
+   "title": "EX09 - B1-2 OB to Western RL340 DUMP",
+   "loading_unit": "EX09",
+   "description": "B1-2 OB to Western RL340 DUMP",
+   "duplicate_title_of": null,
+   "truck_note_raw": {
+    "I374": 5.7,
+    "J374": "Trucks req at 20hrs PT",
+    "M374": "CENTROID ADJUSTED"
+   },
+   "trucks_required": 5.7,
+   "trucks_required_rounded": null,
+   "truck_note": "Trucks req at 20hrs PT",
+   "flags": [
+    "CENTROID ADJUSTED"
+   ],
+   "point_format": [
+    "easting_m",
+    "northing_m",
+    "elevation_m"
+   ],
+   "source_columns": "Raw Data E (X = easting), F (Y = northing), G (Z = RL)",
+   "first_point_row": 376,
+   "last_point_row": 420,
+   "point_count": 45,
+   "geometry_summary": {
+    "length_3d_m": 2270.9328535306586,
+    "length_2d_m": 2267.4937496937396,
+    "start_rl_m": 332.303,
+    "end_rl_m": 333.434,
+    "net_rise_m": 1.1310000000000286
+   },
+   "is_current_data_dump": false,
+   "spreadsheet_mode_travel": {
+    "derived_not_cached": true,
+    "loaded_time_s": 404.18932506038635,
+    "unloaded_time_s": 378.25079063414773,
+    "segments": 44,
+    "segments_excluded_out_of_range": 0,
+    "distance_m": 2270.932853530658,
+    "timed_distance_m": 2270.932853530658
+   },
+   "points": [
+    [
+     235443.313,
+     7052339.071,
+     332.303
+    ],
+    [
+     235571.19,
+     7052262.869,
+     319.111
+    ],
+    [
+     235618.585,
+     7052229.964,
+     316.514
+    ],
+    [
+     235637.385,
+     7052214.865,
+     315.015
+    ],
+    [
+     235646.186,
+     7052190.265,
+     314.517
+    ],
+    [
+     235641.387,
+     7052175.965,
+     314.318
+    ],
+    [
+     235623.888,
+     7052160.364,
+     314.718
+    ],
+    [
+     235588.387,
+     7052171.863,
+     314.817
+    ],
+    [
+     235560.286,
+     7052188.362,
+     317.515
+    ],
+    [
+     235510.585,
+     7052221.06,
+     323.612
+    ],
+    [
+     235446.883,
+     7052258.958,
+     329.108
+    ],
+    [
+     235393.781,
+     7052287.655,
+     333.705
+    ],
+    [
+     235350.98,
+     7052315.854,
+     334.502
+    ],
+    [
+     235322.379,
+     7052343.452,
+     334.8
+    ],
+    [
+     235300.377,
+     7052381.051,
+     334.897
+    ],
+    [
+     235292.176,
+     7052423.351,
+     334.694
+    ],
+    [
+     235290.074,
+     7052471.051,
+     335.091
+    ],
+    [
+     235294.98,
+     7052513.16,
+     335.689
+    ],
+    [
+     235308.27,
+     7052546.252,
+     335.987
+    ],
+    [
+     235330.869,
+     7052582.353,
+     336.185
+    ],
+    [
+     235358.567,
+     7052610.954,
+     336.084
+    ],
+    [
+     235404.965,
+     7052663.156,
+     335.982
+    ],
+    [
+     235435.564,
+     7052700.557,
+     336.581
+    ],
+    [
+     235464.562,
+     7052736.659,
+     337.179
+    ],
+    [
+     235503.459,
+     7052796.761,
+     337.876
+    ],
+    [
+     235525.658,
+     7052830.861,
+     338.475
+    ],
+    [
+     235540.88,
+     7052849.836,
+     338.574
+    ],
+    [
+     235550.356,
+     7052867.263,
+     338.874
+    ],
+    [
+     235579.456,
+     7052857.664,
+     338.775
+    ],
+    [
+     235612.258,
+     7052830.265,
+     335.777
+    ],
+    [
+     235638.359,
+     7052806.566,
+     332.779
+    ],
+    [
+     235675.36,
+     7052776.467,
+     328.182
+    ],
+    [
+     235709.362,
+     7052750.969,
+     324.084
+    ],
+    [
+     235743.263,
+     7052726.27,
+     321.387
+    ],
+    [
+     235772.664,
+     7052705.871,
+     320.089
+    ],
+    [
+     235801.388,
+     7052682.059,
+     320.091
+    ],
+    [
+     235838.066,
+     7052656.774,
+     319.893
+    ],
+    [
+     235869.767,
+     7052636.376,
+     322.895
+    ],
+    [
+     235897.167,
+     7052618.977,
+     326.097
+    ],
+    [
+     235924.668,
+     7052604.478,
+     329.198
+    ],
+    [
+     235987.969,
+     7052564.682,
+     336.002
+    ],
+    [
+     236037.779,
+     7052540.012,
+     340.105
+    ],
+    [
+     236077.572,
+     7052511.286,
+     340.907
+    ],
+    [
+     236254.177,
+     7052375.394,
+     341.72
+    ],
+    [
+     236205.143,
+     7052244.707,
+     333.434
+    ]
+   ]
+  },
+  {
+   "id": "ex09-b13-11-ob-to-eastern-rl340-dump-topo",
+   "order": 15,
+   "title_row": 421,
+   "title": "EX09 - B13-11 OB to Eastern RL340 DUMP (topo)",
+   "loading_unit": "EX09",
+   "description": "B13-11 OB to Eastern RL340 DUMP (topo)",
+   "duplicate_title_of": null,
+   "truck_note_raw": {
+    "I421": 5.7,
+    "J421": "Trucks req at 20hrs PT",
+    "M421": "CENTROID ADJUSTED"
+   },
+   "trucks_required": 5.7,
+   "trucks_required_rounded": null,
+   "truck_note": "Trucks req at 20hrs PT",
+   "flags": [
+    "CENTROID ADJUSTED"
+   ],
+   "point_format": [
+    "easting_m",
+    "northing_m",
+    "elevation_m"
+   ],
+   "source_columns": "Raw Data E (X = easting), F (Y = northing), G (Z = RL)",
+   "first_point_row": 423,
+   "last_point_row": 472,
+   "point_count": 50,
+   "geometry_summary": {
+    "length_3d_m": 2381.851007242454,
+    "length_2d_m": 2378.7665739942618,
+    "start_rl_m": 326.785,
+    "end_rl_m": 332.944,
+    "net_rise_m": 6.158999999999992
+   },
+   "is_current_data_dump": false,
+   "spreadsheet_mode_travel": {
+    "derived_not_cached": true,
+    "loaded_time_s": 374.1994794008666,
+    "unloaded_time_s": 355.9791928562301,
+    "segments": 49,
+    "segments_excluded_out_of_range": 0,
+    "distance_m": 2381.851007242454,
+    "timed_distance_m": 2381.851007242454
+   },
+   "points": [
+    [
+     237027.151,
+     7050932.073,
+     326.785
+    ],
+    [
+     237162.449,
+     7050824.77,
+     326.299
+    ],
+    [
+     237248.177,
+     7050760.775,
+     324.355
+    ],
+    [
+     237276.413,
+     7050740.747,
+     324.412
+    ],
+    [
+     237265.005,
+     7050715.893,
+     324.537
+    ],
+    [
+     237256.645,
+     7050700.211,
+     324.262
+    ],
+    [
+     237279.147,
+     7050684.968,
+     324.514
+    ],
+    [
+     237302.746,
+     7050675.467,
+     324.916
+    ],
+    [
+     237322.147,
+     7050681.267,
+     325.017
+    ],
+    [
+     237343.447,
+     7050702.067,
+     325.019
+    ],
+    [
+     237382.048,
+     7050745.666,
+     322.22
+    ],
+    [
+     237419.301,
+     7050788.713,
+     316.34
+    ],
+    [
+     237454.851,
+     7050849.764,
+     309.822
+    ],
+    [
+     237481.153,
+     7050907.663,
+     305.422
+    ],
+    [
+     237537.354,
+     7050976.462,
+     303.824
+    ],
+    [
+     237573.426,
+     7051026.943,
+     304.284
+    ],
+    [
+     237594.353,
+     7051066.224,
+     302.825
+    ],
+    [
+     237614.957,
+     7051103.06,
+     301.025
+    ],
+    [
+     237632.057,
+     7051128.46,
+     301.025
+    ],
+    [
+     237599.458,
+     7051153.661,
+     299.822
+    ],
+    [
+     237534.858,
+     7051201.962,
+     302.815
+    ],
+    [
+     237491.059,
+     7051237.163,
+     306.91
+    ],
+    [
+     237455.559,
+     7051261.064,
+     308.706
+    ],
+    [
+     237438.259,
+     7051261.064,
+     308.605
+    ],
+    [
+     237421.392,
+     7051254.619,
+     307.643
+    ],
+    [
+     237411.559,
+     7051236.465,
+     305.304
+    ],
+    [
+     237386.359,
+     7051216.165,
+     303.003
+    ],
+    [
+     237372.959,
+     7051210.965,
+     303.001
+    ],
+    [
+     237353.259,
+     7051222.566,
+     303.4
+    ],
+    [
+     237335.859,
+     7051243.266,
+     304.397
+    ],
+    [
+     237325.882,
+     7051273.023,
+     304.615
+    ],
+    [
+     237320.06,
+     7051300.866,
+     304.994
+    ],
+    [
+     237302.061,
+     7051323.667,
+     304.592
+    ],
+    [
+     237275.261,
+     7051352.067,
+     303.788
+    ],
+    [
+     237253.962,
+     7051368.968,
+     303.086
+    ],
+    [
+     237229.862,
+     7051386.368,
+     304.184
+    ],
+    [
+     237209.662,
+     7051390.768,
+     304.582
+    ],
+    [
+     237193.862,
+     7051376.669,
+     304.281
+    ],
+    [
+     237178.461,
+     7051361.169,
+     304.38
+    ],
+    [
+     237164.861,
+     7051346.27,
+     304.38
+    ],
+    [
+     237133.561,
+     7051357.97,
+     304.277
+    ],
+    [
+     237100.062,
+     7051387.871,
+     307.373
+    ],
+    [
+     237039.262,
+     7051448.472,
+     311.666
+    ],
+    [
+     236998.004,
+     7051488.631,
+     316.561
+    ],
+    [
+     236949.013,
+     7051550.741,
+     323.555
+    ],
+    [
+     236909.98,
+     7051610.981,
+     330.48
+    ],
+    [
+     236860.006,
+     7051654.915,
+     337.131
+    ],
+    [
+     236811.403,
+     7051702.081,
+     340
+    ],
+    [
+     236848.374,
+     7051750.219,
+     340
+    ],
+    [
+     236999.542,
+     7051636.246,
+     332.944
+    ]
+   ]
+  },
+  {
+   "id": "ex09-b13-11-ob-to-eastern-rl325-dump-finish",
+   "order": 16,
+   "title_row": 473,
+   "title": "EX09 - B13-11 OB to Eastern RL325 DUMP (finish)",
+   "loading_unit": "EX09",
+   "description": "B13-11 OB to Eastern RL325 DUMP (finish)",
+   "duplicate_title_of": null,
+   "truck_note_raw": {
+    "I473": 5,
+    "J473": "Trucks req at 19.27hrs PT",
+    "M473": "CENTROID ADJUSTED"
+   },
+   "trucks_required": 5,
+   "trucks_required_rounded": 5,
+   "truck_note": "Trucks req at 19.27hrs PT",
+   "flags": [
+    "CENTROID ADJUSTED"
+   ],
+   "point_format": [
+    "easting_m",
+    "northing_m",
+    "elevation_m"
+   ],
+   "source_columns": "Raw Data E (X = easting), F (Y = northing), G (Z = RL)",
+   "first_point_row": 475,
+   "last_point_row": 524,
+   "point_count": 50,
+   "geometry_summary": {
+    "length_3d_m": 2201.41367547634,
+    "length_2d_m": 2199.042772297588,
+    "start_rl_m": 326.785,
+    "end_rl_m": 319.594,
+    "net_rise_m": -7.191000000000031
+   },
+   "is_current_data_dump": false,
+   "spreadsheet_mode_travel": {
+    "derived_not_cached": true,
+    "loaded_time_s": 329.0873339783436,
+    "unloaded_time_s": 316.4526821028951,
+    "segments": 49,
+    "segments_excluded_out_of_range": 0,
+    "distance_m": 2201.41367547634,
+    "timed_distance_m": 2201.41367547634
+   },
+   "points": [
+    [
+     237027.151,
+     7050932.073,
+     326.785
+    ],
+    [
+     237027.151,
+     7050932.073,
+     326.785
+    ],
+    [
+     237162.449,
+     7050824.77,
+     326.299
+    ],
+    [
+     237248.177,
+     7050760.775,
+     324.355
+    ],
+    [
+     237276.413,
+     7050740.747,
+     324.412
+    ],
+    [
+     237265.005,
+     7050715.893,
+     324.537
+    ],
+    [
+     237256.645,
+     7050700.211,
+     324.262
+    ],
+    [
+     237279.147,
+     7050684.968,
+     324.514
+    ],
+    [
+     237302.746,
+     7050675.467,
+     324.916
+    ],
+    [
+     237322.147,
+     7050681.267,
+     325.017
+    ],
+    [
+     237343.447,
+     7050702.067,
+     325.019
+    ],
+    [
+     237382.048,
+     7050745.666,
+     322.22
+    ],
+    [
+     237419.301,
+     7050788.713,
+     316.34
+    ],
+    [
+     237454.851,
+     7050849.764,
+     309.822
+    ],
+    [
+     237481.153,
+     7050907.663,
+     305.422
+    ],
+    [
+     237537.354,
+     7050976.462,
+     303.824
+    ],
+    [
+     237573.426,
+     7051026.943,
+     304.284
+    ],
+    [
+     237594.353,
+     7051066.224,
+     302.825
+    ],
+    [
+     237614.957,
+     7051103.06,
+     301.025
+    ],
+    [
+     237632.057,
+     7051128.46,
+     301.025
+    ],
+    [
+     237599.458,
+     7051153.661,
+     299.822
+    ],
+    [
+     237534.858,
+     7051201.962,
+     302.815
+    ],
+    [
+     237491.059,
+     7051237.163,
+     306.91
+    ],
+    [
+     237455.559,
+     7051261.064,
+     308.706
+    ],
+    [
+     237438.259,
+     7051261.064,
+     308.605
+    ],
+    [
+     237421.392,
+     7051254.619,
+     307.643
+    ],
+    [
+     237411.559,
+     7051236.465,
+     305.304
+    ],
+    [
+     237386.359,
+     7051216.165,
+     303.003
+    ],
+    [
+     237372.959,
+     7051210.965,
+     303.001
+    ],
+    [
+     237353.259,
+     7051222.566,
+     303.4
+    ],
+    [
+     237335.859,
+     7051243.266,
+     304.397
+    ],
+    [
+     237325.882,
+     7051273.023,
+     304.615
+    ],
+    [
+     237320.06,
+     7051300.866,
+     304.994
+    ],
+    [
+     237302.061,
+     7051323.667,
+     304.592
+    ],
+    [
+     237275.261,
+     7051352.067,
+     303.788
+    ],
+    [
+     237253.962,
+     7051368.968,
+     303.086
+    ],
+    [
+     237229.862,
+     7051386.368,
+     304.184
+    ],
+    [
+     237209.662,
+     7051390.768,
+     304.582
+    ],
+    [
+     237193.862,
+     7051376.669,
+     304.281
+    ],
+    [
+     237178.461,
+     7051361.169,
+     304.38
+    ],
+    [
+     237164.861,
+     7051346.27,
+     304.38
+    ],
+    [
+     237133.561,
+     7051357.97,
+     304.277
+    ],
+    [
+     237100.062,
+     7051387.871,
+     307.373
+    ],
+    [
+     237039.262,
+     7051448.472,
+     311.666
+    ],
+    [
+     236998.004,
+     7051488.631,
+     316.561
+    ],
+    [
+     236941.063,
+     7051555.374,
+     324.254
+    ],
+    [
+     236911.064,
+     7051587.675,
+     324.951
+    ],
+    [
+     236879.565,
+     7051617.076,
+     324.747
+    ],
+    [
+     236827.863,
+     7051659.646,
+     324.576
+    ],
+    [
+     236751.936,
+     7051744.104,
+     319.594
+    ]
+   ]
+  },
+  {
+   "id": "ldr-b6-7-ma-coal-to-rom",
+   "order": 17,
+   "title_row": 525,
+   "title": "LDR - B6-7 MA Coal to ROM",
+   "loading_unit": "LDR",
+   "description": "B6-7 MA Coal to ROM",
+   "duplicate_title_of": null,
+   "truck_note_raw": {
+    "I525": 4,
+    "J525": "Trucks req at 18.04hrs PT",
+    "M525": "CENTROID ADJUSTED"
+   },
+   "trucks_required": 4,
+   "trucks_required_rounded": 4,
+   "truck_note": "Trucks req at 18.04hrs PT",
+   "flags": [
+    "CENTROID ADJUSTED"
+   ],
+   "point_format": [
+    "easting_m",
+    "northing_m",
+    "elevation_m"
+   ],
+   "source_columns": "Raw Data E (X = easting), F (Y = northing), G (Z = RL)",
+   "first_point_row": 527,
+   "last_point_row": 620,
+   "point_count": 94,
+   "geometry_summary": {
+    "length_3d_m": 6141.357619103408,
+    "length_2d_m": 6137.58120346566,
+    "start_rl_m": 268.866,
+    "end_rl_m": 332.639,
+    "net_rise_m": 63.773000000000025
+   },
+   "is_current_data_dump": false,
+   "spreadsheet_mode_travel": {
+    "derived_not_cached": true,
+    "loaded_time_s": 862.2475565727088,
+    "unloaded_time_s": 838.8632562770717,
+    "segments": 93,
+    "segments_excluded_out_of_range": 0,
+    "distance_m": 6141.357619103408,
+    "timed_distance_m": 6141.357619103408
+   },
+   "points": [
+    [
+     236354.111,
+     7051657.793,
+     268.866
+    ],
+    [
+     236274.208,
+     7051723.59,
+     270.36
+    ],
+    [
+     236248.707,
+     7051743.489,
+     269.958
+    ],
+    [
+     236273.698,
+     7051778.168,
+     271.557
+    ],
+    [
+     236306.003,
+     7051829.892,
+     275.254
+    ],
+    [
+     236375.499,
+     7051910.895,
+     282.351
+    ],
+    [
+     236421.996,
+     7051975.898,
+     289.148
+    ],
+    [
+     236440.495,
+     7052004.398,
+     288.647
+    ],
+    [
+     236469.296,
+     7051985,
+     288.749
+    ],
+    [
+     236505.197,
+     7051954.901,
+     292.152
+    ],
+    [
+     236540.198,
+     7051926.903,
+     296.154
+    ],
+    [
+     236591.4,
+     7051886.206,
+     297.958
+    ],
+    [
+     236633.301,
+     7051855.829,
+     298.561
+    ],
+    [
+     236663.002,
+     7051834.809,
+     299.363
+    ],
+    [
+     236687.321,
+     7051814.755,
+     300.364
+    ],
+    [
+     236693.604,
+     7051793.81,
+     299.966
+    ],
+    [
+     236677.405,
+     7051770.31,
+     299.367
+    ],
+    [
+     236647.407,
+     7051732.83,
+     296.169
+    ],
+    [
+     236626.608,
+     7051711.107,
+     293.269
+    ],
+    [
+     236632.24,
+     7051682.33,
+     292.271
+    ],
+    [
+     236657.11,
+     7051665.308,
+     293.673
+    ],
+    [
+     236695.911,
+     7051628.51,
+     295.276
+    ],
+    [
+     236738.913,
+     7051590.212,
+     295.379
+    ],
+    [
+     236792.615,
+     7051553.114,
+     294.583
+    ],
+    [
+     236845.917,
+     7051508.616,
+     290.487
+    ],
+    [
+     236882.918,
+     7051482.918,
+     288.389
+    ],
+    [
+     236927.219,
+     7051448.72,
+     289.692
+    ],
+    [
+     236985.421,
+     7051406.023,
+     296.596
+    ],
+    [
+     237045.323,
+     7051358.626,
+     303.901
+    ],
+    [
+     237087.024,
+     7051328.428,
+     304.404
+    ],
+    [
+     237110.125,
+     7051312.029,
+     304.505
+    ],
+    [
+     237134.824,
+     7051325.43,
+     304.105
+    ],
+    [
+     237151.223,
+     7051347.23,
+     304.204
+    ],
+    [
+     237175.622,
+     7051376.932,
+     304.103
+    ],
+    [
+     237189.721,
+     7051408.232,
+     303.901
+    ],
+    [
+     237210.82,
+     7051421.333,
+     304.201
+    ],
+    [
+     237250.921,
+     7051394.135,
+     303.804
+    ],
+    [
+     237283.623,
+     7051367.436,
+     303.506
+    ],
+    [
+     237315.224,
+     7051336.238,
+     304.109
+    ],
+    [
+     237330.925,
+     7051305.938,
+     305.111
+    ],
+    [
+     237341.526,
+     7051276.439,
+     304.813
+    ],
+    [
+     237351.128,
+     7051251.039,
+     304.015
+    ],
+    [
+     237364.628,
+     7051238.44,
+     303.516
+    ],
+    [
+     237377.028,
+     7051235.94,
+     303.716
+    ],
+    [
+     237395.627,
+     7051254.041,
+     305.816
+    ],
+    [
+     237419.626,
+     7051273.342,
+     308.515
+    ],
+    [
+     237438.926,
+     7051282.943,
+     309.115
+    ],
+    [
+     237464.326,
+     7051279.644,
+     308.916
+    ],
+    [
+     237492.127,
+     7051265.346,
+     307.617
+    ],
+    [
+     237518.428,
+     7051239.847,
+     305.719
+    ],
+    [
+     237556.43,
+     7051204.948,
+     302.022
+    ],
+    [
+     237594.231,
+     7051176.75,
+     300.625
+    ],
+    [
+     237627.932,
+     7051153.151,
+     300.927
+    ],
+    [
+     237646.833,
+     7051130.652,
+     301.229
+    ],
+    [
+     237631.556,
+     7051098.56,
+     301.226
+    ],
+    [
+     237631.556,
+     7051098.56,
+     301.226
+    ],
+    [
+     237609.356,
+     7051063.061,
+     302.726
+    ],
+    [
+     237574.455,
+     7051011.462,
+     304.625
+    ],
+    [
+     237546.581,
+     7050973.462,
+     304
+    ],
+    [
+     237505.153,
+     7050923.463,
+     304.623
+    ],
+    [
+     237470.951,
+     7050866.264,
+     308.322
+    ],
+    [
+     237449.784,
+     7050814.9,
+     312.723
+    ],
+    [
+     237407.548,
+     7050760.965,
+     319.621
+    ],
+    [
+     237370.047,
+     7050715.166,
+     324.92
+    ],
+    [
+     237345.947,
+     7050681.867,
+     325.019
+    ],
+    [
+     237330.246,
+     7050664.167,
+     325.219
+    ],
+    [
+     237304.546,
+     7050653.368,
+     325.217
+    ],
+    [
+     237283.646,
+     7050662.368,
+     324.715
+    ],
+    [
+     237232.401,
+     7050691.869,
+     324.21
+    ],
+    [
+     237158.848,
+     7050746.97,
+     324.502
+    ],
+    [
+     237118.523,
+     7050773.999,
+     324.719
+    ],
+    [
+     237062.449,
+     7050819.772,
+     325.092
+    ],
+    [
+     236964.25,
+     7050873.974,
+     325.582
+    ],
+    [
+     236800.252,
+     7050984.777,
+     326.465
+    ],
+    [
+     236618.354,
+     7051098.381,
+     326.846
+    ],
+    [
+     236506.103,
+     7051157.798,
+     326.78
+    ],
+    [
+     236436.469,
+     7051182.797,
+     327.231
+    ],
+    [
+     236315.356,
+     7051204.887,
+     327.818
+    ],
+    [
+     236205.117,
+     7051223.225,
+     327.708
+    ],
+    [
+     236178.555,
+     7051148.289,
+     328.109
+    ],
+    [
+     236072,
+     7050852,
+     327.585
+    ],
+    [
+     236014,
+     7050702,
+     328.299
+    ],
+    [
+     235950,
+     7050506,
+     326.842
+    ],
+    [
+     235892,
+     7050328,
+     326.456
+    ],
+    [
+     235856,
+     7050236,
+     326.039
+    ],
+    [
+     235800.551,
+     7050112.551,
+     326.447
+    ],
+    [
+     235752,
+     7049996,
+     326.396
+    ],
+    [
+     235688,
+     7049852,
+     326.099
+    ],
+    [
+     235644,
+     7049744,
+     326.277
+    ],
+    [
+     235588.489,
+     7049620.489,
+     326.623
+    ],
+    [
+     235556,
+     7049588,
+     326.812
+    ],
+    [
+     235506,
+     7049562,
+     327.199
+    ],
+    [
+     235444,
+     7049537.071,
+     330.229
+    ],
+    [
+     235332,
+     7049524,
+     332.639
+    ]
+   ]
+  },
+  {
+   "id": "ldr-b104-ma-coal-to-rom",
+   "order": 18,
+   "title_row": 621,
+   "title": "LDR - B104 MA Coal to ROM",
+   "loading_unit": "LDR",
+   "description": "B104 MA Coal to ROM",
+   "duplicate_title_of": null,
+   "truck_note_raw": {
+    "I621": 3.2,
+    "J621": "Trucks req at 20hrs PT",
+    "M621": "CENTROID ADJUSTED"
+   },
+   "trucks_required": 3.2,
+   "trucks_required_rounded": null,
+   "truck_note": "Trucks req at 20hrs PT",
+   "flags": [
+    "CENTROID ADJUSTED"
+   ],
+   "point_format": [
+    "easting_m",
+    "northing_m",
+    "elevation_m"
+   ],
+   "source_columns": "Raw Data E (X = easting), F (Y = northing), G (Z = RL)",
+   "first_point_row": 623,
+   "last_point_row": 667,
+   "point_count": 45,
+   "geometry_summary": {
+    "length_3d_m": 4318.732322920003,
+    "length_2d_m": 4317.5938472131,
+    "start_rl_m": 301.233,
+    "end_rl_m": 332.639,
+    "net_rise_m": 31.406000000000006
+   },
+   "is_current_data_dump": false,
+   "spreadsheet_mode_travel": {
+    "derived_not_cached": true,
+    "loaded_time_s": 555.3744520441077,
+    "unloaded_time_s": 547.4883227685065,
+    "segments": 44,
+    "segments_excluded_out_of_range": 0,
+    "distance_m": 4318.732322920003,
+    "timed_distance_m": 4318.732322920003
+   },
+   "points": [
+    [
+     237915.365,
+     7051512.655,
+     301.233
+    ],
+    [
+     237871.564,
+     7051463.756,
+     299.432
+    ],
+    [
+     237844.363,
+     7051421.656,
+     298.331
+    ],
+    [
+     237797.461,
+     7051345.757,
+     299.23
+    ],
+    [
+     237732.024,
+     7051236.351,
+     297.551
+    ],
+    [
+     237670.658,
+     7051159.759,
+     299.627
+    ],
+    [
+     237631.556,
+     7051098.56,
+     301.226
+    ],
+    [
+     237609.356,
+     7051063.061,
+     302.726
+    ],
+    [
+     237574.455,
+     7051011.462,
+     304.625
+    ],
+    [
+     237546.581,
+     7050973.462,
+     304
+    ],
+    [
+     237505.153,
+     7050923.463,
+     304.623
+    ],
+    [
+     237470.951,
+     7050866.264,
+     308.322
+    ],
+    [
+     237449.784,
+     7050814.9,
+     312.723
+    ],
+    [
+     237407.548,
+     7050760.965,
+     319.621
+    ],
+    [
+     237370.047,
+     7050715.166,
+     324.92
+    ],
+    [
+     237345.947,
+     7050681.867,
+     325.019
+    ],
+    [
+     237330.246,
+     7050664.167,
+     325.219
+    ],
+    [
+     237304.546,
+     7050653.368,
+     325.217
+    ],
+    [
+     237283.646,
+     7050662.368,
+     324.715
+    ],
+    [
+     237232.401,
+     7050691.869,
+     324.21
+    ],
+    [
+     237158.848,
+     7050746.97,
+     324.502
+    ],
+    [
+     237118.523,
+     7050773.999,
+     324.719
+    ],
+    [
+     237062.449,
+     7050819.772,
+     325.092
+    ],
+    [
+     236964.25,
+     7050873.974,
+     325.582
+    ],
+    [
+     236800.252,
+     7050984.777,
+     326.465
+    ],
+    [
+     236618.354,
+     7051098.381,
+     326.846
+    ],
+    [
+     236506.103,
+     7051157.798,
+     326.78
+    ],
+    [
+     236436.469,
+     7051182.797,
+     327.231
+    ],
+    [
+     236315.356,
+     7051204.887,
+     327.818
+    ],
+    [
+     236205.117,
+     7051223.225,
+     327.708
+    ],
+    [
+     236178.555,
+     7051148.289,
+     328.109
+    ],
+    [
+     236072,
+     7050852,
+     327.585
+    ],
+    [
+     236014,
+     7050702,
+     328.299
+    ],
+    [
+     235950,
+     7050506,
+     326.842
+    ],
+    [
+     235892,
+     7050328,
+     326.456
+    ],
+    [
+     235856,
+     7050236,
+     326.039
+    ],
+    [
+     235800.551,
+     7050112.551,
+     326.447
+    ],
+    [
+     235752,
+     7049996,
+     326.396
+    ],
+    [
+     235688,
+     7049852,
+     326.099
+    ],
+    [
+     235644,
+     7049744,
+     326.277
+    ],
+    [
+     235588.489,
+     7049620.489,
+     326.623
+    ],
+    [
+     235556,
+     7049588,
+     326.812
+    ],
+    [
+     235506,
+     7049562,
+     327.199
+    ],
+    [
+     235444,
+     7049537.071,
+     330.229
+    ],
+    [
+     235332,
+     7049524,
+     332.639
+    ]
+   ]
+  },
+  {
+   "id": "ex09-b08-10-ob-to-t-bridge-rl295",
+   "order": 19,
+   "title_row": 669,
+   "title": "EX09 - B08-10 OB to T-Bridge RL295",
+   "loading_unit": "EX09",
+   "description": "B08-10 OB to T-Bridge RL295",
+   "duplicate_title_of": null,
+   "truck_note_raw": {
+    "I669": 5.4,
+    "J669": "Trucks req at 20hrs PT",
+    "M669": "CENTROID ADJUSTED"
+   },
+   "trucks_required": 5.4,
+   "trucks_required_rounded": null,
+   "truck_note": "Trucks req at 20hrs PT",
+   "flags": [
+    "CENTROID ADJUSTED"
+   ],
+   "point_format": [
+    "easting_m",
+    "northing_m",
+    "elevation_m"
+   ],
+   "source_columns": "Raw Data E (X = easting), F (Y = northing), G (Z = RL)",
+   "first_point_row": 671,
+   "last_point_row": 705,
+   "point_count": 35,
+   "geometry_summary": {
+    "length_3d_m": 2548.4349160935626,
+    "length_2d_m": 2547.2522315612537,
+    "start_rl_m": 326.777,
+    "end_rl_m": 295,
+    "net_rise_m": -31.776999999999987
+   },
+   "is_current_data_dump": false,
+   "spreadsheet_mode_travel": {
+    "derived_not_cached": true,
+    "loaded_time_s": 345.50859484395636,
+    "unloaded_time_s": 338.81249363631673,
+    "segments": 34,
+    "segments_excluded_out_of_range": 0,
+    "distance_m": 2548.434916093562,
+    "timed_distance_m": 2548.434916093562
+   },
+   "points": [
+    [
+     236508.079,
+     7051284.328,
+     326.777
+    ],
+    [
+     236333.406,
+     7051422.608,
+     327.463
+    ],
+    [
+     236293.987,
+     7051409.241,
+     327.261
+    ],
+    [
+     236253.784,
+     7051368.844,
+     327.659
+    ],
+    [
+     236234.181,
+     7051319.345,
+     327.659
+    ],
+    [
+     236214.547,
+     7051266.592,
+     327.659
+    ],
+    [
+     236211.276,
+     7051244.347,
+     327.659
+    ],
+    [
+     236232.075,
+     7051233.245,
+     327.561
+    ],
+    [
+     236313.175,
+     7051224.34,
+     327.566
+    ],
+    [
+     236408.926,
+     7051214.737,
+     327.066
+    ],
+    [
+     236466.773,
+     7051201.33,
+     327.077
+    ],
+    [
+     236517.901,
+     7051177.313,
+     326.91
+    ],
+    [
+     236583.569,
+     7051137.623,
+     326.986
+    ],
+    [
+     236668.965,
+     7051079.317,
+     326.493
+    ],
+    [
+     236747.562,
+     7051023.512,
+     326.599
+    ],
+    [
+     236828.159,
+     7050976.607,
+     326.105
+    ],
+    [
+     236913.056,
+     7050923.602,
+     325.512
+    ],
+    [
+     237016.452,
+     7050858.295,
+     325.12
+    ],
+    [
+     237107.748,
+     7050802.589,
+     324.927
+    ],
+    [
+     237161.745,
+     7050754.686,
+     324.532
+    ],
+    [
+     237237.941,
+     7050699.981,
+     324.338
+    ],
+    [
+     237288.84,
+     7050671.077,
+     324.842
+    ],
+    [
+     237314.24,
+     7050674.076,
+     324.944
+    ],
+    [
+     237347.042,
+     7050711.074,
+     325.145
+    ],
+    [
+     237395.545,
+     7050756.471,
+     320.747
+    ],
+    [
+     237436.55,
+     7050820.468,
+     313.148
+    ],
+    [
+     237472.427,
+     7050891.511,
+     306.604
+    ],
+    [
+     237516.918,
+     7050953.221,
+     304.35
+    ],
+    [
+     237521.161,
+     7050988.962,
+     303.949
+    ],
+    [
+     237482.562,
+     7051010.565,
+     304.046
+    ],
+    [
+     237395.766,
+     7051067.37,
+     303.139
+    ],
+    [
+     237341.668,
+     7051102.374,
+     304.735
+    ],
+    [
+     237368.272,
+     7051153.972,
+     303.836
+    ],
+    [
+     237481.669,
+     7051099.064,
+     295
+    ],
+    [
+     237490.736,
+     7051145.581,
+     295
+    ]
+   ]
+  },
+  {
+   "id": "ex09-b08-10-ob-to-t-bridge-rl340",
+   "order": 20,
+   "title_row": 707,
+   "title": "EX09 - B08-10 OB to T-Bridge RL340",
+   "loading_unit": "EX09",
+   "description": "B08-10 OB to T-Bridge RL340",
+   "duplicate_title_of": null,
+   "truck_note_raw": {
+    "I707": 7,
+    "J707": "Trucks req at 19.82hrs PT",
+    "M707": "CENTROID ADJUSTED"
+   },
+   "trucks_required": 7,
+   "trucks_required_rounded": 7,
+   "truck_note": "Trucks req at 19.82hrs PT",
+   "flags": [
+    "CENTROID ADJUSTED"
+   ],
+   "point_format": [
+    "easting_m",
+    "northing_m",
+    "elevation_m"
+   ],
+   "source_columns": "Raw Data E (X = easting), F (Y = northing), G (Z = RL)",
+   "first_point_row": 709,
+   "last_point_row": 764,
+   "point_count": 56,
+   "geometry_summary": {
+    "length_3d_m": 3375.80381327067,
+    "length_2d_m": 3372.700907303638,
+    "start_rl_m": 326.777,
+    "end_rl_m": 340,
+    "net_rise_m": 13.223000000000013
+   },
+   "is_current_data_dump": false,
+   "spreadsheet_mode_travel": {
+    "derived_not_cached": true,
+    "loaded_time_s": 497.53962423233446,
+    "unloaded_time_s": 479.40864562426793,
+    "segments": 55,
+    "segments_excluded_out_of_range": 0,
+    "distance_m": 3375.8038132706697,
+    "timed_distance_m": 3375.8038132706697
+   },
+   "points": [
+    [
+     236508.079,
+     7051284.328,
+     326.777
+    ],
+    [
+     236508.079,
+     7051284.328,
+     326.777
+    ],
+    [
+     236333.406,
+     7051422.608,
+     327.463
+    ],
+    [
+     236293.987,
+     7051409.241,
+     327.261
+    ],
+    [
+     236253.784,
+     7051368.844,
+     327.659
+    ],
+    [
+     236234.181,
+     7051319.345,
+     327.659
+    ],
+    [
+     236214.547,
+     7051266.592,
+     327.659
+    ],
+    [
+     236211.276,
+     7051244.347,
+     327.659
+    ],
+    [
+     236232.075,
+     7051233.245,
+     327.561
+    ],
+    [
+     236313.175,
+     7051224.34,
+     327.566
+    ],
+    [
+     236408.926,
+     7051214.737,
+     327.066
+    ],
+    [
+     236466.773,
+     7051201.33,
+     327.077
+    ],
+    [
+     236517.901,
+     7051177.313,
+     326.91
+    ],
+    [
+     236583.569,
+     7051137.623,
+     326.986
+    ],
+    [
+     236668.965,
+     7051079.317,
+     326.493
+    ],
+    [
+     236747.562,
+     7051023.512,
+     326.599
+    ],
+    [
+     236828.159,
+     7050976.607,
+     326.105
+    ],
+    [
+     236913.056,
+     7050923.602,
+     325.512
+    ],
+    [
+     237016.452,
+     7050858.295,
+     325.12
+    ],
+    [
+     237107.748,
+     7050802.589,
+     324.927
+    ],
+    [
+     237161.745,
+     7050754.686,
+     324.532
+    ],
+    [
+     237237.941,
+     7050699.981,
+     324.338
+    ],
+    [
+     237288.84,
+     7050671.077,
+     324.842
+    ],
+    [
+     237314.24,
+     7050674.076,
+     324.944
+    ],
+    [
+     237347.042,
+     7050711.074,
+     325.145
+    ],
+    [
+     237395.545,
+     7050756.471,
+     320.747
+    ],
+    [
+     237436.55,
+     7050820.468,
+     313.148
+    ],
+    [
+     237472.427,
+     7050891.511,
+     306.604
+    ],
+    [
+     237516.918,
+     7050953.221,
+     304.35
+    ],
+    [
+     237570.564,
+     7051036.859,
+     304.351
+    ],
+    [
+     237607.615,
+     7051093.336,
+     301.696
+    ],
+    [
+     237627.77,
+     7051127.155,
+     300.853
+    ],
+    [
+     237600.072,
+     7051148.157,
+     300.05
+    ],
+    [
+     237535.248,
+     7051196.635,
+     302.48
+    ],
+    [
+     237487.414,
+     7051237.86,
+     307.005
+    ],
+    [
+     237452.178,
+     7051255.967,
+     308.638
+    ],
+    [
+     237432.278,
+     7051260.268,
+     308.437
+    ],
+    [
+     237406.077,
+     7051237.47,
+     305.236
+    ],
+    [
+     237384.775,
+     7051203.471,
+     303.235
+    ],
+    [
+     237359.768,
+     7051216.509,
+     303.245
+    ],
+    [
+     237336.077,
+     7051241.374,
+     304.331
+    ],
+    [
+     237327.474,
+     7051271.464,
+     304.73
+    ],
+    [
+     237318.081,
+     7051303.075,
+     304.929
+    ],
+    [
+     237301.377,
+     7051324.916,
+     304.627
+    ],
+    [
+     237281.284,
+     7051345.678,
+     303.925
+    ],
+    [
+     237251.986,
+     7051370.379,
+     303.223
+    ],
+    [
+     237227.787,
+     7051389.481,
+     304.321
+    ],
+    [
+     237206.186,
+     7051385.982,
+     303.82
+    ],
+    [
+     237186.485,
+     7051363.084,
+     304.219
+    ],
+    [
+     237160.583,
+     7051332.185,
+     304.318
+    ],
+    [
+     237110.486,
+     7051379.089,
+     306.013
+    ],
+    [
+     237054.189,
+     7051429.592,
+     310.309
+    ],
+    [
+     237011.887,
+     7051479.908,
+     315.11
+    ],
+    [
+     236975.894,
+     7051522.798,
+     320.101
+    ],
+    [
+     236941.096,
+     7051559.9,
+     324.498
+    ],
+    [
+     236872.303,
+     7051662.704,
+     340
+    ]
+   ]
+  },
+  {
+   "id": "ldr-b011-to-rom",
+   "order": 21,
+   "title_row": 766,
+   "title": "LDR - B011 to ROM",
+   "loading_unit": "LDR",
+   "description": "B011 to ROM",
+   "duplicate_title_of": null,
+   "truck_note_raw": {
+    "I766": 3,
+    "J766": "Trucks req at 16.82hrs PT",
+    "M766": "CENTROID ADJUSTED"
+   },
+   "trucks_required": 3,
+   "trucks_required_rounded": 3,
+   "truck_note": "Trucks req at 16.82hrs PT",
+   "flags": [
+    "CENTROID ADJUSTED"
+   ],
+   "point_format": [
+    "easting_m",
+    "northing_m",
+    "elevation_m"
+   ],
+   "source_columns": "Raw Data E (X = easting), F (Y = northing), G (Z = RL)",
+   "first_point_row": 768,
+   "last_point_row": 833,
+   "point_count": 66,
+   "geometry_summary": {
+    "length_3d_m": 4844.647414132647,
+    "length_2d_m": 4842.025102838604,
+    "start_rl_m": 299.711,
+    "end_rl_m": 332.639,
+    "net_rise_m": 32.928
+   },
+   "is_current_data_dump": false,
+   "spreadsheet_mode_travel": {
+    "derived_not_cached": true,
+    "loaded_time_s": 672.0176850939637,
+    "unloaded_time_s": 652.124470778876,
+    "segments": 65,
+    "segments_excluded_out_of_range": 0,
+    "distance_m": 4844.647414132647,
+    "timed_distance_m": 4844.647414132647
+   },
+   "points": [
+    [
+     236962.467,
+     7051081.598,
+     299.711
+    ],
+    [
+     236992.266,
+     7051053.996,
+     299.114
+    ],
+    [
+     237038.565,
+     7051047.693,
+     300.617
+    ],
+    [
+     237061.566,
+     7051057.892,
+     298.518
+    ],
+    [
+     237106.17,
+     7051118.488,
+     290.319
+    ],
+    [
+     237149.774,
+     7051179.786,
+     289.721
+    ],
+    [
+     237197.713,
+     7051240.059,
+     292.598
+    ],
+    [
+     237228.112,
+     7051285.412,
+     297.041
+    ],
+    [
+     237269.983,
+     7051337.978,
+     303.325
+    ],
+    [
+     237290.373,
+     7051360.772,
+     303.635
+    ],
+    [
+     237315.224,
+     7051336.238,
+     304.109
+    ],
+    [
+     237330.925,
+     7051305.938,
+     305.111
+    ],
+    [
+     237341.526,
+     7051276.439,
+     304.813
+    ],
+    [
+     237351.128,
+     7051251.039,
+     304.015
+    ],
+    [
+     237364.628,
+     7051238.44,
+     303.516
+    ],
+    [
+     237377.028,
+     7051235.94,
+     303.716
+    ],
+    [
+     237395.627,
+     7051254.041,
+     305.816
+    ],
+    [
+     237419.626,
+     7051273.342,
+     308.515
+    ],
+    [
+     237438.926,
+     7051282.943,
+     309.115
+    ],
+    [
+     237464.326,
+     7051279.644,
+     308.916
+    ],
+    [
+     237492.127,
+     7051265.346,
+     307.617
+    ],
+    [
+     237518.428,
+     7051239.847,
+     305.719
+    ],
+    [
+     237556.43,
+     7051204.948,
+     302.022
+    ],
+    [
+     237594.231,
+     7051176.75,
+     300.625
+    ],
+    [
+     237627.932,
+     7051153.151,
+     300.927
+    ],
+    [
+     237646.833,
+     7051130.652,
+     301.229
+    ],
+    [
+     237631.556,
+     7051098.56,
+     301.226
+    ],
+    [
+     237631.556,
+     7051098.56,
+     301.226
+    ],
+    [
+     237609.356,
+     7051063.061,
+     302.726
+    ],
+    [
+     237574.455,
+     7051011.462,
+     304.625
+    ],
+    [
+     237546.581,
+     7050973.462,
+     304
+    ],
+    [
+     237505.153,
+     7050923.463,
+     304.623
+    ],
+    [
+     237470.951,
+     7050866.264,
+     308.322
+    ],
+    [
+     237449.784,
+     7050814.9,
+     312.723
+    ],
+    [
+     237407.548,
+     7050760.965,
+     319.621
+    ],
+    [
+     237370.047,
+     7050715.166,
+     324.92
+    ],
+    [
+     237345.947,
+     7050681.867,
+     325.019
+    ],
+    [
+     237330.246,
+     7050664.167,
+     325.219
+    ],
+    [
+     237304.546,
+     7050653.368,
+     325.217
+    ],
+    [
+     237283.646,
+     7050662.368,
+     324.715
+    ],
+    [
+     237232.401,
+     7050691.869,
+     324.21
+    ],
+    [
+     237158.848,
+     7050746.97,
+     324.502
+    ],
+    [
+     237118.523,
+     7050773.999,
+     324.719
+    ],
+    [
+     237062.449,
+     7050819.772,
+     325.092
+    ],
+    [
+     236964.25,
+     7050873.974,
+     325.582
+    ],
+    [
+     236800.252,
+     7050984.777,
+     326.465
+    ],
+    [
+     236618.354,
+     7051098.381,
+     326.846
+    ],
+    [
+     236506.103,
+     7051157.798,
+     326.78
+    ],
+    [
+     236436.469,
+     7051182.797,
+     327.231
+    ],
+    [
+     236315.356,
+     7051204.887,
+     327.818
+    ],
+    [
+     236205.117,
+     7051223.225,
+     327.708
+    ],
+    [
+     236178.555,
+     7051148.289,
+     328.109
+    ],
+    [
+     236072,
+     7050852,
+     327.585
+    ],
+    [
+     236014,
+     7050702,
+     328.299
+    ],
+    [
+     235950,
+     7050506,
+     326.842
+    ],
+    [
+     235892,
+     7050328,
+     326.456
+    ],
+    [
+     235856,
+     7050236,
+     326.039
+    ],
+    [
+     235800.551,
+     7050112.551,
+     326.447
+    ],
+    [
+     235752,
+     7049996,
+     326.396
+    ],
+    [
+     235688,
+     7049852,
+     326.099
+    ],
+    [
+     235644,
+     7049744,
+     326.277
+    ],
+    [
+     235588.489,
+     7049620.489,
+     326.623
+    ],
+    [
+     235556,
+     7049588,
+     326.812
+    ],
+    [
+     235506,
+     7049562,
+     327.199
+    ],
+    [
+     235444,
+     7049537.071,
+     330.229
+    ],
+    [
+     235332,
+     7049524,
+     332.639
+    ]
+   ]
+  },
+  {
+   "id": "ex09-b7-9-to-rl325",
+   "order": 22,
+   "title_row": 835,
+   "title": "EX09 - B7-9 to RL325",
+   "loading_unit": "EX09",
+   "description": "B7-9 to RL325",
+   "duplicate_title_of": null,
+   "truck_note_raw": {
+    "I835": 5,
+    "J835": "Trucks req at 0.92hrs PT hang/shift (32kbcm)",
+    "P835": "centroid-to-centroid"
+   },
+   "trucks_required": 5,
+   "trucks_required_rounded": 5,
+   "truck_note": "Trucks req at 0.92hrs PT hang/shift (32kbcm)",
+   "flags": [
+    "centroid-to-centroid"
+   ],
+   "point_format": [
+    "easting_m",
+    "northing_m",
+    "elevation_m"
+   ],
+   "source_columns": "Raw Data E (X = easting), F (Y = northing), G (Z = RL)",
+   "first_point_row": 837,
+   "last_point_row": 1026,
+   "point_count": 190,
+   "geometry_summary": {
+    "length_3d_m": 2166.29908190834,
+    "length_2d_m": 2159.1192486772165,
+    "start_rl_m": 291.315211467443,
+    "end_rl_m": 325,
+    "net_rise_m": 33.68478853255698
+   },
+   "is_current_data_dump": false,
+   "spreadsheet_mode_travel": {
+    "derived_not_cached": true,
+    "loaded_time_s": 341.2259125266014,
+    "unloaded_time_s": 323.20874143536133,
+    "segments": 189,
+    "segments_excluded_out_of_range": 14,
+    "distance_m": 2166.29908190834,
+    "timed_distance_m": 2128.0568500511527
+   },
+   "points": [
+    [
+     236494.145034093,
+     7051413.66124887,
+     291.315211467443
+    ],
+    [
+     236494.145034092,
+     7051413.66124887,
+     294.727579310536
+    ],
+    [
+     236534.949189685,
+     7051379.40610139,
+     295.616968455145
+    ],
+    [
+     236536.266839706,
+     7051378.2999323,
+     295.755549959315
+    ],
+    [
+     236552.943404262,
+     7051364.2999323,
+     296.052134194451
+    ],
+    [
+     236552.949189685,
+     7051364.29507543,
+     296.051658898848
+    ],
+    [
+     236565.440622019,
+     7051353.80849996,
+     296.498677306627
+    ],
+    [
+     236566.949189685,
+     7051352.54205523,
+     296.404751106611
+    ],
+    [
+     236570.949189685,
+     7051349.18404946,
+     296.329457662976
+    ],
+    [
+     236572.002335182,
+     7051348.2999323,
+     296.353120860453
+    ],
+    [
+     236572.949189685,
+     7051347.50504658,
+     296.370678315518
+    ],
+    [
+     236584.949189685,
+     7051337.43102927,
+     296.59124566358
+    ],
+    [
+     236594.080629902,
+     7051329.76517203,
+     295.545051813126
+    ],
+    [
+     236594.949189685,
+     7051328.94448453,
+     295.443105725173
+    ],
+    [
+     236596.949189685,
+     7051327.05471825,
+     295.261691907568
+    ],
+    [
+     236614.949189685,
+     7051310.04682166,
+     294.177023987292
+    ],
+    [
+     236616.797978477,
+     7051308.2999323,
+     294.264598952041
+    ],
+    [
+     236618.914642335,
+     7051306.2999323,
+     294.253792450415
+    ],
+    [
+     236642.197944773,
+     7051284.2999323,
+     294.759289367509
+    ],
+    [
+     236642.949189685,
+     7051283.59009364,
+     294.991097014098
+    ],
+    [
+     236650.664600205,
+     7051276.2999323,
+     294.699944703764
+    ],
+    [
+     236661.749114201,
+     7051265.82636187,
+     294.768648400903
+    ],
+    [
+     236706.949189685,
+     7051231.84094066,
+     293.154304919547
+    ],
+    [
+     236708.799131386,
+     7051230.4499906,
+     293.43144445548
+    ],
+    [
+     236708.821875884,
+     7051230.43288927,
+     293.434556677938
+    ],
+    [
+     236718.929096752,
+     7051234.32002523,
+     293.524507391438
+    ],
+    [
+     236718.949189685,
+     7051234.32775277,
+     293.522783336721
+    ],
+    [
+     236726.625655505,
+     7051237.28004468,
+     292.698577240109
+    ],
+    [
+     236734.227211748,
+     7051250.2999323,
+     292.444975529251
+    ],
+    [
+     236738.897947143,
+     7051258.2999323,
+     291.024353530887
+    ],
+    [
+     236741.128579529,
+     7051262.12054245,
+     290.142744204968
+    ],
+    [
+     236741.23331484,
+     7051262.2999323,
+     290.145397506557
+    ],
+    [
+     236741.865827249,
+     7051263.38329473,
+     289.761055506434
+    ],
+    [
+     236742.400998689,
+     7051264.2999323,
+     289.787388435996
+    ],
+    [
+     236749.238304456,
+     7051276.01081753,
+     288.700341994399
+    ],
+    [
+     236753.66179078,
+     7051283.5873312,
+     288.410751695723
+    ],
+    [
+     236754.949189685,
+     7051285.79237824,
+     288.549118908153
+    ],
+    [
+     236755.136286222,
+     7051286.11283576,
+     288.351770747474
+    ],
+    [
+     236758.085277105,
+     7051291.16384488,
+     287.93026889724
+    ],
+    [
+     236759.360866812,
+     7051293.34866521,
+     287.995827540755
+    ],
+    [
+     236770.83909356,
+     7051320.2999323,
+     285.686085633801
+    ],
+    [
+     236771.690869969,
+     7051322.2999323,
+     285.839002353289
+    ],
+    [
+     236772.066708357,
+     7051323.18241363,
+     285.852208630849
+    ],
+    [
+     236772.542646378,
+     7051324.2999323,
+     285.647831772238
+    ],
+    [
+     236785.893141888,
+     7051355.64735017,
+     284.944707840681
+    ],
+    [
+     236786.534876049,
+     7051356.2999323,
+     284.952026891393
+    ],
+    [
+     236786.740296637,
+     7051356.50882535,
+     284.972010512152
+    ],
+    [
+     236789.715152926,
+     7051359.53396906,
+     285.054346129559
+    ],
+    [
+     236792.435137144,
+     7051362.2999323,
+     285.134331107851
+    ],
+    [
+     236812.522384482,
+     7051382.7267375,
+     285.81516267585
+    ],
+    [
+     236820.455334588,
+     7051390.79378739,
+     286.375858105036
+    ],
+    [
+     236825.413428404,
+     7051395.83569358,
+     286.76951910183
+    ],
+    [
+     236825.869950013,
+     7051396.2999323,
+     286.833547094298
+    ],
+    [
+     236839.761741483,
+     7051410.42655271,
+     288.204092845321
+    ],
+    [
+     236842.949189685,
+     7051414.20358961,
+     288.469075675517
+    ],
+    [
+     236842.993283013,
+     7051414.25583897,
+     288.473109636773
+    ],
+    [
+     236852.14671835,
+     7051425.10240363,
+     289.1001909831
+    ],
+    [
+     236859.469466619,
+     7051433.77965536,
+     289.269723552015
+    ],
+    [
+     236864.949189685,
+     7051440.27297381,
+     289.439171617492
+    ],
+    [
+     236864.961527821,
+     7051440.28759416,
+     289.440373062701
+    ],
+    [
+     236864.971939997,
+     7051440.2999323,
+     289.439685298858
+    ],
+    [
+     236865.876871355,
+     7051441.37225063,
+     289.441965256938
+    ],
+    [
+     236871.723154319,
+     7051448.2999323,
+     290.25595912931
+    ],
+    [
+     236875.030306692,
+     7051452.21881529,
+     289.938136708461
+    ],
+    [
+     236877.061723064,
+     7051454.62598683,
+     289.840745761991
+    ],
+    [
+     236874.806466116,
+     7051472.99358069,
+     290.179135873914
+    ],
+    [
+     236858.292104485,
+     7051487.27981357,
+     290.173272877932
+    ],
+    [
+     236856.949189685,
+     7051488.3290136,
+     290.128834508279
+    ],
+    [
+     236854.949189685,
+     7051489.89158485,
+     290.231674196933
+    ],
+    [
+     236854.426528787,
+     7051490.2999323,
+     290.23072399269
+    ],
+    [
+     236852.949189685,
+     7051491.4541561,
+     290.266087404789
+    ],
+    [
+     236836.949189685,
+     7051503.95472613,
+     291.187277237847
+    ],
+    [
+     236812.949189685,
+     7051522.70558116,
+     293.142304445437
+    ],
+    [
+     236805.788746763,
+     7051528.2999323,
+     293.628350876384
+    ],
+    [
+     236804.949189685,
+     7051528.95586617,
+     293.686631007988
+    ],
+    [
+     236803.228863499,
+     7051530.2999323,
+     293.709947536607
+    ],
+    [
+     236796.949189685,
+     7051535.20615119,
+     293.85153233252
+    ],
+    [
+     236792.949189685,
+     7051538.33129369,
+     293.922670799023
+    ],
+    [
+     236765.372760668,
+     7051559.87636131,
+     294.590359870657
+    ],
+    [
+     236728.949189685,
+     7051588.33357379,
+     295.096219830728
+    ],
+    [
+     236726.949189685,
+     7051589.89614504,
+     295.077542965131
+    ],
+    [
+     236722.949189685,
+     7051593.02128755,
+     295.071317982975
+    ],
+    [
+     236704.949189685,
+     7051607.08442883,
+     295.044447057135
+    ],
+    [
+     236703.393416187,
+     7051608.2999323,
+     294.978651857437
+    ],
+    [
+     236702.949189685,
+     7051608.64700008,
+     294.993651403738
+    ],
+    [
+     236692.217989246,
+     7051617.03113274,
+     295.016260204363
+    ],
+    [
+     236657.315517427,
+     7051644.2999323,
+     294.229513685909
+    ],
+    [
+     236656.949189685,
+     7051644.5861389,
+     294.211422467755
+    ],
+    [
+     236655.640603535,
+     7051645.60851845,
+     294.111578492722
+    ],
+    [
+     236636.836451312,
+     7051660.2999323,
+     292.504153193803
+    ],
+    [
+     236624.949189685,
+     7051669.58727895,
+     291.776736885586
+    ],
+    [
+     236614.949189685,
+     7051677.40013521,
+     291.480481089168
+    ],
+    [
+     236588.198669288,
+     7051698.2999323,
+     291.522365847557
+    ],
+    [
+     236582.949189685,
+     7051702.40127526,
+     291.556991124511
+    ],
+    [
+     236570.431478659,
+     7051712.18118296,
+     291.722986832261
+    ],
+    [
+     236535.469118223,
+     7051731.19397563,
+     294.546821206808
+    ],
+    [
+     236512.949189685,
+     7051739.524159,
+     297.377585824587
+    ],
+    [
+     236485.012491493,
+     7051749.85802033,
+     299.713681638241
+    ],
+    [
+     236480.949189685,
+     7051751.83151318,
+     300.018583051236
+    ],
+    [
+     236475.866864787,
+     7051754.2999323,
+     301.00746714517
+    ],
+    [
+     236456.924414658,
+     7051763.50003402,
+     302.103364914656
+    ],
+    [
+     236442.954533039,
+     7051778.2999323,
+     300.059115581825
+    ],
+    [
+     236442.949189685,
+     7051778.30559312,
+     300.055696355203
+    ],
+    [
+     236422.096715547,
+     7051800.39701125,
+     300.738638520241
+    ],
+    [
+     236390.949189685,
+     7051832.10640499,
+     301.280209675868
+    ],
+    [
+     236378.971723004,
+     7051844.2999323,
+     301.209151539673
+    ],
+    [
+     236378.949189685,
+     7051844.32287209,
+     301.208100287899
+    ],
+    [
+     236376.949189685,
+     7051846.35894994,
+     301.213057963015
+    ],
+    [
+     236362.949189685,
+     7051860.61149489,
+     301.184488813752
+    ],
+    [
+     236361.290670187,
+     7051862.2999323,
+     301.115641441724
+    ],
+    [
+     236351.957908033,
+     7051871.80104745,
+     301.599139407277
+    ],
+    [
+     236348.949189685,
+     7051876.33553087,
+     301.92989271266
+    ],
+    [
+     236347.645770956,
+     7051878.2999323,
+     301.57145144907
+    ],
+    [
+     236344.991692802,
+     7051882.2999323,
+     301.895099276442
+    ],
+    [
+     236341.010575571,
+     7051888.2999323,
+     302.348560612767
+    ],
+    [
+     236339.683536494,
+     7051890.2999323,
+     302.028371628398
+    ],
+    [
+     236334.799327218,
+     7051897.66099553,
+     301.100000008941
+    ],
+    [
+     236339.035066371,
+     7051902.2999323,
+     301.623783538402
+    ],
+    [
+     236339.948646442,
+     7051903.30047554,
+     301.541301130394
+    ],
+    [
+     236340.949189685,
+     7051904.39625993,
+     302.137140434377
+    ],
+    [
+     236353.972929775,
+     7051918.65972249,
+     302.563132762909
+    ],
+    [
+     236360.949189685,
+     7051920.16733324,
+     303.034137112014
+    ],
+    [
+     236364.347412763,
+     7051920.90170922,
+     303.124610131682
+    ],
+    [
+     236364.949189685,
+     7051921.03175675,
+     303.194063610001
+    ],
+    [
+     236370.621952732,
+     7051922.25767418,
+     301.836696565151
+    ],
+    [
+     236388.115720555,
+     7051912.2999323,
+     302.34699066456
+    ],
+    [
+     236395.142923323,
+     7051908.2999323,
+     303.130262714268
+    ],
+    [
+     236404.949189685,
+     7051902.71804335,
+     304.258590317065
+    ],
+    [
+     236405.683727476,
+     7051902.2999323,
+     304.343107628165
+    ],
+    [
+     236430.949189685,
+     7051887.91841348,
+     307.250199619852
+    ],
+    [
+     236458.949189685,
+     7051871.98035054,
+     309.999999999964
+    ],
+    [
+     236461.901349622,
+     7051870.2999323,
+     309.999999999963
+    ],
+    [
+     236468.949189685,
+     7051866.28818521,
+     309.999999999961
+    ],
+    [
+     236468.976458812,
+     7051866.27266317,
+     309.999999999961
+    ],
+    [
+     236475.025624748,
+     7051862.82937791,
+     310
+    ],
+    [
+     236480.949189685,
+     7051859.90672988,
+     309.999999999956
+    ],
+    [
+     236481.725339143,
+     7051859.52378284,
+     309.999999999956
+    ],
+    [
+     236489.621012507,
+     7051855.62810948,
+     309.999999999954
+    ],
+    [
+     236492.949189685,
+     7051853.98600872,
+     309.999999999986
+    ],
+    [
+     236512.949189685,
+     7051844.11814012,
+     310.000000000162
+    ],
+    [
+     236533.047216009,
+     7051834.20190597,
+     310.693243145765
+    ],
+    [
+     236540.949189685,
+     7051830.30312408,
+     311.574348091753
+    ],
+    [
+     236544.949189685,
+     7051828.32955036,
+     312.02036574878
+    ],
+    [
+     236582.949189685,
+     7051809.58060001,
+     316.257533489744
+    ],
+    [
+     236584.369092876,
+     7051808.88002911,
+     316.415858963307
+    ],
+    [
+     236588.316929558,
+     7051806.93219242,
+     316.856060180034
+    ],
+    [
+     236596.212602922,
+     7051803.03651906,
+     317.736462613598
+    ],
+    [
+     236628.838699965,
+     7051786.93901713,
+     321.374416440725
+    ],
+    [
+     236646.496133193,
+     7051778.2999323,
+     323.340006803567
+    ],
+    [
+     236699.9181775,
+     7051752.16263552,
+     325
+    ],
+    [
+     236717.415227339,
+     7051771.83389464,
+     325
+    ],
+    [
+     236717.829755155,
+     7051772.2999323,
+     325
+    ],
+    [
+     236724.945537516,
+     7051780.2999323,
+     325
+    ],
+    [
+     236724.947256781,
+     7051780.3018652,
+     325
+    ],
+    [
+     236724.949189685,
+     7051780.30403829,
+     325
+    ],
+    [
+     236726.830264142,
+     7051782.41885784,
+     325
+    ],
+    [
+     236730.282374288,
+     7051786.2999323,
+     325
+    ],
+    [
+     236734.049360303,
+     7051790.53500956,
+     325
+    ],
+    [
+     236736.077512894,
+     7051794.2999323,
+     325
+    ],
+    [
+     236744.949189685,
+     7051810.76870184,
+     325
+    ],
+    [
+     236749.686466275,
+     7051819.56265571,
+     325
+    ],
+    [
+     236751.086864148,
+     7051822.16225783,
+     325
+    ],
+    [
+     236753.887659896,
+     7051827.36146209,
+     326.25034843606
+    ],
+    [
+     236754.393210986,
+     7051828.2999323,
+     326.845651382066
+    ],
+    [
+     236755.559604376,
+     7051830.46514462,
+     325.985364675522
+    ],
+    [
+     236752.949189685,
+     7051833.50109609,
+     326.412599949038
+    ],
+    [
+     236750.949189685,
+     7051835.8271261,
+     327.027747565344
+    ],
+    [
+     236734.949189685,
+     7051854.43536624,
+     324.999999999999
+    ],
+    [
+     236733.809125097,
+     7051855.76127846,
+     325
+    ],
+    [
+     236726.949189685,
+     7051861.82118343,
+     324.999999999999
+    ],
+    [
+     236716.949189685,
+     7051870.65494731,
+     324.999999999999
+    ],
+    [
+     236690.18258679,
+     7051894.2999323,
+     325
+    ],
+    [
+     236686.949189685,
+     7051897.15623895,
+     325
+    ],
+    [
+     236685.654505607,
+     7051898.2999323,
+     325
+    ],
+    [
+     236652.949189685,
+     7051927.19103615,
+     325
+    ],
+    [
+     236630.949189685,
+     7051946.62531669,
+     325
+    ],
+    [
+     236614.949189685,
+     7051960.75933889,
+     325
+    ],
+    [
+     236613.205206686,
+     7051962.2999323,
+     325
+    ],
+    [
+     236611.817719356,
+     7051963.52560584,
+     325
+    ],
+    [
+     236595.917768314,
+     7051968.2999323,
+     325
+    ],
+    [
+     236584.949189685,
+     7051971.59350062,
+     324.999999999999
+    ],
+    [
+     236575.93595367,
+     7051974.2999323,
+     324.999999999999
+    ],
+    [
+     236568.809225405,
+     7051976.43989658,
+     324.999999999999
+    ],
+    [
+     236566.949189685,
+     7051976.99841514,
+     324.999999999999
+    ],
+    [
+     236565.95096771,
+     7051977.29815427,
+     324.999999999999
+    ],
+    [
+     236558.949189685,
+     7051979.40059937,
+     324.999999999999
+    ],
+    [
+     236525.935359989,
+     7051989.31376199,
+     324.999999999999
+    ],
+    [
+     236525.512318549,
+     7051989.44078993,
+     325
+    ],
+    [
+     236496.949189685,
+     7051987.81158075,
+     324.999999999998
+    ],
+    [
+     236446.904125709,
+     7051984.95706582,
+     325
+    ]
+   ]
+  },
+  {
+   "id": "ex09-b7-9-to-rl282",
+   "order": 23,
+   "title_row": 1028,
+   "title": "EX09 - B7-9 to RL282",
+   "loading_unit": "EX09",
+   "description": "B7-9 to RL282",
+   "duplicate_title_of": null,
+   "truck_note_raw": {
+    "I1028": 3,
+    "J1028": "Trucks req at 0.92hrs PT hang/shift (32kbcm)",
+    "P1028": "centroid-to-centroid"
+   },
+   "trucks_required": 3,
+   "trucks_required_rounded": 3,
+   "truck_note": "Trucks req at 0.92hrs PT hang/shift (32kbcm)",
+   "flags": [
+    "centroid-to-centroid"
+   ],
+   "point_format": [
+    "easting_m",
+    "northing_m",
+    "elevation_m"
+   ],
+   "source_columns": "Raw Data E (X = easting), F (Y = northing), G (Z = RL)",
+   "first_point_row": 1030,
+   "last_point_row": 1146,
+   "point_count": 117,
+   "geometry_summary": {
+    "length_3d_m": 1115.5477237303662,
+    "length_2d_m": 1114.2457106963284,
+    "start_rl_m": 294.727579310536,
+    "end_rl_m": 282.303250402212,
+    "net_rise_m": -12.424328908324014
+   },
+   "is_current_data_dump": true,
+   "spreadsheet_mode_travel": {
+    "derived_not_cached": true,
+    "loaded_time_s": 171.56703384077264,
+    "unloaded_time_s": 163.93864122564963,
+    "segments": 116,
+    "segments_excluded_out_of_range": 4,
+    "distance_m": 1115.5477237303662,
+    "timed_distance_m": 1110.7967936553941
+   },
+   "points": [
+    [
+     236494.145034092,
+     7051413.66124887,
+     294.727579310536
+    ],
+    [
+     236508.146852738,
+     7051402.2999323,
+     295.09825537488
+    ],
+    [
+     236518.006145756,
+     7051394.2999323,
+     295.217721042514
+    ],
+    [
+     236537.724731794,
+     7051378.2999323,
+     295.74876471334
+    ],
+    [
+     236562.949189685,
+     7051357.83237314,
+     296.485257883435
+    ],
+    [
+     236566.949189685,
+     7051354.58670431,
+     296.438617941645
+    ],
+    [
+     236567.30261085,
+     7051354.2999323,
+     296.444895307989
+    ],
+    [
+     236570.949189685,
+     7051351.34103549,
+     296.340774875709
+    ],
+    [
+     236572.23225736,
+     7051350.2999323,
+     296.380081253317
+    ],
+    [
+     236579.17706934,
+     7051344.66479236,
+     296.498403400183
+    ],
+    [
+     236583.761976498,
+     7051340.2999323,
+     296.659604960705
+    ],
+    [
+     236584.949189685,
+     7051339.16969798,
+     296.715594430451
+    ],
+    [
+     236585.862803142,
+     7051338.2999323,
+     296.598995513241
+    ],
+    [
+     236596.36693636,
+     7051328.2999323,
+     295.303198116486
+    ],
+    [
+     236600.568589647,
+     7051324.2999323,
+     294.842766120126
+    ],
+    [
+     236600.949189685,
+     7051323.9375987,
+     294.795925167449
+    ],
+    [
+     236608.498782213,
+     7051316.75033977,
+     294.305004889115
+    ],
+    [
+     236608.949189685,
+     7051316.32154906,
+     294.267050404518
+    ],
+    [
+     236648.887602451,
+     7051278.2999323,
+     294.643453759428
+    ],
+    [
+     236665.056304437,
+     7051262.90722768,
+     294.409216463566
+    ],
+    [
+     236669.753171571,
+     7051259.49595041,
+     294.005453743017
+    ],
+    [
+     236670.949189685,
+     7051258.62729705,
+     293.932471290037
+    ],
+    [
+     236671.399926649,
+     7051258.2999323,
+     293.858235149357
+    ],
+    [
+     236672.949189685,
+     7051257.17472146,
+     293.758240604881
+    ],
+    [
+     236674.153655977,
+     7051256.2999323,
+     293.696266733798
+    ],
+    [
+     236674.949189685,
+     7051255.72214588,
+     293.615203225288
+    ],
+    [
+     236700.949189685,
+     7051236.83866322,
+     292.574386586351
+    ],
+    [
+     236703.139241072,
+     7051235.24805563,
+     292.735767945647
+    ],
+    [
+     236705.808006659,
+     7051235.44111532,
+     292.344958117879
+    ],
+    [
+     236716.998482631,
+     7051236.25063935,
+     292.064057720791
+    ],
+    [
+     236726.448686154,
+     7051236.93427129,
+     292.593553394079
+    ],
+    [
+     236750.722974092,
+     7051278.2999323,
+     288.582479801413
+    ],
+    [
+     236756.723585546,
+     7051288.52553644,
+     288.488891949339
+    ],
+    [
+     236758.050687561,
+     7051290.78704261,
+     288.046560898423
+    ],
+    [
+     236758.949189685,
+     7051293.16253932,
+     288.302869608112
+    ],
+    [
+     236766.396658803,
+     7051312.85246318,
+     287.31958816205
+    ],
+    [
+     236766.944146017,
+     7051314.2999323,
+     287.600067774724
+    ],
+    [
+     236766.945530179,
+     7051314.3035918,
+     287.598784666414
+    ],
+    [
+     236766.949189685,
+     7051314.31326695,
+     287.599985807129
+    ],
+    [
+     236769.970046644,
+     7051322.2999323,
+     286.442199680643
+    ],
+    [
+     236771.80952986,
+     7051327.16323336,
+     286.219052046537
+    ],
+    [
+     236776.949189685,
+     7051334.4660392,
+     285.601039697313
+    ],
+    [
+     236779.359019602,
+     7051337.89010238,
+     285.649193725222
+    ],
+    [
+     236779.647454815,
+     7051338.2999323,
+     285.5311619194
+    ],
+    [
+     236781.011315847,
+     7051340.23780613,
+     285.251749747944
+    ],
+    [
+     236795.130889355,
+     7051360.2999323,
+     285.182317183918
+    ],
+    [
+     236800.342605079,
+     7051367.70512044,
+     285.292470946908
+    ],
+    [
+     236804.949189685,
+     7051372.78589093,
+     285.443787451594
+    ],
+    [
+     236813.277563388,
+     7051381.97155859,
+     285.828405593057
+    ],
+    [
+     236818.949189685,
+     7051388.22700247,
+     286.268326897479
+    ],
+    [
+     236818.983869678,
+     7051388.2652523,
+     286.271237819174
+    ],
+    [
+     236829.895358749,
+     7051400.2999323,
+     287.182445466793
+    ],
+    [
+     236835.151737499,
+     7051406.09738448,
+     287.808379435797
+    ],
+    [
+     236838.962063537,
+     7051410.2999323,
+     288.206936084309
+    ],
+    [
+     236849.417503223,
+     7051421.83161876,
+     289.023533720383
+    ],
+    [
+     236849.842109283,
+     7051422.2999323,
+     289.017389115111
+    ],
+    [
+     236854.949189685,
+     7051427.93271788,
+     289.195735533606
+    ],
+    [
+     236855.282132156,
+     7051428.2999323,
+     289.210109048406
+    ],
+    [
+     236856.074860561,
+     7051429.17426142,
+     289.266508770716
+    ],
+    [
+     236856.949189685,
+     7051430.13859096,
+     289.26107789129
+    ],
+    [
+     236857.025911609,
+     7051430.22321037,
+     289.25631664116
+    ],
+    [
+     236857.095473113,
+     7051430.2999323,
+     289.258460123006
+    ],
+    [
+     236860.92415703,
+     7051434.52272769,
+     289.348642244935
+    ],
+    [
+     236862.138656618,
+     7051436.2999323,
+     289.35471458154
+    ],
+    [
+     236868.151078002,
+     7051445.09804398,
+     289.790609511843
+    ],
+    [
+     236869.77490109,
+     7051447.47422089,
+     289.988748384147
+    ],
+    [
+     236878.949189685,
+     7051460.89916411,
+     289.97865841705
+    ],
+    [
+     236875.570594168,
+     7051472.2999323,
+     290.163672242762
+    ],
+    [
+     236870.450827639,
+     7051476.2999323,
+     290.508018524333
+    ],
+    [
+     236850.949189685,
+     7051491.53628172,
+     290.317484448139
+    ],
+    [
+     236846.949189685,
+     7051494.66142423,
+     290.442314537501
+    ],
+    [
+     236845.296385949,
+     7051495.95273603,
+     290.509124150902
+    ],
+    [
+     236836.949189685,
+     7051502.4742805,
+     291.086958047524
+    ],
+    [
+     236836.15203952,
+     7051503.09708246,
+     291.15878015195
+    ],
+    [
+     236827.007693091,
+     7051510.24142889,
+     291.91421977184
+    ],
+    [
+     236821.813045617,
+     7051514.2999323,
+     292.453768238984
+    ],
+    [
+     236809.369059849,
+     7051524.02223951,
+     293.350613385439
+    ],
+    [
+     236804.949189685,
+     7051527.79103671,
+     293.646452547374
+    ],
+    [
+     236804.352380599,
+     7051528.2999323,
+     293.705963957493
+    ],
+    [
+     236782.949189685,
+     7051546.55030684,
+     294.10597611438
+    ],
+    [
+     236781.249498486,
+     7051547.9996235,
+     294.160466044974
+    ],
+    [
+     236780.897310284,
+     7051548.2999323,
+     294.171592873589
+    ],
+    [
+     236772.949189685,
+     7051555.07724781,
+     294.460696183968
+    ],
+    [
+     236754.949189685,
+     7051570.42574156,
+     294.847382638436
+    ],
+    [
+     236740.517933264,
+     7051582.73118872,
+     294.979433275257
+    ],
+    [
+     236726.950648559,
+     7051594.2999323,
+     295.148974014295
+    ],
+    [
+     236726.949189685,
+     7051594.30117627,
+     295.14897552964
+    ],
+    [
+     236721.376181249,
+     7051599.05324767,
+     295.099814802408
+    ],
+    [
+     236700.949189685,
+     7051615.61928619,
+     295.015934454767
+    ],
+    [
+     236700.109909235,
+     7051616.2999323,
+     295.045979006128
+    ],
+    [
+     236692.949189685,
+     7051622.10718764,
+     295.050426539783
+    ],
+    [
+     236672.982493486,
+     7051638.2999323,
+     294.950023815602
+    ],
+    [
+     236664.949189685,
+     7051644.81484272,
+     294.602773403814
+    ],
+    [
+     236648.949189685,
+     7051657.79064562,
+     293.368847887362
+    ],
+    [
+     236648.321206441,
+     7051658.2999323,
+     293.319614303105
+    ],
+    [
+     236626.949189685,
+     7051675.63237461,
+     291.986872061679
+    ],
+    [
+     236621.193790692,
+     7051680.2999323,
+     291.910357774021
+    ],
+    [
+     236615.601734209,
+     7051684.83502122,
+     291.814817801118
+    ],
+    [
+     236608.995025448,
+     7051684.25409654,
+     291.514499508022
+    ],
+    [
+     236598.734388011,
+     7051683.35188368,
+     291.465054437518
+    ],
+    [
+     236596.949189685,
+     7051681.16870166,
+     291.465332066333
+    ],
+    [
+     236596.558368875,
+     7051680.69075311,
+     291.448773107851
+    ],
+    [
+     236575.221123437,
+     7051654.59668285,
+     290.526536926627
+    ],
+    [
+     236575.004313308,
+     7051654.2999323,
+     290.474612860342
+    ],
+    [
+     236574.136700904,
+     7051653.11242108,
+     290.379059888713
+    ],
+    [
+     236573.543085169,
+     7051652.2999323,
+     290.367714732169
+    ],
+    [
+     236564.848951653,
+     7051640.40017033,
+     289.141557641673
+    ],
+    [
+     236554.949189685,
+     7051626.85025063,
+     287.638723194844
+    ],
+    [
+     236553.028179879,
+     7051624.2209421,
+     287.302593388717
+    ],
+    [
+     236532.949189685,
+     7051596.73859398,
+     284.0831491316
+    ],
+    [
+     236529.921870398,
+     7051592.59506676,
+     283.621759280562
+    ],
+    [
+     236516.501958616,
+     7051574.74716337,
+     282.848616076229
+    ],
+    [
+     236511.351648609,
+     7051567.89747337,
+     282.739403103817
+    ],
+    [
+     236506.201338603,
+     7051561.04778338,
+     282.626114478915
+    ],
+    [
+     236492.949189685,
+     7051543.42299735,
+     282.334573353583
+    ],
+    [
+     236492.467178585,
+     7051542.7819434,
+     282.328048418033
+    ],
+    [
+     236491.403764521,
+     7051541.36764859,
+     282.303250402212
+    ]
+   ]
+  }
+ ]
+}

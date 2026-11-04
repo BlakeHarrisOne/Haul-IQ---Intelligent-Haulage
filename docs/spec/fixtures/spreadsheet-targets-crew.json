@@ -1,0 +1,5319 @@
+{
+ "meta": {
+  "source_workbook": "calc.xlsm (Haulage Calculator Spreadsheet, Short Term Planning)",
+  "extracted": "2026-11-04",
+  "extractor": "openpyxl cached values (data_only=True) + formulas (data_only=False)",
+  "float_note": "All numbers are IEEE-754 doubles exactly as cached by Excel (JSON repr round-trips).",
+  "description": "'Targets & Haulage Priorities' weekly plan, crew blocks, static crew allocation, and the manning rule-set derived from the formulas."
+ },
+ "week_start": {
+  "cell": "Targets & Haulage Priorities!C1",
+  "value": "2026-05-05",
+  "note": "AJ3 says 'Update B1 for plan week' but the date lives in C1."
+ },
+ "days": [
+  {
+   "date": "2026-05-05",
+   "dow": "Tue"
+  },
+  {
+   "date": "2026-05-06",
+   "dow": "Wed"
+  },
+  {
+   "date": "2026-05-07",
+   "dow": "Thu"
+  },
+  {
+   "date": "2026-05-08",
+   "dow": "Fri"
+  },
+  {
+   "date": "2026-05-09",
+   "dow": "Sat"
+  },
+  {
+   "date": "2026-05-10",
+   "dow": "Sun"
+  },
+  {
+   "date": "2026-05-11",
+   "dow": "Mon"
+  }
+ ],
+ "circuits": [
+  {
+   "id": "EX09",
+   "kind": "excavator",
+   "rows": "C5:L11",
+   "fields": {
+    "priority": {
+     "row": 5,
+     "label": "Priority",
+     "values": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ]
+    },
+    "trucks": {
+     "row": 6,
+     "label": "# Trucks",
+     "values": [
+      5,
+      5,
+      5,
+      5,
+      5,
+      5,
+      5
+     ]
+    },
+    "hours": {
+     "row": 7,
+     "label": "Hours",
+     "values": [
+      20,
+      20,
+      20,
+      20,
+      20,
+      20,
+      20
+     ]
+    },
+    "rate": {
+     "row": 8,
+     "label": "Rate",
+     "values": [
+      1800,
+      1800,
+      1800,
+      1800,
+      1800,
+      1800,
+      1800
+     ]
+    },
+    "target_waste": {
+     "row": 9,
+     "label": "Target Waste",
+     "values": [
+      36000,
+      36000,
+      36000,
+      36000,
+      36000,
+      36000,
+      36000
+     ],
+     "formula_E": "=E7*E8",
+     "week_total": {
+      "cell": "L9",
+      "formula": "=SUM(E9:K9)",
+      "value": 252000
+     }
+    },
+    "dig": {
+     "row": 10,
+     "label": "Dig",
+     "values": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ]
+    },
+    "dump": {
+     "row": 11,
+     "label": "Dump",
+     "values": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ]
+    }
+   }
+  },
+  {
+   "id": "EX04",
+   "kind": "excavator",
+   "rows": "C12:L18",
+   "fields": {
+    "priority": {
+     "row": 12,
+     "label": "Priority",
+     "values": [
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2
+     ]
+    },
+    "trucks": {
+     "row": 13,
+     "label": "# Trucks",
+     "values": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+     ]
+    },
+    "hours": {
+     "row": 14,
+     "label": "Hours",
+     "values": [
+      20,
+      20,
+      20,
+      20,
+      20,
+      20,
+      20
+     ]
+    },
+    "rate": {
+     "row": 15,
+     "label": "Rate",
+     "values": [
+      1300,
+      1300,
+      1300,
+      1300,
+      1300,
+      1300,
+      1300
+     ]
+    },
+    "target_waste": {
+     "row": 16,
+     "label": "Target Waste",
+     "values": [
+      26000,
+      26000,
+      26000,
+      26000,
+      26000,
+      26000,
+      26000
+     ],
+     "formula_E": "=E14*E15",
+     "week_total": {
+      "cell": "L16",
+      "formula": "=SUM(E16:K16)",
+      "value": 182000
+     }
+    },
+    "dig": {
+     "row": 17,
+     "label": "Dig",
+     "values": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ]
+    },
+    "dump": {
+     "row": 18,
+     "label": "Dump",
+     "values": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ]
+    }
+   }
+  },
+  {
+   "id": "EX06",
+   "kind": "excavator",
+   "rows": "C19:L25",
+   "fields": {
+    "priority": {
+     "row": 19,
+     "label": "Priority",
+     "values": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ]
+    },
+    "trucks": {
+     "row": 20,
+     "label": "# Trucks",
+     "values": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ]
+    },
+    "hours": {
+     "row": 21,
+     "label": "Hours",
+     "values": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ]
+    },
+    "rate": {
+     "row": 22,
+     "label": "Rate",
+     "values": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    },
+    "target_waste": {
+     "row": 23,
+     "label": "Target Waste",
+     "values": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "formula_E": "=E21*E22",
+     "week_total": {
+      "cell": "L23",
+      "formula": "=SUM(E23:K23)",
+      "value": 0
+     }
+    },
+    "dig": {
+     "row": 24,
+     "label": "Dig",
+     "values": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ]
+    },
+    "dump": {
+     "row": 25,
+     "label": "Dump",
+     "values": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ]
+    }
+   }
+  },
+  {
+   "id": "LDR 1/2",
+   "kind": "loader",
+   "rows": "C27:L34",
+   "fields": {
+    "priority": {
+     "row": 27,
+     "label": "Priority",
+     "values": [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+     ]
+    },
+    "trucks": {
+     "row": 28,
+     "label": "# Trucks",
+     "values": [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+     ]
+    },
+    "hours": {
+     "row": 29,
+     "label": "Hours",
+     "values": [
+      18,
+      18,
+      18,
+      18,
+      18,
+      18,
+      18
+     ]
+    },
+    "rate": {
+     "row": 30,
+     "label": "Rate",
+     "values": [
+      650,
+      650,
+      650,
+      650,
+      650,
+      650,
+      650
+     ]
+    },
+    "target_waste": {
+     "row": 31,
+     "label": "Target Waste",
+     "values": [
+      11700,
+      11700,
+      11700,
+      11700,
+      11700,
+      11700,
+      11700
+     ],
+     "formula_E": "=E29*E30",
+     "week_total": {
+      "cell": "L31",
+      "formula": "=SUM(E31:K31)",
+      "value": 81900
+     }
+    },
+    "target_coal": {
+     "row": 32,
+     "label": "Target Coal",
+     "values": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "week_total": {
+      "cell": "L32",
+      "formula": "=SUM(E32:K32)",
+      "value": 0
+     }
+    },
+    "dig": {
+     "row": 33,
+     "label": "Dig",
+     "values": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ]
+    },
+    "dump": {
+     "row": 34,
+     "label": "Dump",
+     "values": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ]
+    }
+   },
+   "note": "Loader (coal) circuit, but its production formula sits in the 'Target Waste' row 31; 'Target Coal' row 32 is blank (L32=SUM(E32:K32)=0)."
+  },
+  {
+   "id": "LDR 2/2",
+   "kind": "loader",
+   "rows": "C35:L42",
+   "fields": {
+    "priority": {
+     "row": 35,
+     "label": "Priority",
+     "values": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    },
+    "trucks": {
+     "row": 36,
+     "label": "# Trucks",
+     "values": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    },
+    "hours": {
+     "row": 37,
+     "label": "Hours",
+     "values": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ]
+    },
+    "rate": {
+     "row": 38,
+     "label": "Rate",
+     "values": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ]
+    },
+    "target_waste": {
+     "row": 39,
+     "label": "Target Waste",
+     "values": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ]
+    },
+    "target_coal": {
+     "row": 40,
+     "label": "Target Coal",
+     "values": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "formula_E": "=E37*E38",
+     "week_total": {
+      "cell": "L40",
+      "formula": "=SUM(E40:K40)",
+      "value": 0
+     }
+    },
+    "dig": {
+     "row": 41,
+     "label": "Dig",
+     "values": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ]
+    },
+    "dump": {
+     "row": 42,
+     "label": "Dump",
+     "values": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ]
+    }
+   },
+   "note": "Production formula =E37*E38 sits in 'Target Coal' row 40; 'Target Waste' row 39 is blank."
+  },
+  {
+   "id": "DZR",
+   "kind": "dozer_push",
+   "rows": "C44:L48",
+   "fields": {
+    "priority": {
+     "row": 44,
+     "label": "Priority",
+     "values": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+     ]
+    },
+    "hours": {
+     "row": 45,
+     "label": "Hours",
+     "values": [
+      18,
+      18,
+      18,
+      18,
+      18,
+      18,
+      18
+     ]
+    },
+    "rate": {
+     "row": 46,
+     "label": "Rate",
+     "values": [
+      320,
+      320,
+      320,
+      320,
+      320,
+      320,
+      320
+     ]
+    },
+    "dozers": {
+     "row": 47,
+     "label": "# Dozers",
+     "values": [
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6
+     ],
+     "formula_E": "=IF(E57>12, 7-(E57-12)-E52, 7-E52)"
+    },
+    "target_waste": {
+     "row": 48,
+     "label": "Target Waste",
+     "values": [
+      34560,
+      34560,
+      34560,
+      34560,
+      34560,
+      34560,
+      34560
+     ],
+     "formula_E": "=E45*E46*E47",
+     "week_total": {
+      "cell": "L48",
+      "formula": "=SUM(E48:K48)",
+      "value": 241920
+     }
+    }
+   }
+  },
+  {
+   "id": "DZR - Enabling Tasks",
+   "kind": "dozer_enabling",
+   "rows": "C50:K53",
+   "fields": {
+    "task": {
+     "row": 51,
+     "label": "Enabling Tasks",
+     "values": [
+      "DR Prep",
+      "DR Prep",
+      "DR Prep",
+      "DR Prep",
+      "DR Prep",
+      "DR Prep",
+      "DR Prep"
+     ]
+    },
+    "dozers": {
+     "row": 52,
+     "label": "# Dozers",
+     "values": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ]
+    }
+   }
+  }
+ ],
+ "daily_totals": {
+  "daily_waste_bcm": {
+   "row": 55,
+   "label": "Daily Waste (bcm)",
+   "formula_E": "=E9+E16+E23++E31+E48+E39",
+   "values": [
+    108260,
+    108260,
+    108260,
+    108260,
+    108260,
+    108260,
+    108260
+   ],
+   "week_total": {
+    "cell": "L55",
+    "formula": "=L9+L16+L23++L31+L48+L39",
+    "value": 757820
+   }
+  },
+  "daily_coal": {
+   "row": 56,
+   "label": "Daily Coal (kt)",
+   "formula_E": "=E31+E40",
+   "values": [
+    11700,
+    11700,
+    11700,
+    11700,
+    11700,
+    11700,
+    11700
+   ],
+   "week_total": {
+    "cell": "L56",
+    "formula": "=L31+L40",
+    "value": 81900
+   }
+  },
+  "daily_trucks_operating": {
+   "row": 57,
+   "label": "Daily Trucks (max 12) # Operating",
+   "formula_E": "=E6+E13+E20+E28+E36",
+   "values": [
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12
+   ],
+   "week_total": null
+  },
+  "total_units": {
+   "row": 58,
+   "label": "Total Units (bcm + t)",
+   "formula_E": "=E56+E55",
+   "values": [
+    119960,
+    119960,
+    119960,
+    119960,
+    119960,
+    119960,
+    119960
+   ],
+   "week_total": {
+    "cell": "L58",
+    "formula": "=SUM(E58:K58)",
+    "value": 839720
+   }
+  }
+ },
+ "benchmarks": {
+  "O57": {
+   "cell": "Targets & Haulage Priorities!O57",
+   "value": 12.88,
+   "formula": "=14*0.92",
+   "label": "92% Avail (14 trucks x 0.92)"
+  },
+  "S57": "13 possible with good availability (achieving 92-95% on new CAT789's)",
+  "O58": {
+   "cell": "Targets & Haulage Priorities!O58",
+   "value": 83562.46666666666,
+   "formula": "=(2156874+350000)/30",
+   "label": "Scheduled Total Units/ Day for April 2026"
+  }
+ },
+ "notes": {
+  "AI3": "Note:",
+  "AJ3": "Update B1 for plan week",
+  "AJ4": "Balance trucking to ensure 12 operating at all times based on priorities",
+  "AJ5": "Highlight yellow if undertrucked (to prompt discussion on haulage strategies)",
+  "AJ6": "Remove dozers from push for Enabling tasks to reflect lower volumes",
+  "C59": "Services/ Relocation",
+  "C90": "Crew Cap (No OT)",
+  "D90": "29?? (incl/excl supervisors/oce) ??",
+  "C91": "32 crew cap minus 4 for AL/PL?Training = 28 operating (or is it 28 including the supervisors and OCE's??)"
+ },
+ "crew_allocations_static": {
+  "source": "Targets & Haulage Priorities!AF3:AG19",
+  "rows": [
+   {
+    "cell": "Targets & Haulage Priorities!AG4",
+    "value": 12,
+    "label": "Trucks"
+   },
+   {
+    "cell": "Targets & Haulage Priorities!AG5",
+    "value": 7,
+    "label": "Push Dozers"
+   },
+   {
+    "cell": "Targets & Haulage Priorities!AG6",
+    "value": 3,
+    "label": "Excavators"
+   },
+   {
+    "cell": "Targets & Haulage Priorities!AG7",
+    "value": 2,
+    "label": "Loaders"
+   },
+   {
+    "cell": "Targets & Haulage Priorities!AG8",
+    "value": 2,
+    "label": "Dump Dozers"
+   },
+   {
+    "cell": "Targets & Haulage Priorities!AG9",
+    "value": 1,
+    "label": "Wheel Dozers"
+   },
+   {
+    "cell": "Targets & Haulage Priorities!AG10",
+    "value": 2,
+    "label": "Coal Dozer"
+   },
+   {
+    "cell": "Targets & Haulage Priorities!AG11",
+    "value": 2,
+    "label": "Water Cart"
+   },
+   {
+    "cell": "Targets & Haulage Priorities!AG12",
+    "value": 2,
+    "label": "Grader"
+   },
+   {
+    "cell": "Targets & Haulage Priorities!AG13",
+    "value": 2,
+    "label": "Loaders"
+   },
+   {
+    "cell": "Targets & Haulage Priorities!AG15",
+    "value": 2,
+    "label": "Supervisor"
+   },
+   {
+    "cell": "Targets & Haulage Priorities!AG16",
+    "value": 1,
+    "label": "OCE"
+   },
+   {
+    "cell": "Targets & Haulage Priorities!AG18",
+    "value": 38,
+    "formula": "=SUM(AG4:AG16)",
+    "label": "Total Crew # Req."
+   },
+   {
+    "cell": "Targets & Haulage Priorities!AG19",
+    "value": 30
+   }
+  ],
+  "note": "Static typed numbers, not linked to the crew blocks. 'Loaders' appears twice (AG7 and AG13). AG14 has no label/value. AG19=30 has no label (presumably available crew).",
+  "total": {
+   "cell": "Targets & Haulage Priorities!AG18",
+   "value": 38,
+   "formula": "=SUM(AG4:AG16)",
+   "label": "Total Crew # Req."
+  },
+  "unlabelled_AG19": {
+   "cell": "Targets & Haulage Priorities!AG19",
+   "value": 30
+  }
+ },
+ "crew_blocks": [
+  {
+   "label": "CREW (linked to plan above)",
+   "rows": "C65:Q88",
+   "dates": [
+    "2026-05-05",
+    "2026-05-06",
+    "2026-05-07",
+    "2026-05-08",
+    "2026-05-09",
+    "2026-05-10",
+    "2026-05-11"
+   ],
+   "lines": [
+    {
+     "row": 68,
+     "role": "EX09",
+     "trucks": [
+      5,
+      5,
+      5,
+      5,
+      5,
+      5,
+      5
+     ],
+     "equip_op": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "formula_trucks_D": "=$E$6",
+     "formula_equip_E": "=IF(D68>0,1,0)",
+     "maps_to": {
+      "trucks": [
+       "truck_operator",
+       "EX09"
+      ],
+      "equip_op": [
+       "excavator_operator",
+       "EX09"
+      ]
+     }
+    },
+    {
+     "row": 69,
+     "role": "EX09 DZR (floor + dump)",
+     "trucks": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "equip_op": [
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2
+     ],
+     "formula_trucks_D": null,
+     "formula_equip_E": "=IF(D68>0,2,0)",
+     "maps_to": {
+      "equip_op": [
+       "dozer_floor_dump",
+       "EX09"
+      ]
+     }
+    },
+    {
+     "row": 70,
+     "role": "EX04",
+     "trucks": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+     ],
+     "equip_op": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "formula_trucks_D": "=$E$13",
+     "formula_equip_E": "=IF(D70>0,1,0)",
+     "maps_to": {
+      "trucks": [
+       "truck_operator",
+       "EX04"
+      ],
+      "equip_op": [
+       "excavator_operator",
+       "EX04"
+      ]
+     }
+    },
+    {
+     "row": 71,
+     "role": "EX04 DZR (floor + dump)",
+     "trucks": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "equip_op": [
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2
+     ],
+     "formula_trucks_D": null,
+     "formula_equip_E": "=IF(D70>0,2,0)",
+     "maps_to": {
+      "equip_op": [
+       "dozer_floor_dump",
+       "EX04"
+      ]
+     }
+    },
+    {
+     "row": 72,
+     "role": "EX06",
+     "trucks": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "equip_op": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "formula_trucks_D": "=$E$20",
+     "formula_equip_E": "=IF(D72>0,1,0)",
+     "maps_to": {
+      "trucks": [
+       "truck_operator",
+       "EX06"
+      ],
+      "equip_op": [
+       "excavator_operator",
+       "EX06"
+      ]
+     }
+    },
+    {
+     "row": 73,
+     "role": "EX06 DZR (floor + dump)",
+     "trucks": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "equip_op": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "formula_trucks_D": null,
+     "formula_equip_E": "=IF(D72>0,2,0)",
+     "maps_to": {
+      "equip_op": [
+       "dozer_floor_dump",
+       "EX06"
+      ]
+     }
+    },
+    {
+     "row": 75,
+     "role": "LDR 1",
+     "trucks": [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+     ],
+     "equip_op": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "formula_trucks_D": "=$E$28",
+     "formula_equip_E": "=IF(D75>0,1,0)",
+     "maps_to": {
+      "trucks": [
+       "truck_operator",
+       "LDR 1"
+      ],
+      "equip_op": [
+       "loader_operator",
+       "LDR 1"
+      ]
+     }
+    },
+    {
+     "row": 76,
+     "role": "DZR (coal)",
+     "trucks": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "equip_op": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "formula_trucks_D": null,
+     "formula_equip_E": "=IF(D75>0,1,0)",
+     "maps_to": {
+      "equip_op": [
+       "dozer_coal",
+       "LDR 1"
+      ]
+     }
+    },
+    {
+     "row": 77,
+     "role": "LDR 2",
+     "trucks": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "equip_op": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "formula_trucks_D": "=$E$36",
+     "formula_equip_E": "=IF(D77>0,1,0)",
+     "maps_to": {
+      "trucks": [
+       "truck_operator",
+       "LDR 2"
+      ],
+      "equip_op": [
+       "loader_operator",
+       "LDR 2"
+      ]
+     }
+    },
+    {
+     "row": 78,
+     "role": "DZR (coal)",
+     "trucks": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "equip_op": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "formula_trucks_D": null,
+     "formula_equip_E": "=IF(D77>0,1,0)",
+     "maps_to": {
+      "equip_op": [
+       "dozer_coal",
+       "LDR 2"
+      ]
+     }
+    },
+    {
+     "row": 79,
+     "role": "EX03/EX08 (support)",
+     "trucks": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "equip_op": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "formula_trucks_D": null,
+     "formula_equip_E": "=IF(D75>0,1,0)",
+     "maps_to": {
+      "equip_op": [
+       "support_excavator_operator",
+       "LDR 1"
+      ]
+     }
+    },
+    {
+     "row": 81,
+     "role": "DZR Bulk Push",
+     "trucks": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "equip_op": [
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6
+     ],
+     "formula_trucks_D": null,
+     "formula_equip_E": "=$E$47",
+     "maps_to": {
+      "equip_op": [
+       "dozer_bulk_push",
+       null
+      ]
+     }
+    },
+    {
+     "row": 82,
+     "role": "EX06 DZR Assist",
+     "trucks": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "equip_op": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "formula_trucks_D": null,
+     "formula_equip_E": "=IF(E81>0,1,0)",
+     "maps_to": {
+      "equip_op": [
+       "dozer_push_assist",
+       null
+      ]
+     }
+    },
+    {
+     "row": 83,
+     "role": "DZR Enabling Tasks",
+     "trucks": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "equip_op": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "formula_trucks_D": null,
+     "formula_equip_E": "=$E$52",
+     "maps_to": {
+      "equip_op": [
+       "dozer_enabling",
+       null
+      ]
+     }
+    },
+    {
+     "row": 85,
+     "role": "Water Truck",
+     "trucks": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "equip_op": [
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2
+     ],
+     "formula_trucks_D": null,
+     "formula_equip_E": "constant 2",
+     "maps_to": {
+      "equip_op": [
+       "water_cart",
+       null
+      ]
+     }
+    },
+    {
+     "row": 86,
+     "role": "Grader",
+     "trucks": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "equip_op": [
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2
+     ],
+     "formula_trucks_D": null,
+     "formula_equip_E": "constant 2",
+     "maps_to": {
+      "equip_op": [
+       "grader",
+       null
+      ]
+     }
+    },
+    {
+     "row": 87,
+     "role": "Supervisors/OCE",
+     "trucks": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "equip_op": [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+     ],
+     "formula_trucks_D": null,
+     "formula_equip_E": "constant 3",
+     "maps_to": {
+      "equip_op": [
+       "supervisor_oce",
+       null
+      ]
+     }
+    }
+   ],
+   "total": {
+    "row": 88,
+    "formula_D": "=SUM(D68:E87)",
+    "values": [
+     36,
+     36,
+     36,
+     36,
+     36,
+     36,
+     36
+    ]
+   }
+  },
+  {
+   "label": "CREW (manual what-if scenario)",
+   "rows": "C93:Q116",
+   "dates": [
+    "2026-05-05",
+    "2026-05-06",
+    "2026-05-07",
+    "2026-05-08",
+    "2026-05-09",
+    "2026-05-10",
+    "2026-05-11"
+   ],
+   "lines": [
+    {
+     "row": 96,
+     "role": "EX09",
+     "trucks": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+     ],
+     "equip_op": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "formula_trucks_D": "constant 4",
+     "formula_equip_E": "=IF(D96>0,1,0)",
+     "maps_to": {
+      "trucks": [
+       "truck_operator",
+       "EX09"
+      ],
+      "equip_op": [
+       "excavator_operator",
+       "EX09"
+      ]
+     }
+    },
+    {
+     "row": 97,
+     "role": "EX09 DZR (floor + dump)",
+     "trucks": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "equip_op": [
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2
+     ],
+     "formula_trucks_D": null,
+     "formula_equip_E": "=IF(D96>0,2,0)",
+     "maps_to": {
+      "equip_op": [
+       "dozer_floor_dump",
+       "EX09"
+      ]
+     }
+    },
+    {
+     "row": 98,
+     "role": "EX04",
+     "trucks": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+     ],
+     "equip_op": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "formula_trucks_D": "=$E$13",
+     "formula_equip_E": "=IF(D98>0,1,0)",
+     "maps_to": {
+      "trucks": [
+       "truck_operator",
+       "EX04"
+      ],
+      "equip_op": [
+       "excavator_operator",
+       "EX04"
+      ]
+     }
+    },
+    {
+     "row": 99,
+     "role": "EX04 DZR (floor + dump)",
+     "trucks": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "equip_op": [
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2
+     ],
+     "formula_trucks_D": null,
+     "formula_equip_E": "=IF(D98>0,2,0)",
+     "maps_to": {
+      "equip_op": [
+       "dozer_floor_dump",
+       "EX04"
+      ]
+     }
+    },
+    {
+     "row": 100,
+     "role": "EX06",
+     "trucks": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "equip_op": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "formula_trucks_D": "=$E$20",
+     "formula_equip_E": "=IF(D100>0,1,0)",
+     "maps_to": {
+      "trucks": [
+       "truck_operator",
+       "EX06"
+      ],
+      "equip_op": [
+       "excavator_operator",
+       "EX06"
+      ]
+     }
+    },
+    {
+     "row": 101,
+     "role": "EX06 DZR (floor + dump)",
+     "trucks": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "equip_op": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "formula_trucks_D": null,
+     "formula_equip_E": "=IF(D100>0,2,0)",
+     "maps_to": {
+      "equip_op": [
+       "dozer_floor_dump",
+       "EX06"
+      ]
+     }
+    },
+    {
+     "row": 103,
+     "role": "LDR 1",
+     "trucks": [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+     ],
+     "equip_op": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "formula_trucks_D": "=$E$28",
+     "formula_equip_E": "=IF(D103>0,1,0)",
+     "maps_to": {
+      "trucks": [
+       "truck_operator",
+       "LDR 1"
+      ],
+      "equip_op": [
+       "loader_operator",
+       "LDR 1"
+      ]
+     }
+    },
+    {
+     "row": 104,
+     "role": "DZR (coal)",
+     "trucks": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "equip_op": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "formula_trucks_D": null,
+     "formula_equip_E": "=IF(D103>0,1,0)",
+     "maps_to": {
+      "equip_op": [
+       "dozer_coal",
+       "LDR 1"
+      ]
+     }
+    },
+    {
+     "row": 105,
+     "role": "LDR 2",
+     "trucks": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "equip_op": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "formula_trucks_D": "=$E$36",
+     "formula_equip_E": "=IF(D105>0,1,0)",
+     "maps_to": {
+      "trucks": [
+       "truck_operator",
+       "LDR 2"
+      ],
+      "equip_op": [
+       "loader_operator",
+       "LDR 2"
+      ]
+     }
+    },
+    {
+     "row": 106,
+     "role": "DZR (coal)",
+     "trucks": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "equip_op": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "formula_trucks_D": null,
+     "formula_equip_E": "=IF(D105>0,1,0)",
+     "maps_to": {
+      "equip_op": [
+       "dozer_coal",
+       "LDR 2"
+      ]
+     }
+    },
+    {
+     "row": 107,
+     "role": "EX03/EX08 (support)",
+     "trucks": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "equip_op": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "formula_trucks_D": null,
+     "formula_equip_E": "=IF(D103>0,1,0)",
+     "maps_to": {
+      "equip_op": [
+       "support_excavator_operator",
+       "LDR 1"
+      ]
+     }
+    },
+    {
+     "row": 109,
+     "role": "DZR Bulk Push",
+     "trucks": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "equip_op": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+     ],
+     "formula_trucks_D": null,
+     "formula_equip_E": "constant 4",
+     "maps_to": {
+      "equip_op": [
+       "dozer_bulk_push",
+       null
+      ]
+     }
+    },
+    {
+     "row": 110,
+     "role": "EX06 DZR Assist",
+     "trucks": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "equip_op": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "formula_trucks_D": null,
+     "formula_equip_E": "=IF(E109>0,1,0)",
+     "maps_to": {
+      "equip_op": [
+       "dozer_push_assist",
+       null
+      ]
+     }
+    },
+    {
+     "row": 111,
+     "role": "DZR Enabling Tasks",
+     "trucks": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "equip_op": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "formula_trucks_D": null,
+     "formula_equip_E": "=$E$52",
+     "maps_to": {
+      "equip_op": [
+       "dozer_enabling",
+       null
+      ]
+     }
+    },
+    {
+     "row": 113,
+     "role": "Water Truck",
+     "trucks": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "equip_op": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "formula_trucks_D": null,
+     "formula_equip_E": "constant 1",
+     "maps_to": {
+      "equip_op": [
+       "water_cart",
+       null
+      ]
+     }
+    },
+    {
+     "row": 114,
+     "role": "Grader",
+     "trucks": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "equip_op": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "formula_trucks_D": null,
+     "formula_equip_E": "constant 1",
+     "maps_to": {
+      "equip_op": [
+       "grader",
+       null
+      ]
+     }
+    },
+    {
+     "row": 115,
+     "role": "Supervisors/OCE",
+     "trucks": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "equip_op": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "formula_trucks_D": null,
+     "formula_equip_E": "constant 0",
+     "maps_to": {
+      "equip_op": [
+       "supervisor_oce",
+       null
+      ]
+     }
+    }
+   ],
+   "total": {
+    "row": 116,
+    "formula_D": "=SUM(D96:E115)",
+    "values": [
+     28,
+     28,
+     28,
+     28,
+     28,
+     28,
+     28
+    ]
+   }
+  }
+ ],
+ "conditional_formats": [
+  {
+   "range": "Targets & Haulage Priorities!E57:K57",
+   "rules": [
+    {
+     "rule": "> 12",
+     "style": "red fill (FF0000)"
+    },
+    {
+     "rule": "<= 12",
+     "style": "bold text, green fill (00B050)"
+    }
+   ]
+  }
+ ],
+ "data_validations": [],
+ "rule_set": {
+  "schema": "haulsim.crew-rules/1",
+  "description": "Manning rules reverse-engineered from 'Targets & Haulage Priorities' rows 47 and 65-116. Expressions use a tiny language: numbers, 'strings', + - * /, comparisons (> >= < <= == !=), parentheses, max(a,b), min(a,b), identifiers (params.*, inputs.*, circuit.*, totals.*, roles.*). Rules run in array order; 'add' accumulates role counts, 'set' assigns.",
+  "params": {
+   "max_trucks_operating": {
+    "value": 12,
+    "source": "hard-coded '12' in E47 and CF on E57:K57; AG4=12; note AJ4"
+   },
+   "push_dozer_fleet": {
+    "value": 7,
+    "source": "hard-coded '7' in E47 (=AG5 'Push Dozers' 7, not referenced)"
+   },
+   "water_cart": {
+    "value": 2,
+    "source": "E85:Q85 typed constant"
+   },
+   "grader": {
+    "value": 2,
+    "source": "E86:Q86 typed constant"
+   },
+   "supervisor_oce": {
+    "value": 3,
+    "source": "E87:Q87 typed constant (AG15 Supervisor 2 + AG16 OCE 1)"
+   },
+   "crew_cap_operating": {
+    "value": 28,
+    "source": "text note C91: '32 crew cap minus 4 for AL/PL/Training = 28 operating' (not used by any formula); D90 says '29??'"
+   }
+  },
+  "circuit_kinds": {
+   "excavator": "Truck-loading excavator circuit producing waste (EX09, EX04, EX06)",
+   "loader": "Coal loader circuit (LDR 1, LDR 2)"
+  },
+  "roles": {
+   "truck_operator": "Haul truck operator (one per truck)",
+   "excavator_operator": "Prime-mover excavator operator for an active EX circuit",
+   "dozer_floor_dump": "Dozer operators supporting an EX circuit: 1 floor/clean-up + 1 dump",
+   "loader_operator": "Coal loader operator",
+   "dozer_coal": "Coal dozer operator supporting a loader circuit",
+   "support_excavator_operator": "EX03/EX08 support excavator operator for the coal loader circuit",
+   "dozer_bulk_push": "Bulk push dozer operators",
+   "dozer_push_assist": "'EX06 DZR Assist' operator (manned whenever bulk push dozers > 0)",
+   "dozer_enabling": "Dozers taken off push for enabling tasks (e.g. DR Prep)",
+   "water_cart": "Water cart operators",
+   "grader": "Grader operators",
+   "supervisor_oce": "Supervisors / OCE"
+  },
+  "derived_totals": {
+   "total_trucks": {
+    "expr": "sum(circuit.trucks for all circuits)",
+    "source": "E57 =E6+E13+E20+E28+E36"
+   }
+  },
+  "rules": [
+   {
+    "id": "R1_TRUCK_OPERATORS",
+    "scope": "circuit",
+    "where": "true",
+    "when": "true",
+    "add": {
+     "truck_operator": "circuit.trucks"
+    },
+    "text": "Every truck allocated to a circuit needs one truck operator.",
+    "source": "D68 =$E$6, D70 =$E$13, D72 =$E$20, D75 =$E$28, D77 =$E$36"
+   },
+   {
+    "id": "R2_EX_OPERATOR",
+    "scope": "circuit",
+    "where": "circuit.kind == 'excavator'",
+    "when": "circuit.trucks > 0",
+    "add": {
+     "excavator_operator": 1
+    },
+    "text": "IF an excavator circuit has trucks > 0 THEN +1 excavator operator.",
+    "source": "E68/E70/E72 =IF(D68>0,1,0)"
+   },
+   {
+    "id": "R3_EX_DOZERS",
+    "scope": "circuit",
+    "where": "circuit.kind == 'excavator'",
+    "when": "circuit.trucks > 0",
+    "add": {
+     "dozer_floor_dump": 2
+    },
+    "text": "IF an excavator circuit has trucks > 0 THEN +2 dozer operators (1 floor + 1 dump).",
+    "source": "E69/E71/E73 =IF(D68>0,2,0)"
+   },
+   {
+    "id": "R4_LOADER_OPERATOR",
+    "scope": "circuit",
+    "where": "circuit.kind == 'loader'",
+    "when": "circuit.trucks > 0",
+    "add": {
+     "loader_operator": 1
+    },
+    "text": "IF a coal loader circuit has trucks > 0 THEN +1 loader operator.",
+    "source": "E75/E77 =IF(D75>0,1,0)"
+   },
+   {
+    "id": "R5_COAL_DOZER",
+    "scope": "circuit",
+    "where": "circuit.kind == 'loader'",
+    "when": "circuit.trucks > 0",
+    "add": {
+     "dozer_coal": 1
+    },
+    "text": "IF a coal loader circuit has trucks > 0 THEN +1 coal dozer operator.",
+    "source": "E76/E78 'DZR (coal)' =IF(D75>0,1,0)"
+   },
+   {
+    "id": "R6_SUPPORT_EX",
+    "scope": "circuit",
+    "where": "circuit.id == 'LDR 1'",
+    "when": "circuit.trucks > 0",
+    "add": {
+     "support_excavator_operator": 1
+    },
+    "text": "IF coal loader LDR 1 has trucks > 0 THEN +1 support excavator operator (EX03/EX08).",
+    "source": "E79 'EX03/EX08 (support)' =IF(D75>0,1,0)",
+    "compat_note": "Spreadsheet keys this to LDR 1 only; LDR 2 alone gets no support EX. Proposed improved rule: where circuit.kind=='loader', at most one support EX in total (cap via a 'max_per_plan': 1)."
+   },
+   {
+    "id": "R7_BULK_PUSH",
+    "scope": "global",
+    "set": {
+     "dozer_bulk_push": "params.push_dozer_fleet - inputs.enabling_dozers - max(0, totals.total_trucks - params.max_trucks_operating)"
+    },
+    "text": "Bulk push dozers = 7 push dozers - dozers on enabling tasks - one dozer for every truck above 12 (dozer operators re-deployed to drive trucks).",
+    "source": "E47 =IF(E57>12, 7-(E57-12)-E52, 7-E52)",
+    "compat_note": "No clamp at 0 in the spreadsheet (can go negative when trucks > 18 with 1 enabling dozer)."
+   },
+   {
+    "id": "R8_PUSH_ASSIST",
+    "scope": "global",
+    "when": "roles.dozer_bulk_push > 0",
+    "add": {
+     "dozer_push_assist": 1
+    },
+    "text": "IF bulk push dozers > 0 THEN +1 'EX06 DZR Assist' operator.",
+    "source": "E82 =IF(E81>0,1,0)",
+    "compat_note": "Label is ambiguous (EX06 assisting the push vs a dozer assisting EX06). If EX06 also runs a truck circuit, its operator is counted again by R2."
+   },
+   {
+    "id": "R9_ENABLING_DOZERS",
+    "scope": "global",
+    "add": {
+     "dozer_enabling": "inputs.enabling_dozers"
+    },
+    "text": "Each dozer assigned to enabling tasks needs an operator.",
+    "source": "E83 =$E$52"
+   },
+   {
+    "id": "R10_FIXED_ROLES",
+    "scope": "global",
+    "add": {
+     "water_cart": "params.water_cart",
+     "grader": "params.grader",
+     "supervisor_oce": "params.supervisor_oce"
+    },
+    "text": "Fixed daily manning: 2 water cart, 2 grader, 3 supervisors/OCE.",
+    "source": "E85:E87 typed constants"
+   }
+  ],
+  "outputs": {
+   "total_crew": {
+    "expr": "sum(all roles)",
+    "source": "D88 =SUM(D68:E87) (truck + equipment columns)"
+   }
+  },
+  "constraints": [
+   {
+    "id": "C1_MAX_TRUCKS",
+    "expr": "totals.total_trucks <= params.max_trucks_operating",
+    "severity": "error",
+    "source": "CF on E57:K57: red fill if >12, green if <=12; note AJ4 'Balance trucking to ensure 12 operating at all times'"
+   },
+   {
+    "id": "C2_UNDERTRUCKED",
+    "expr": "totals.total_trucks >= params.max_trucks_operating",
+    "severity": "info",
+    "source": "note AJ5 'Highlight yellow if undertrucked' (manual; no CF rule implements it)"
+   },
+   {
+    "id": "C3_CREW_CAP",
+    "expr": "outputs.total_crew <= params.crew_cap_operating",
+    "severity": "warning",
+    "source": "note C90/C91 (not implemented as a formula in the workbook)"
+   }
+  ],
+  "production_rules": [
+   {
+    "id": "P1_EX_TARGET",
+    "applies_to": "excavator and loader circuits",
+    "expr": "circuit.hours * circuit.rate",
+    "source": "E9 =E7*E8 (also E16, E23, E31, E40)"
+   },
+   {
+    "id": "P2_DOZER_PUSH_TARGET",
+    "expr": "dozer.hours * dozer.rate * roles.dozer_bulk_push",
+    "source": "E48 =E45*E46*E47"
+   },
+   {
+    "id": "P3_DAILY_WASTE",
+    "expr": "EX09 + EX04 + EX06 + LDR1(row31) + DZR + LDR2(row39, blank)",
+    "source": "E55 =E9+E16+E23++E31+E48+E39"
+   },
+   {
+    "id": "P4_DAILY_COAL",
+    "expr": "LDR1(row31) + LDR2(row40)",
+    "source": "E56 =E31+E40",
+    "compat_note": "LDR 1 production is counted in BOTH waste and coal."
+   },
+   {
+    "id": "P5_TOTAL_UNITS",
+    "expr": "daily_waste + daily_coal",
+    "source": "E58 =E56+E55"
+   }
+  ],
+  "test_scenarios": [
+   {
+    "id": "linked_plan_day1",
+    "crew_block": "rows 65-88",
+    "date": "2026-05-05",
+    "inputs": {
+     "circuits": [
+      {
+       "id": "EX09",
+       "kind": "excavator",
+       "trucks": 5
+      },
+      {
+       "id": "EX04",
+       "kind": "excavator",
+       "trucks": 4
+      },
+      {
+       "id": "EX06",
+       "kind": "excavator",
+       "trucks": 0
+      },
+      {
+       "id": "LDR 1",
+       "kind": "loader",
+       "trucks": 3
+      },
+      {
+       "id": "LDR 2",
+       "kind": "loader",
+       "trucks": 0
+      }
+     ],
+     "enabling_dozers": 1
+    },
+    "overrides": {},
+    "expected": {
+     "total_trucks": 12,
+     "dozer_bulk_push_E47": 6,
+     "total_crew": 36
+    }
+   },
+   {
+    "id": "linked_plan_day2",
+    "crew_block": "rows 65-88",
+    "date": "2026-05-06",
+    "inputs": {
+     "circuits": [
+      {
+       "id": "EX09",
+       "kind": "excavator",
+       "trucks": 5
+      },
+      {
+       "id": "EX04",
+       "kind": "excavator",
+       "trucks": 4
+      },
+      {
+       "id": "EX06",
+       "kind": "excavator",
+       "trucks": 0
+      },
+      {
+       "id": "LDR 1",
+       "kind": "loader",
+       "trucks": 3
+      },
+      {
+       "id": "LDR 2",
+       "kind": "loader",
+       "trucks": 0
+      }
+     ],
+     "enabling_dozers": 1
+    },
+    "overrides": {},
+    "expected": {
+     "total_trucks": 12,
+     "dozer_bulk_push_E47": 6,
+     "total_crew": 36
+    }
+   },
+   {
+    "id": "linked_plan_day3",
+    "crew_block": "rows 65-88",
+    "date": "2026-05-07",
+    "inputs": {
+     "circuits": [
+      {
+       "id": "EX09",
+       "kind": "excavator",
+       "trucks": 5
+      },
+      {
+       "id": "EX04",
+       "kind": "excavator",
+       "trucks": 4
+      },
+      {
+       "id": "EX06",
+       "kind": "excavator",
+       "trucks": 0
+      },
+      {
+       "id": "LDR 1",
+       "kind": "loader",
+       "trucks": 3
+      },
+      {
+       "id": "LDR 2",
+       "kind": "loader",
+       "trucks": 0
+      }
+     ],
+     "enabling_dozers": 1
+    },
+    "overrides": {},
+    "expected": {
+     "total_trucks": 12,
+     "dozer_bulk_push_E47": 6,
+     "total_crew": 36
+    }
+   },
+   {
+    "id": "linked_plan_day4",
+    "crew_block": "rows 65-88",
+    "date": "2026-05-08",
+    "inputs": {
+     "circuits": [
+      {
+       "id": "EX09",
+       "kind": "excavator",
+       "trucks": 5
+      },
+      {
+       "id": "EX04",
+       "kind": "excavator",
+       "trucks": 4
+      },
+      {
+       "id": "EX06",
+       "kind": "excavator",
+       "trucks": 0
+      },
+      {
+       "id": "LDR 1",
+       "kind": "loader",
+       "trucks": 3
+      },
+      {
+       "id": "LDR 2",
+       "kind": "loader",
+       "trucks": 0
+      }
+     ],
+     "enabling_dozers": 1
+    },
+    "overrides": {},
+    "expected": {
+     "total_trucks": 12,
+     "dozer_bulk_push_E47": 6,
+     "total_crew": 36
+    }
+   },
+   {
+    "id": "linked_plan_day5",
+    "crew_block": "rows 65-88",
+    "date": "2026-05-09",
+    "inputs": {
+     "circuits": [
+      {
+       "id": "EX09",
+       "kind": "excavator",
+       "trucks": 5
+      },
+      {
+       "id": "EX04",
+       "kind": "excavator",
+       "trucks": 4
+      },
+      {
+       "id": "EX06",
+       "kind": "excavator",
+       "trucks": 0
+      },
+      {
+       "id": "LDR 1",
+       "kind": "loader",
+       "trucks": 3
+      },
+      {
+       "id": "LDR 2",
+       "kind": "loader",
+       "trucks": 0
+      }
+     ],
+     "enabling_dozers": 1
+    },
+    "overrides": {},
+    "expected": {
+     "total_trucks": 12,
+     "dozer_bulk_push_E47": 6,
+     "total_crew": 36
+    }
+   },
+   {
+    "id": "linked_plan_day6",
+    "crew_block": "rows 65-88",
+    "date": "2026-05-10",
+    "inputs": {
+     "circuits": [
+      {
+       "id": "EX09",
+       "kind": "excavator",
+       "trucks": 5
+      },
+      {
+       "id": "EX04",
+       "kind": "excavator",
+       "trucks": 4
+      },
+      {
+       "id": "EX06",
+       "kind": "excavator",
+       "trucks": 0
+      },
+      {
+       "id": "LDR 1",
+       "kind": "loader",
+       "trucks": 3
+      },
+      {
+       "id": "LDR 2",
+       "kind": "loader",
+       "trucks": 0
+      }
+     ],
+     "enabling_dozers": 1
+    },
+    "overrides": {},
+    "expected": {
+     "total_trucks": 12,
+     "dozer_bulk_push_E47": 6,
+     "total_crew": 36
+    }
+   },
+   {
+    "id": "linked_plan_day7",
+    "crew_block": "rows 65-88",
+    "date": "2026-05-11",
+    "inputs": {
+     "circuits": [
+      {
+       "id": "EX09",
+       "kind": "excavator",
+       "trucks": 5
+      },
+      {
+       "id": "EX04",
+       "kind": "excavator",
+       "trucks": 4
+      },
+      {
+       "id": "EX06",
+       "kind": "excavator",
+       "trucks": 0
+      },
+      {
+       "id": "LDR 1",
+       "kind": "loader",
+       "trucks": 3
+      },
+      {
+       "id": "LDR 2",
+       "kind": "loader",
+       "trucks": 0
+      }
+     ],
+     "enabling_dozers": 1
+    },
+    "overrides": {},
+    "expected": {
+     "total_trucks": 12,
+     "dozer_bulk_push_E47": 6,
+     "total_crew": 36
+    }
+   },
+   {
+    "id": "manual_scenario_day1",
+    "crew_block": "rows 93-116",
+    "date": "2026-05-05",
+    "inputs": {
+     "circuits": [
+      {
+       "id": "EX09",
+       "kind": "excavator",
+       "trucks": 5
+      },
+      {
+       "id": "EX04",
+       "kind": "excavator",
+       "trucks": 4
+      },
+      {
+       "id": "EX06",
+       "kind": "excavator",
+       "trucks": 0
+      },
+      {
+       "id": "LDR 1",
+       "kind": "loader",
+       "trucks": 3
+      },
+      {
+       "id": "LDR 2",
+       "kind": "loader",
+       "trucks": 0
+      }
+     ],
+     "enabling_dozers": 1
+    },
+    "overrides": {
+     "circuit_trucks": {
+      "EX09": 4
+     },
+     "roles": {
+      "dozer_bulk_push": 4,
+      "water_cart": 1,
+      "grader": 1,
+      "supervisor_oce": 0
+     }
+    },
+    "override_note": "Block 2 replaces formulas with typed values: D96:P96 EX09 trucks (4), E109:Q109 bulk push (4), water 1, grader 1, supervisors/OCE 0. All other lines use the same rule formulas as block 1.",
+    "expected": {
+     "total_crew": 28
+    }
+   },
+   {
+    "id": "manual_scenario_day2",
+    "crew_block": "rows 93-116",
+    "date": "2026-05-06",
+    "inputs": {
+     "circuits": [
+      {
+       "id": "EX09",
+       "kind": "excavator",
+       "trucks": 5
+      },
+      {
+       "id": "EX04",
+       "kind": "excavator",
+       "trucks": 4
+      },
+      {
+       "id": "EX06",
+       "kind": "excavator",
+       "trucks": 0
+      },
+      {
+       "id": "LDR 1",
+       "kind": "loader",
+       "trucks": 3
+      },
+      {
+       "id": "LDR 2",
+       "kind": "loader",
+       "trucks": 0
+      }
+     ],
+     "enabling_dozers": 1
+    },
+    "overrides": {
+     "circuit_trucks": {
+      "EX09": 4
+     },
+     "roles": {
+      "dozer_bulk_push": 4,
+      "water_cart": 1,
+      "grader": 1,
+      "supervisor_oce": 0
+     }
+    },
+    "override_note": "Block 2 replaces formulas with typed values: D96:P96 EX09 trucks (4), E109:Q109 bulk push (4), water 1, grader 1, supervisors/OCE 0. All other lines use the same rule formulas as block 1.",
+    "expected": {
+     "total_crew": 28
+    }
+   },
+   {
+    "id": "manual_scenario_day3",
+    "crew_block": "rows 93-116",
+    "date": "2026-05-07",
+    "inputs": {
+     "circuits": [
+      {
+       "id": "EX09",
+       "kind": "excavator",
+       "trucks": 5
+      },
+      {
+       "id": "EX04",
+       "kind": "excavator",
+       "trucks": 4
+      },
+      {
+       "id": "EX06",
+       "kind": "excavator",
+       "trucks": 0
+      },
+      {
+       "id": "LDR 1",
+       "kind": "loader",
+       "trucks": 3
+      },
+      {
+       "id": "LDR 2",
+       "kind": "loader",
+       "trucks": 0
+      }
+     ],
+     "enabling_dozers": 1
+    },
+    "overrides": {
+     "circuit_trucks": {
+      "EX09": 4
+     },
+     "roles": {
+      "dozer_bulk_push": 4,
+      "water_cart": 1,
+      "grader": 1,
+      "supervisor_oce": 0
+     }
+    },
+    "override_note": "Block 2 replaces formulas with typed values: D96:P96 EX09 trucks (4), E109:Q109 bulk push (4), water 1, grader 1, supervisors/OCE 0. All other lines use the same rule formulas as block 1.",
+    "expected": {
+     "total_crew": 28
+    }
+   },
+   {
+    "id": "manual_scenario_day4",
+    "crew_block": "rows 93-116",
+    "date": "2026-05-08",
+    "inputs": {
+     "circuits": [
+      {
+       "id": "EX09",
+       "kind": "excavator",
+       "trucks": 5
+      },
+      {
+       "id": "EX04",
+       "kind": "excavator",
+       "trucks": 4
+      },
+      {
+       "id": "EX06",
+       "kind": "excavator",
+       "trucks": 0
+      },
+      {
+       "id": "LDR 1",
+       "kind": "loader",
+       "trucks": 3
+      },
+      {
+       "id": "LDR 2",
+       "kind": "loader",
+       "trucks": 0
+      }
+     ],
+     "enabling_dozers": 1
+    },
+    "overrides": {
+     "circuit_trucks": {
+      "EX09": 4
+     },
+     "roles": {
+      "dozer_bulk_push": 4,
+      "water_cart": 1,
+      "grader": 1,
+      "supervisor_oce": 0
+     }
+    },
+    "override_note": "Block 2 replaces formulas with typed values: D96:P96 EX09 trucks (4), E109:Q109 bulk push (4), water 1, grader 1, supervisors/OCE 0. All other lines use the same rule formulas as block 1.",
+    "expected": {
+     "total_crew": 28
+    }
+   },
+   {
+    "id": "manual_scenario_day5",
+    "crew_block": "rows 93-116",
+    "date": "2026-05-09",
+    "inputs": {
+     "circuits": [
+      {
+       "id": "EX09",
+       "kind": "excavator",
+       "trucks": 5
+      },
+      {
+       "id": "EX04",
+       "kind": "excavator",
+       "trucks": 4
+      },
+      {
+       "id": "EX06",
+       "kind": "excavator",
+       "trucks": 0
+      },
+      {
+       "id": "LDR 1",
+       "kind": "loader",
+       "trucks": 3
+      },
+      {
+       "id": "LDR 2",
+       "kind": "loader",
+       "trucks": 0
+      }
+     ],
+     "enabling_dozers": 1
+    },
+    "overrides": {
+     "circuit_trucks": {
+      "EX09": 4
+     },
+     "roles": {
+      "dozer_bulk_push": 4,
+      "water_cart": 1,
+      "grader": 1,
+      "supervisor_oce": 0
+     }
+    },
+    "override_note": "Block 2 replaces formulas with typed values: D96:P96 EX09 trucks (4), E109:Q109 bulk push (4), water 1, grader 1, supervisors/OCE 0. All other lines use the same rule formulas as block 1.",
+    "expected": {
+     "total_crew": 28
+    }
+   },
+   {
+    "id": "manual_scenario_day6",
+    "crew_block": "rows 93-116",
+    "date": "2026-05-10",
+    "inputs": {
+     "circuits": [
+      {
+       "id": "EX09",
+       "kind": "excavator",
+       "trucks": 5
+      },
+      {
+       "id": "EX04",
+       "kind": "excavator",
+       "trucks": 4
+      },
+      {
+       "id": "EX06",
+       "kind": "excavator",
+       "trucks": 0
+      },
+      {
+       "id": "LDR 1",
+       "kind": "loader",
+       "trucks": 3
+      },
+      {
+       "id": "LDR 2",
+       "kind": "loader",
+       "trucks": 0
+      }
+     ],
+     "enabling_dozers": 1
+    },
+    "overrides": {
+     "circuit_trucks": {
+      "EX09": 4
+     },
+     "roles": {
+      "dozer_bulk_push": 4,
+      "water_cart": 1,
+      "grader": 1,
+      "supervisor_oce": 0
+     }
+    },
+    "override_note": "Block 2 replaces formulas with typed values: D96:P96 EX09 trucks (4), E109:Q109 bulk push (4), water 1, grader 1, supervisors/OCE 0. All other lines use the same rule formulas as block 1.",
+    "expected": {
+     "total_crew": 28
+    }
+   },
+   {
+    "id": "manual_scenario_day7",
+    "crew_block": "rows 93-116",
+    "date": "2026-05-11",
+    "inputs": {
+     "circuits": [
+      {
+       "id": "EX09",
+       "kind": "excavator",
+       "trucks": 5
+      },
+      {
+       "id": "EX04",
+       "kind": "excavator",
+       "trucks": 4
+      },
+      {
+       "id": "EX06",
+       "kind": "excavator",
+       "trucks": 0
+      },
+      {
+       "id": "LDR 1",
+       "kind": "loader",
+       "trucks": 3
+      },
+      {
+       "id": "LDR 2",
+       "kind": "loader",
+       "trucks": 0
+      }
+     ],
+     "enabling_dozers": 1
+    },
+    "overrides": {
+     "circuit_trucks": {
+      "EX09": 4
+     },
+     "roles": {
+      "dozer_bulk_push": 4,
+      "water_cart": 1,
+      "grader": 1,
+      "supervisor_oce": 0
+     }
+    },
+    "override_note": "Block 2 replaces formulas with typed values: D96:P96 EX09 trucks (4), E109:Q109 bulk push (4), water 1, grader 1, supervisors/OCE 0. All other lines use the same rule formulas as block 1.",
+    "expected": {
+     "total_crew": 28
+    }
+   }
+  ]
+ },
+ "equipment_register": {
+  "source": "Equipment!A2:AS83 (print area B2:AS81); no formulas; not referenced by any other sheet",
+  "columns": {
+   "A": "Eqp Description",
+   "B": "Eqp Code Input",
+   "C": "Proposed Fleet ID",
+   "D": "Current SAP CC",
+   "E": "Current SAP Dsc",
+   "F": "Tech Services Comments",
+   "G": "Commercial Comments",
+   "H": "Mtce Comments",
+   "I:K": "Options (I=Own/Buy, J=Hire / Buy, K=Hire)",
+   "M:AJ": "Monthly presence flag 2025-01..2026-12 (1 = in fleet, 0 = not, fractions = part-period)",
+   "AK:AN": "Yearly presence 2027..2030 (fractions = part-year)",
+   "AO": "Note",
+   "AP": "CURRENT SMU",
+   "AQ": "SMU AT 2029",
+   "AR": "SMU AT LIFE"
+  },
+  "comment_W3": "William Long: 'Contract due in Nov' (on EX003 row, Nov-2025 column)",
+  "period_headers": [
+   "2025-01",
+   "2025-02",
+   "2025-03",
+   "2025-04",
+   "2025-05",
+   "2025-06",
+   "2025-07",
+   "2025-08",
+   "2025-09",
+   "2025-10",
+   "2025-11",
+   "2025-12",
+   "2026-01",
+   "2026-02",
+   "2026-03",
+   "2026-04",
+   "2026-05",
+   "2026-06",
+   "2026-07",
+   "2026-08",
+   "2026-09",
+   "2026-10",
+   "2026-11",
+   "2026-12",
+   "2027",
+   "2028",
+   "2029",
+   "2030"
+  ],
+  "units": [
+   {
+    "row": 3,
+    "description": "50t Excavator",
+    "code": "EX003",
+    "proposed_fleet_id": "Exc3",
+    "sap_cost_centre": 46208003,
+    "sap_description": "50t Excavator - Hyundai",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Replaces EX002 Q4 2022 or Q1 2023.",
+    "ownership": "Hire",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": "Contract due to review in November 2025. It will only 175hr (min) when purchased 50t Digger commissioned, ",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 4,
+    "description": "CDM EX004 KOM PC4000YCC",
+    "code": "EX004",
+    "proposed_fleet_id": "Exc4",
+    "sap_cost_centre": 46208004,
+    "sap_description": "CDM EX004 KOM PC4000 ",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Maximum utilisation 2023, utilisation may reduce CY24-27",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2025-01": 0,
+     "2025-02": 0,
+     "2025-03": 0,
+     "2025-04": 0,
+     "2025-05": 0,
+     "2025-06": 0,
+     "2025-07": 0,
+     "2025-08": 0,
+     "2025-09": 0,
+     "2025-10": 0,
+     "2025-11": 0,
+     "2025-12": 0,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": "Parked from July 2025, Potentially $1.5M in 2026 if re-commissioned then out to 2029",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 5,
+    "description": "CDM EX005 HIT EX1900 Hire",
+    "code": "EX006",
+    "proposed_fleet_id": "Exc6",
+    "sap_cost_centre": 46208006,
+    "sap_description": "CDM EX006 HIT EX2600",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "On site.",
+    "ownership": "Hire",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": null,
+    "current_smu": 18500,
+    "smu_at_2029": 42793,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 6,
+    "description": "CDM EX005 HIT EX1900 Hire",
+    "code": "EX007",
+    "proposed_fleet_id": "Exc7",
+    "sap_cost_centre": 46208007,
+    "sap_description": "CDM EX007 LIEB R996B",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Capital to include purchase & rebuild costs.",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1
+    },
+    "note": "To be replaced in Q1 2026, CER needs to be approved by 2025",
+    "current_smu": 78500,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 7,
+    "description": "CDM EX005 HIT EX1900 Hire",
+    "code": "EX008",
+    "proposed_fleet_id": "Exc8",
+    "sap_cost_centre": 46208008,
+    "sap_description": "50t Excavator",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Capital to include purchase & rebuild costs.",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": null,
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 8,
+    "description": "CDM EX005 HIT EX1900 Hire",
+    "code": "EX009",
+    "proposed_fleet_id": "Exc9",
+    "sap_cost_centre": 46208009,
+    "sap_description": "CDM EX009 HIT EX5600",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Capital to include purchase & rebuild costs.",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": "If running 12.5hr shift, this machine is required by Nov 2026, or 10.5 hr shift, it can be deferred to Jan 2027",
+    "current_smu": 78500,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 9,
+    "description": "CDM EX007 LIEBHERR R996B",
+    "code": null,
+    "proposed_fleet_id": null,
+    "sap_cost_centre": null,
+    "sap_description": null,
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": null,
+    "ownership": null,
+    "availability_by_period": {
+     "2025-04": " "
+    },
+    "note": null,
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 11,
+    "description": "CDM DT103 KOM HD1500-7",
+    "code": "DT103",
+    "proposed_fleet_id": "Trk1",
+    "sap_cost_centre": 46208103,
+    "sap_description": "CDM DT103 KOM HD1500 ",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "On site. Retain asset 5YP.",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1
+    },
+    "note": null,
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 12,
+    "description": "CDM DT105 KOM HD1500-7",
+    "code": "DT105",
+    "proposed_fleet_id": "Trk1",
+    "sap_cost_centre": 46208105,
+    "sap_description": "CDM DT105 KOM HD1500 ",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "On site. Retain asset 5YP.",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1
+    },
+    "note": null,
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 13,
+    "description": "CDM DT107 KOM HD1500-7",
+    "code": "DT107",
+    "proposed_fleet_id": "Trk1",
+    "sap_cost_centre": 46208107,
+    "sap_description": "CDM DT107 KOM HD1500 ",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "On site. Retain asset 5YP.",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1
+    },
+    "note": null,
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 15,
+    "description": "CDM DT197 CAT 789 Hire",
+    "code": "DT126",
+    "proposed_fleet_id": "Trk3",
+    "sap_cost_centre": 46208126,
+    "sap_description": "CDM DT126 CAT 789 Hire",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": null,
+    "ownership": null,
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1
+    },
+    "note": "Plan to park up by end of July 2026 and to be replaced by purchased Cat 789 Truck commissioning in July 2026",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 16,
+    "description": "CDM DT199 CAT 789 Hire",
+    "code": "DT128",
+    "proposed_fleet_id": "Trk3",
+    "sap_cost_centre": 46208128,
+    "sap_description": "CDM DT128 CAT 789 Hire",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": null,
+    "ownership": null,
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1
+    },
+    "note": "Plan to park up by end of July 2026 and to be replaced by purchased Cat 789 Truck commissioning in July 2026",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 17,
+    "description": "CDM DT198 CAT 789 Hire",
+    "code": "DT198",
+    "proposed_fleet_id": "Trk3",
+    "sap_cost_centre": 46208198,
+    "sap_description": "CDM DT198 CAT 789 Hire",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Extended Hire through 2023",
+    "ownership": "Hire",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1
+    },
+    "note": "Continue running untill July 2027, when 2 x purchased 789 Trucks turned up",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 20,
+    "description": "CDM DT196 CAT 789 Hire",
+    "code": "DT189",
+    "proposed_fleet_id": "Trk5",
+    "sap_cost_centre": 46208189,
+    "sap_description": "CDM DT189 CAT 789 ",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Capital to include purchase & rebuild costs.",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": null,
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 21,
+    "description": "CDM DT195 CAT 789 Hire",
+    "code": "DT190",
+    "proposed_fleet_id": "Trk5",
+    "sap_cost_centre": 46208190,
+    "sap_description": "CDM DT190 CAT 789 ",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Capital to include purchase & rebuild costs.",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": null,
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 22,
+    "description": "CDM DT193 CAT 789 Hire",
+    "code": "DT191",
+    "proposed_fleet_id": "Trk5",
+    "sap_cost_centre": 46208191,
+    "sap_description": "CDM DT191 CAT 789 ",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "To purchase in 2024",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": null,
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 23,
+    "description": "CDM DT193 CAT 789 Hire",
+    "code": "DT192",
+    "proposed_fleet_id": "Trk5",
+    "sap_cost_centre": 46208192,
+    "sap_description": "CDM DT192 CAT 789 ",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "To purchase in 2024",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": null,
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 24,
+    "description": "CDM DT193 CAT 789 Hire",
+    "code": "DT193",
+    "proposed_fleet_id": "Trk5",
+    "sap_cost_centre": 46208193,
+    "sap_description": "CDM DT193 CAT 789 ",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "To purchase in 2024",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": null,
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 25,
+    "description": "CDM DT194 CAT 789 Hire",
+    "code": "DT194",
+    "proposed_fleet_id": "Trk5",
+    "sap_cost_centre": 46208194,
+    "sap_description": "CDM DT194 CAT 789 ",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "To purchase in 2024",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": null,
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 26,
+    "description": "CDM DT195 CAT 789 Hire",
+    "code": "DT195",
+    "proposed_fleet_id": "Trk5",
+    "sap_cost_centre": 46208195,
+    "sap_description": "CDM DT195 CAT 789 ",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Capital to include purchase & rebuild costs.",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": null,
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 27,
+    "description": "CDM DT196 CAT 789 Hire",
+    "code": "DT196",
+    "proposed_fleet_id": "Trk5",
+    "sap_cost_centre": 46208196,
+    "sap_description": "CDM DT196 CAT 789 ",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Capital to include purchase & rebuild costs.",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": null,
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 28,
+    "description": "CDM DT121 CAT 793",
+    "code": "DT185",
+    "proposed_fleet_id": "Trk5",
+    "sap_cost_centre": 46208185,
+    "sap_description": "CDM DT196 CAT 789 ",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "TBA; Place holder.",
+    "ownership": null,
+    "availability_by_period": {
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": "To be purchased in 2027 to replace hire 789 Truck, CER approval required by August 2026",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 29,
+    "description": "CDM DT121 CAT 793",
+    "code": "DT186",
+    "proposed_fleet_id": "Trk5",
+    "sap_cost_centre": 46208186,
+    "sap_description": "CDM DT196 CAT 789 ",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "TBA; Place holder.",
+    "ownership": null,
+    "availability_by_period": {
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": "To be purchased in 2027, CER approval required by August 2026",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 30,
+    "description": "CDM DT122 CAT 793",
+    "code": "DT187",
+    "proposed_fleet_id": "Trk5",
+    "sap_cost_centre": 46208187,
+    "sap_description": "CDM DT196 CAT 789 ",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "TBA; Place holder.",
+    "ownership": null,
+    "availability_by_period": {
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": "To be purchased in 2026 to replace hire 789 Truck, CER approval required by August 2025",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 31,
+    "description": "CDM DT120 CAT 793",
+    "code": "DT188",
+    "proposed_fleet_id": "Trk5",
+    "sap_cost_centre": 46208188,
+    "sap_description": "CDM DT196 CAT 789 ",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "TBA; Place holder.",
+    "ownership": null,
+    "availability_by_period": {
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": "To be purchased in 2026 to replace hire 789 Truck, CER approval required by August 2025",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 33,
+    "description": "CDM DZ201 KOM D475SD-5EO",
+    "code": "DZ201",
+    "proposed_fleet_id": "Doz1",
+    "sap_cost_centre": 46208201,
+    "sap_description": "CDM TD201 KOM D475SD ",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Reduce Utilisation When D11's Arrive or / Spare / Retire.",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 0.75
+    },
+    "note": "Refurb 201 in 2025 to replace DZ213",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": 65000,
+    "extra_AS": null
+   },
+   {
+    "row": 34,
+    "description": "CDM DZ202 KOM D475SD-5EO",
+    "code": "DZ202",
+    "proposed_fleet_id": "Doz1",
+    "sap_cost_centre": 46208202,
+    "sap_description": "CDM TD202 KOM D475SD ",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Reduce Utilisation When D11's Arrive or / Spare / Retire.",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1
+    },
+    "note": null,
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 35,
+    "description": "CDM DZ203 KOM D475SD-5EO",
+    "code": "DZ203",
+    "proposed_fleet_id": "Doz1",
+    "sap_cost_centre": 46208203,
+    "sap_description": "CDM TD203 KOM D475SD ",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Reduce Utilisation When D11's Arrive or / Spare / Retire.",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 0.75
+    },
+    "note": "Replace approx. Jul29",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": 64000,
+    "extra_AS": null
+   },
+   {
+    "row": 36,
+    "description": "CDM DZ209 KOM D475SD-5EO",
+    "code": "DZ209",
+    "proposed_fleet_id": "Doz1",
+    "sap_cost_centre": 46208209,
+    "sap_description": "CDM DZ209 KOM D475SD",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "When 2nd wave of D11's Arrive, make this Spare / Retire.",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 0
+    },
+    "note": "Replace approx. Nov28",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": 64000,
+    "extra_AS": null
+   },
+   {
+    "row": 37,
+    "description": "CDM DZ210 KOM D475SD-5EO",
+    "code": "DZ210",
+    "proposed_fleet_id": "Doz1",
+    "sap_cost_centre": 46208210,
+    "sap_description": "CDM DZ210 KOM D475SD",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "When 2nd wave of D11's Arrive, make this Spare / Retire.",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 0.5
+    },
+    "note": "Replace approx. Jul30",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": 63000,
+    "extra_AS": null
+   },
+   {
+    "row": 39,
+    "description": "CDM DZ215 CAT D11T Remote",
+    "code": "DZ215",
+    "proposed_fleet_id": "Doz6",
+    "sap_cost_centre": 46208215,
+    "sap_description": "CDM DZ215 CAT D11 Fusion",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Delivery ~Q3/Q4-2023 - Replaces DZ208.",
+    "ownership": "Buy",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": null,
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 40,
+    "description": "CDM DZ216 CAT D11T Remote",
+    "code": "DZ216",
+    "proposed_fleet_id": "Doz6",
+    "sap_cost_centre": 46208216,
+    "sap_description": "CDM DZ216 CAT D11 Fusion",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Delivery ~Q3/Q4-2023 - Replaces DZ220.",
+    "ownership": "Buy",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": null,
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 41,
+    "description": "CDM DZ217 CAT D11T Remote",
+    "code": "DZ217",
+    "proposed_fleet_id": "Doz6",
+    "sap_cost_centre": 46208217,
+    "sap_description": "CDM DZ217 CAT D11 Fusion",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Delivery ~Q3/Q4-2023 - Replaces DZ221.",
+    "ownership": "Buy",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": null,
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 42,
+    "description": "CDM DZ218 CAT D11T Remote",
+    "code": "DZ218",
+    "proposed_fleet_id": "Doz6",
+    "sap_cost_centre": 46208218,
+    "sap_description": "CDM DZ218 CAT D11 Fusion",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Delivery ~Q3-2023 - Replaces DZ202.",
+    "ownership": "Buy",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": null,
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 43,
+    "description": "CDM DZ219 CAT D11T Remote",
+    "code": "DZ219",
+    "proposed_fleet_id": "Doz6",
+    "sap_cost_centre": 46208219,
+    "sap_description": "CDM DZ219 CAT D11 Fusion",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Delivery ~Q3-2023 - Replaces DZ203",
+    "ownership": "Buy",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": null,
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 45,
+    "description": "CDM DZ230 CAT D11T Remote",
+    "code": "DZ230",
+    "proposed_fleet_id": "Doz5",
+    "sap_cost_centre": 46208230,
+    "sap_description": "CDM DZ230 CAT D11 Fusion",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Delivery TBA - Replaces DZ201 CY25.",
+    "ownership": "Buy",
+    "availability_by_period": {
+     "2028": 0.25,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": "Replace DZ201 Sep28",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 46,
+    "description": "CDM DZ231 CAT D11T Remote",
+    "code": "DZ231",
+    "proposed_fleet_id": "Doz6",
+    "sap_cost_centre": 46208231,
+    "sap_description": "CDM DZ231 CAT D11 Fusion",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Delivery TBA - Replaces DZ202 CY25.",
+    "ownership": "Buy",
+    "availability_by_period": {
+     "2028": 0.25,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": "Replace DZ209 Nov28",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 47,
+    "description": "CDM DZ232 CAT D11T Remote",
+    "code": "DZ232",
+    "proposed_fleet_id": "Doz6",
+    "sap_cost_centre": 46208232,
+    "sap_description": "CDM DZ232 CAT D11 Fusion",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Delivery TBA - Replaces either DZ209 or DZ210 CY26.",
+    "ownership": "Buy",
+    "availability_by_period": {
+     "2029": 0.5,
+     "2030": 1
+    },
+    "note": "Replace DZ203 Jul29",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 48,
+    "description": "CDM DZ233 CAT D11T Remote",
+    "code": "DZ233",
+    "proposed_fleet_id": "Doz6",
+    "sap_cost_centre": 46208233,
+    "sap_description": "CDM DZ233 CAT D11 Fusion",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Delivery TBA - CY27.",
+    "ownership": "Buy",
+    "availability_by_period": {
+     "2029": 0.5,
+     "2030": 1
+    },
+    "note": "Replace DZ210 Jul30",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 50,
+    "description": "CDM DZ204 KOM D375A-6",
+    "code": "DZ204",
+    "proposed_fleet_id": "Doz2",
+    "sap_cost_centre": 46208204,
+    "sap_description": "CDM DZ204 KOM D375A-6",
+    "tech_services_comment": "Coal Mining",
+    "commercial_comment": null,
+    "maintenance_comment": "Maintain for 5YP - Replace with DZ227 CY28",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1
+    },
+    "note": "Mining Dozer, due to be replaced in Q1 2026, need to be added in 2026 Capital Budget Pass 1",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": 51000,
+    "extra_AS": null
+   },
+   {
+    "row": 51,
+    "description": "CDM DZ225 KOM D375-5",
+    "code": "DZ225",
+    "proposed_fleet_id": "Doz3",
+    "sap_cost_centre": 46208225,
+    "sap_description": "CDM DZ225 KOM D375A-5",
+    "tech_services_comment": "CHPP - replaces DZ206 in sep 22",
+    "commercial_comment": null,
+    "maintenance_comment": "On site. CHPP Stockpile Operations, Retire CY25",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": "CHPP Dozer",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 53,
+    "description": "CDM DZ226 CAT D10",
+    "code": "DZ226",
+    "proposed_fleet_id": "Doz4",
+    "sap_cost_centre": 46208226,
+    "sap_description": "CDM DZ226 CAT D10",
+    "tech_services_comment": "Dump Dozer",
+    "commercial_comment": null,
+    "maintenance_comment": "New machine purchase due to site Sep 22 - WBS C-12579-01",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": "Mining Dozer",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 54,
+    "description": "CDM DZ226 CAT D10",
+    "code": "DZ227",
+    "proposed_fleet_id": "Doz4",
+    "sap_cost_centre": 46208227,
+    "sap_description": "CDM DZ227 CAT D10",
+    "tech_services_comment": "Dump Dozer",
+    "commercial_comment": null,
+    "maintenance_comment": "New machine purchase due to site Sep 22 - WBS C-12579-01",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": "Mining Dozer",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 55,
+    "description": "CDM DZ226 CAT D10",
+    "code": null,
+    "proposed_fleet_id": null,
+    "sap_cost_centre": null,
+    "sap_description": null,
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": null,
+    "ownership": null,
+    "availability_by_period": {},
+    "note": null,
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 57,
+    "description": "CDM WD207 KOM WD900-3",
+    "code": "WD207",
+    "proposed_fleet_id": "WDz1",
+    "sap_cost_centre": 46208207,
+    "sap_description": "CDM WD207 KOM WD900",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "On site. Retain asset 5YP.",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": null,
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 59,
+    "description": "CDM GR305 CAT 24M Hire",
+    "code": "GR309",
+    "proposed_fleet_id": "Grd1",
+    "sap_cost_centre": 46208309,
+    "sap_description": "CDM CAT18M GR309",
+    "tech_services_comment": "Look at replacing with a 18M",
+    "commercial_comment": null,
+    "maintenance_comment": "On site - Hire",
+    "ownership": "Hire",
+    "availability_by_period": {
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": null,
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 60,
+    "description": "CDM GR305 CAT 24M Hire",
+    "code": "GR310",
+    "proposed_fleet_id": "Grd1",
+    "sap_cost_centre": 46208310,
+    "sap_description": "CDM CAT18M GR310",
+    "tech_services_comment": "Look at replacing with a 18M",
+    "commercial_comment": null,
+    "maintenance_comment": "On site - Hire",
+    "ownership": "Hire",
+    "availability_by_period": {
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": null,
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 62,
+    "description": "CDM WL401 KOM WA900-3EO HL",
+    "code": "LD401",
+    "proposed_fleet_id": "Fel1",
+    "sap_cost_centre": 46208401,
+    "sap_description": "CDM LD401 KOM WA900",
+    "tech_services_comment": "Back-up 2023.",
+    "commercial_comment": null,
+    "maintenance_comment": "Reduce utilisation - Replace with LD409 Q3 2023",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 0.5
+    },
+    "note": "Replace approx. Q32027 with new Mining Loader; WL410. (Major overhaul due M112027 @61K hours)",
+    "current_smu": 49500,
+    "smu_at_2029": null,
+    "smu_at_life": 60000,
+    "extra_AS": null
+   },
+   {
+    "row": 63,
+    "description": "CDM WL402 KOM WA900-3EO HL",
+    "code": "LD402",
+    "proposed_fleet_id": "Fel1",
+    "sap_cost_centre": 46208402,
+    "sap_description": "CDM LD402 KOM WA900",
+    "tech_services_comment": "Secondary in pit & ROM loader 2023",
+    "commercial_comment": null,
+    "maintenance_comment": "Reduce utilisation when possible- Replace with LD410 Q3 2024",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1
+    },
+    "note": "Replace approx. Q12026 with new mining loader; WL409. ",
+    "current_smu": 47750,
+    "smu_at_2029": null,
+    "smu_at_life": 60000,
+    "extra_AS": null
+   },
+   {
+    "row": 64,
+    "description": "CDM WL403 KOM WA600-6",
+    "code": "LD403",
+    "proposed_fleet_id": "Fel6",
+    "sap_cost_centre": 46208403,
+    "sap_description": "CDM LD403 KOM WA600",
+    "tech_services_comment": "Utlisation to reduce with new bypass crusher",
+    "commercial_comment": null,
+    "maintenance_comment": "Breakdowns to be assesed case by case.",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1
+    },
+    "note": "Replace approx. Q22025 with new loader; WL413",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 65,
+    "description": "CDM WL407 KOM WA900-3EO HL",
+    "code": "LD407",
+    "proposed_fleet_id": "Fel3",
+    "sap_cost_centre": 46208407,
+    "sap_description": "CDM LD407 KOM WA900",
+    "tech_services_comment": "Prime inpit loader 2023",
+    "commercial_comment": null,
+    "maintenance_comment": "On site. Retain asset 5YP.",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 0.75
+    },
+    "note": "Replace approx. Q32027 with new CHPP Loader; WL412. @56K hours)",
+    "current_smu": 38500,
+    "smu_at_2029": 65000,
+    "smu_at_life": 56000,
+    "extra_AS": null
+   },
+   {
+    "row": 66,
+    "description": "CDM WL408 KOM WA900-3EO HL",
+    "code": "LD408",
+    "proposed_fleet_id": "Fel4",
+    "sap_cost_centre": 46208408,
+    "sap_description": "CDM LD408 KOM WA900 ",
+    "tech_services_comment": "Primary Train loader.",
+    "commercial_comment": null,
+    "maintenance_comment": "New machine purchase due to site Sep 22 - WBS C-12580-01",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": "CHPP Loader",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 67,
+    "description": "CDM WL408 KOM WA900-3EO HL",
+    "code": "LD409",
+    "proposed_fleet_id": "Fel2",
+    "sap_cost_centre": 46208409,
+    "sap_description": "CDM LD409 KOM WA900 ",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Delivery ~Q3/Q4-2023 - Replaces LD401",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": "Mining Loader; Budgeted to replace WL402 in Q12026",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 68,
+    "description": "CDM WL408 KOM WA900-3EO HL",
+    "code": "LD410",
+    "proposed_fleet_id": "Fel2",
+    "sap_cost_centre": 46208410,
+    "sap_description": "CDM LD410 KOM WA900 ",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Delivery ~Q3/Q4-2024 - Replaces LD402",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2027": 0.5,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": "Mining Loader; Budgeted to replace WL401 in Q32027, it will be purchased late in 2026",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 69,
+    "description": "CDM IT002 KOM WA500-6",
+    "code": "LD411",
+    "proposed_fleet_id": "Fel5",
+    "sap_cost_centre": 46208411,
+    "sap_description": "CDM LD411 KOM WA500",
+    "tech_services_comment": "Domestic - Screen",
+    "commercial_comment": null,
+    "maintenance_comment": null,
+    "ownership": "Own",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1
+    },
+    "note": null,
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 70,
+    "description": "CDM WL408 KOM WA900-3EO HL",
+    "code": "LD412",
+    "proposed_fleet_id": "Fel4",
+    "sap_cost_centre": 46208412,
+    "sap_description": "CDM LD412 KOM WA900 ",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Delivery ~Q3/Q4-2024 - Replaces LD402",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2027": 0.25,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": "CHPP Loader; Budgeted to replace WL407 in Q32028, it will be purchased late in 2027",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 71,
+    "description": "CDM WL408 KOM WA900-3EO HL",
+    "code": "LD413",
+    "proposed_fleet_id": "Fel8",
+    "sap_cost_centre": 46208413,
+    "sap_description": "CDM LD413 KOM WA700 ",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Delivery ~Q3/Q4-2024 - Replaces LD402",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": "Replace WL403 in July25, Waiting for new model to be released",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 72,
+    "description": "CDM CAT 980M Hire",
+    "code": "LD450",
+    "proposed_fleet_id": "Fel7",
+    "sap_cost_centre": 46208450,
+    "sap_description": "CDM LD450 CAT 980K ",
+    "tech_services_comment": "Domestic - Truck loader",
+    "commercial_comment": null,
+    "maintenance_comment": null,
+    "ownership": "Own",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 0.5
+    },
+    "note": "CHPP Domestic Loader; plan to be replaced/rebuild to be determined based on assessment of chasis condition",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 73,
+    "description": "CDM WL408 KOM WA900-3EO HL",
+    "code": "LD405",
+    "proposed_fleet_id": "Fel9",
+    "sap_cost_centre": 46208405,
+    "sap_description": "CDM LD405 CAT992 Hire",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Delivery ~Q3/Q4-2024 - Replaces LD402",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1
+    },
+    "note": "To back up WL402 before purchased replacement turned up",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 74,
+    "description": "CDM WL408 KOM WA900-3EO HL",
+    "code": "LD414",
+    "proposed_fleet_id": "Fel10",
+    "sap_cost_centre": 46208414,
+    "sap_description": "CDM LD414 CAT980",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": null,
+    "ownership": null,
+    "availability_by_period": {
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": "Replace LD411.",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 76,
+    "description": "CDM WT607 KOM 785-7",
+    "code": "WT607",
+    "proposed_fleet_id": "Wtr1",
+    "sap_cost_centre": 46208607,
+    "sap_description": "CDM WT607 KOM785-7  ",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Off hire WT609 CY26. WT607 becomes back-up.",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": "Running as backup WT for WT610 from When??",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": 53000,
+    "extra_AS": "Before major overhaul"
+   },
+   {
+    "row": 77,
+    "description": "CDM WT609 773F Hire",
+    "code": "WT609",
+    "proposed_fleet_id": "Wtr2",
+    "sap_cost_centre": 46208609,
+    "sap_description": "CDM WT58 (WT609) CAT773 Hire ",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "On site - Hire",
+    "ownership": "Hire",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1
+    },
+    "note": "WT609 will be off hired and replaced with WT610 in Q1 2027; propose to buy a WT KOM785-7 to replaced the hire WT in 2026.Then the WT607 can be utilised as a backup for future 5 years due to low utilisation hours. ",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 78,
+    "description": "CDM WT607 KOM 785-7",
+    "code": "WT610",
+    "proposed_fleet_id": "Wtr3",
+    "sap_cost_centre": 46208610,
+    "sap_description": "CDM WT610 KOM785-7",
+    "tech_services_comment": "With the brand and model of the WT unknown, assume using KOM785-7 for cost modelling ",
+    "commercial_comment": null,
+    "maintenance_comment": "Purchase WT610 CY26 - Make primary watercart.",
+    "ownership": "Own",
+    "availability_by_period": {
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": "WT610 to be purchased in Q12027 to replace WT609",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 80,
+    "description": "CDM Western Star Hire",
+    "code": "ST002",
+    "proposed_fleet_id": "Stk2",
+    "sap_cost_centre": 46208504,
+    "sap_description": "CDM ST002 Mack8x4 (LT052 Hire)",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "Hire to Buy in process Mack 8x4 (ST23) should be onsite Q4-22; SAP CC description update: \"CDM ST002\" change to \"CDM ST004\"",
+    "ownership": "Hire / Buy",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1
+    },
+    "note": "Plan to be parked by end of 2025",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 81,
+    "description": "CDM CAT 770G Hire",
+    "code": "ST004",
+    "proposed_fleet_id": "Stk4",
+    "sap_cost_centre": 46208505,
+    "sap_description": "CDM ST004 CAT775F",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "On site - Hire. SAP CC description update: \"CDM ST003\" change to \"CDM ST002\"",
+    "ownership": "Hire",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2026-01": 1,
+     "2026-02": 1,
+     "2026-03": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 1,
+     "2026-07": 1,
+     "2026-08": 1,
+     "2026-09": 1,
+     "2026-10": 1,
+     "2026-11": 1,
+     "2026-12": 1,
+     "2027": 1,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": "Plan to run ST004 as backup when ST006 purchased. ",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   },
+   {
+    "row": 82,
+    "description": "CDM CAT 770G Hire",
+    "code": "ST006",
+    "proposed_fleet_id": "Stk6",
+    "sap_cost_centre": 46208506,
+    "sap_description": "CDM ST006 CAT775F",
+    "tech_services_comment": null,
+    "commercial_comment": null,
+    "maintenance_comment": "On site - Hire. SAP CC description update: \"CDM ST003\" change to \"CDM ST002\"",
+    "ownership": "Hire",
+    "availability_by_period": {
+     "2025-01": 1,
+     "2025-02": 1,
+     "2025-03": 1,
+     "2025-04": 1,
+     "2025-05": 1,
+     "2025-06": 1,
+     "2025-07": 1,
+     "2025-08": 1,
+     "2025-09": 1,
+     "2025-10": 1,
+     "2025-11": 1,
+     "2025-12": 1,
+     "2027": 0.75,
+     "2028": 1,
+     "2029": 1,
+     "2030": 1
+    },
+    "note": "Propose to be purchased to replace ST002",
+    "current_smu": null,
+    "smu_at_2029": null,
+    "smu_at_life": null,
+    "extra_AS": null
+   }
+  ]
+ }
+}
