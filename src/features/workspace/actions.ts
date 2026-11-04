@@ -66,8 +66,16 @@ export function cmdExportStrings(kind: 'csv' | 'dxf') {
   const s = app().scenario;
   if (!s.strings.length) { app().toast('warn', 'There are no haul strings to export yet.'); return; }
   const base = stringsFileBase(s);
-  if (kind === 'csv') downloadText(`${base}.csv`, stringsToCsv(s.strings), 'text/csv');
-  else downloadText(`${base}.dxf`, stringsToDxf(s.strings), 'application/dxf');
+  if (kind === 'csv') {
+    downloadText(`${base}.csv`, stringsToCsv(s.strings), 'text/csv');
+  } else {
+    const warnings: string[] = [];
+    let dxf: string;
+    try { dxf = stringsToDxf(s.strings, warnings); }
+    catch (e) { app().toast('error', `DXF export failed: ${(e as Error).message}`); return; }
+    downloadText(`${base}.dxf`, dxf, 'application/dxf');
+    for (const w of warnings) app().toast('warn', w);
+  }
   app().toast('ok', `Exported ${s.strings.length} strings as ${kind.toUpperCase()}`);
 }
 

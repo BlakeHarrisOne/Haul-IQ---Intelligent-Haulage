@@ -17,7 +17,10 @@ export function stringsToCsv(strings: HaulString[]): string {
   return rows.join('\n') + '\n';
 }
 
-/** AutoCAD R12 DXF (3D POLYLINE per string) - the geometry module's writer. */
-export const stringsToDxf = (strings: HaulString[]) => toDxf3dPolyline(strings);
+/**
+ * AutoCAD R12 DXF (3D POLYLINE per string) - the geometry module's writer. Invalid (non-finite) vertices are skipped
+ * and reported in `warnings`; throws when a string would be left with fewer than 2 points.
+ */
+export const stringsToDxf = (strings: HaulString[], warnings: string[] = []) => toDxf3dPolyline(strings, { warnings });
 
 export const stringsFileBase = (s: Scenario) => (s.name.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-') || 'scenario') + '-strings';
