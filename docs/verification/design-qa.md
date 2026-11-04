@@ -623,12 +623,26 @@ Before and after shots are in `…/scratchpad/fix_scene_core/`: `before_*` (buil
   - **Dark theme:** a dark backdrop and a dusk-toned sky by day, but the scene stays daylit.
   - **For the cockpit's headlights:** `sceneApi.environment()`, `sceneApi.onEnvironment()` and `ctx.environment()`
     expose `{ hour, sunElDeg, sunAzDeg, daylight, night, headlights, lightDir }`.
-  - **Near-field detail:** a procedural tileable gravel texture fades in under about 110 m. It is generated off the
-    build path, sampled at two rotated scales and triplanar on faces. It now samples with `textureGrad`, using
-    derivatives taken outside the branch. This fixes the salt-and-pepper noise reported under "Still open (scene core)"
-    above: an implicit-LOD lookup inside a branch has an undefined mip level, and SwiftShader used level 0.
+  - **Near-field detail:** the ground near the eye is compacted clay-gravel.
+    - It uses three octaves (3.7, 1.3 and 0.47 m) of one procedural tileable texture, rotated against each other so the
+      tile never shows, and triplanar on faces. The texture is generated in idle time, off the build path.
+    - Each octave fades out by its own screen footprint before its pebbles drop under about 2 px. The whole layer fades
+      between 35 and 110 m.
+    - It only modulates the terrain's own albedo, by about ±15 %, with a slight warm tint on the stones.
+    - Sampling uses `textureGrad`, with derivatives taken outside the branch.
+
+    This replaces the high-contrast first version that read as TV static beside the cab (reported under "Still open
+    (scene core)" above). The cause of the static was an implicit-LOD lookup inside a branch, whose mip level is
+    undefined: SwiftShader used level 0.
   - **Haze in ride views:** from 160 m out to 3.6 km, blending into the horizon sky.
 - **#2 (core part) Fixed.** In POV and chase, the scale bar and the legend are hidden. Fit and the compass stay.
+  - Ride frames are now map-free. A frame counts as a ride frame when either the rig or the store camera says POV or
+    chase.
+  - In a ride frame, the map label layer is hidden: block labels, string pins and grade chips. So are the leaders, the
+    contour RL labels, the skirt references and the face lines. Only the HUD layer (cockpit and cards) and the modules'
+    own ride marks remain.
+  - The overlay is now cleared before the 3D draw, and the label and overlay pass is guarded. Map marks from an
+    earlier orbit frame can no longer stay over the cab (as in `fix_scene_modules/b3_pov_night.png`).
 - **#3 Fixed.** The dock sizes to its content, inside the right column.
   - The scale bar's maximum length is computed from the room left after fit, the compass and the legend.
   - If even a short bar won't fit, the legend is dropped first.
@@ -652,7 +666,9 @@ Before and after shots are in `…/scratchpad/fix_scene_core/`: `before_*` (buil
   - **Per frame:** no allocations in the label, contour-label, overlay, haze and camera-ride paths. Contour-label
     occlusion is capped at 24 short raycasts per frame. Depletion changes cost only uniform writes plus two caps per
     moving solid.
-  - **Build:** terrain build adds only `smoothed()` (two NaN-aware box passes) and the column atlas. The gravel texture
-    is made in idle time.
+  - **Build:** the demo builds in 964 ms (< 1.5 s), of which the AO bake is 351 ms. Before this pass it was 812 ms
+    with AO at 327 ms, on a machine that is not quite idle. This pass adds about 25 ms: `smoothed()` plus the contour
+    texture take 10 ms and the column atlas 10 ms. The gravel texture is made in idle time.
+  - **Timeline steps:** a depletion update costs 1–6 ms in shift mode and 4–10 ms in completion mode.
   - **Tests:** `npx vitest run src/scene` passes 47 tests, including the new `core/core.test.ts`. The scene files
     typecheck clean.

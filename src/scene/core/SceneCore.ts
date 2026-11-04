@@ -832,18 +832,31 @@ export class SceneCore {
     this.terrain.setGrid(gs, this.gridOn && mode !== 'pov' && mode !== 'chase');
     if (this.shadowDirty || kept) { this.renderer.shadowMap.needsUpdate = true; this.shadowDirty = false; this.stats.shadowFrames++; }
     this.solids.syncPlanes();
-    this.renderer.render(this.scene, cam);
-    // labels: ONE placement pass over the core's block labels and every module label
-    const follow = mode === 'pov' || mode === 'chase';
-    const labelsOn = this.labelLayer.style.display !== 'none';
-    this.solids.updateLabels(cam, ve, Math.max(250, cam === this.rig.ortho ? this.rig.diag() : this.rig.P.dist), follow);
-    this.labels.place(cam, this.w, this.h, this.safeInsets, this.frameV, labelsOn);
-    this.section.update(cam, this.w, this.h, ve, mpp);
-    // overlay
+    // clear the overlay BEFORE the 3D draw: if anything later in the frame fails, no stale map marks stay over the view
     const o = this.octx;
     o.setTransform(1, 0, 0, 1, 0, 0);
     o.clearRect(0, 0, this.overlay.width, this.overlay.height);
     o.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    this.renderer.render(this.scene, cam);
+    try { this.drawLabelsAndOverlay(cam, ve, mode, mpp, gs); } catch (e) { console.error('[scene] labels / overlay', e); }
+    this.finishStats(tStart, mpp);
+  }
+
+  /**
+   * Labels (one placement pass over core + module labels) and the overlay. Ride modes (POV / chase, by the rig OR the
+   * store, whichever says so first) are map-free: no map labels, leaders, contour RLs, skirt references or face lines
+   * — only the HUD layer (cockpit, cards) and the modules' own ride marks remain.
+   */
+  private drawLabelsAndOverlay(cam: THREE.Camera, ve: number, mode: CamMode, mpp: number, gs: number) {
+    const storeCam = useApp.getState().camera;
+    const follow = mode === 'pov' || mode === 'chase' || storeCam === 'pov' || storeCam === 'chase';
+    const labelsOn = this.labelLayer.style.display !== 'none' && !follow;
+    const vis = follow ? 'hidden' : '';
+    if (this.labelLayer.style.visibility !== vis) this.labelLayer.style.visibility = vis;
+    this.solids.updateLabels(cam, ve, Math.max(250, cam === this.rig.ortho ? this.rig.diag() : this.rig.P.dist), follow);
+    this.labels.place(cam, this.w, this.h, this.safeInsets, this.frameV, labelsOn);
+    this.section.update(cam, this.w, this.h, ve, mpp);
+    const o = this.octx;
     const dark = this.theme === 'dark';
     if (!follow) this.solids.drawFaces(o, cam, this.w, this.h, ve);
     if (labelsOn) {
@@ -853,7 +866,7 @@ export class SceneCore {
           stepM: gs * (this.rig.transitioning ? 2 : 1), ink: this.pal.def.overlayInk, halo: this.pal.def.overlayHalo, insets: this.safeInsets, dark });
       }
       // RL labels on index contours (orbit / plan), clear of every placed label
-      if (!follow && terrainOn && this.terrain.contoursOn && !this.rig.transitioning) {
+      if (terrainOn && this.terrain.contoursOn && !this.rig.transitioning) {
         const J = this.terrain.contourMinor * 5;
         this.contourLabels.update(this.terrain.smoothGrid, J);
         const night = this.lighting.env.night > 0.5;
@@ -871,6 +884,9 @@ export class SceneCore {
     if (this.overlayCbs.size) {
       for (const cb of this.overlayCbs) { try { o.save(); cb(o, this.w, this.h); o.restore(); } catch (e) { console.error('[scene] overlay', e); } }
     }
+  }
+
+  private finishStats(tStart: number, mpp: number) {
     // stats
     const info = this.renderer.info.render;
     this.stats.frames++;

@@ -226,22 +226,33 @@ float hk_tanS; float hk_rl; float hk_fw; vec2 hk_pw; float hk_bh;`);
     float farK = smoothstep(0.6, 3.0, hk_fw);
     base *= 1.0 + uDetail * g * (1.0 - 0.6 * farK);
     base = mix(base, base * vec3(1.03, 1.0, 0.95), clamp(g * 1.5, -0.5, 0.5) * (1.0 - farK));
-    // near field (≲110 m from the eye): tiled gravel, two rotated scales, triplanar on faces. The UVs and their
-    // derivatives are taken in uniform control flow and sampled with textureGrad: an implicit-LOD lookup inside the
-    // branch has an undefined mip level (SwiftShader takes level 0 → salt-and-pepper ground)
+    // near field (≲110 m from the eye): compacted clay-gravel, three octaves of one tileable texture (3.7 / 1.3 /
+    // 0.47 m, rotated against each other so the tile never reads), triplanar on faces. Each octave fades out by its
+    // own screen footprint before its pebbles drop under ~2 px, the whole layer fades with distance, and the variation
+    // only modulates the terrain's own albedo (no grey static). UVs + derivatives are taken in uniform control flow and
+    // sampled with textureGrad (an implicit-LOD lookup in a branch has an undefined mip level).
     float vd = length(vViewPosition);
-    float nearK = uNearK * (1.0 - smoothstep(35.0, 110.0, vd)) * (1.0 - smoothstep(0.03, 0.12, hk_fw));
+    float nearK = uNearK * (1.0 - smoothstep(35.0, 110.0, vd));
     float onFace = step(0.5, wv);
     vec2 qFace = mix(vec2(vLoc.x, hk_rl), vec2(vLoc.z, hk_rl), step(0.5, bx));
-    vec2 qa = mix(hk_pw, qFace, onFace) / 2.4;
-    vec2 qb = (mat2(0.8, -0.6, 0.6, 0.8) * mix(hk_pw, qFace.yx, onFace)) / 0.83 + 0.37;
-    vec2 qaX = dFdx(qa), qaY = dFdy(qa), qbX = dFdx(qb), qbY = dFdy(qb);
+    vec2 q0 = mix(hk_pw, qFace, onFace);
+    vec2 qa = q0 / 3.7;
+    vec2 qb = (mat2(0.8, -0.6, 0.6, 0.8) * q0) / 1.3 + 0.37;
+    vec2 qc = (mat2(0.28, 0.96, -0.96, 0.28) * q0) / 0.47 + 0.71;
+    vec2 qaX = dFdx(qa), qaY = dFdy(qa), qbX = dFdx(qb), qbY = dFdy(qb), qcX = dFdx(qc), qcY = dFdy(qc);
     if (nearK > 0.002) {
+      float wa = 0.5 * (1.0 - smoothstep(0.03, 0.09, hk_fw));
+      float wb = 0.33 * (1.0 - smoothstep(0.012, 0.035, hk_fw));
+      float wc = 0.17 * (1.0 - smoothstep(0.004, 0.012, hk_fw));
       vec4 g1 = textureGrad(uGravel, qa, qaX, qaY);
       vec4 g2 = textureGrad(uGravel, qb, qbX, qbY);
-      float alb = mix(g1.r, g2.r, 0.38) * 1.594;
-      base *= mix(1.0, alb, nearK * 0.6);
-      hk_bh += ((g1.g - 0.5) * 0.04 + (g2.g - 0.5) * 0.015) * nearK;
+      vec4 g3 = textureGrad(uGravel, qc, qcX, qcY);
+      // albedo channel is centred on ~0.86 (×1.594): variation in −0.35…+0.5, weighted per octave
+      float v = wa * (g1.r * 1.594 - 0.86) + wb * (g2.r * 1.594 - 0.86) + wc * (g3.r * 1.594 - 0.86);
+      base *= 1.0 + 0.45 * nearK * v;
+      // warm the stones slightly toward the ground's own clay tone, never toward grey
+      base = mix(base, base * vec3(1.04, 1.0, 0.94), clamp(v * 2.0, 0.0, 1.0) * nearK * 0.5);
+      hk_bh += ((g1.g - 0.5) * 0.03 * wa * 2.0 + (g2.g - 0.5) * 0.012 * wb * 3.0) * nearK;
     }
     // baked curvature: crests a touch brighter, toes darker (bench lines read at any distance)
     {
@@ -350,7 +361,7 @@ float hk_tanS; float hk_rl; float hk_fw; vec2 hk_pw; float hk_bh;`);
   }`, 'before');
       sh.fragmentShader = f;
     };
-    m.customProgramCacheKey = () => 'hk-terrain-v9';
+    m.customProgramCacheKey = () => 'hk-terrain-v10';
     return m;
   }
 

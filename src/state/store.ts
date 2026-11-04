@@ -130,7 +130,7 @@ export function emptyScenario(name = 'Untitled scenario'): Scenario {
     fleet: { trucks: [], loaders: [], units: [], loaderAssumptions: [], trucksAvailable: 12 },
     crew: { rules: [], shifts: [], activeShiftId: '' },
     shift: { name: 'Day shift', startHour: 6, lengthH: 12, events: [] },
-    settings: { verticalExaggeration: 1, contourIntervalM: 5, theme: 'light', showGradeColours: true },
+    settings: { verticalExaggeration: 1, contourIntervalM: 2, theme: 'light', showGradeColours: true },
   };
 }
 

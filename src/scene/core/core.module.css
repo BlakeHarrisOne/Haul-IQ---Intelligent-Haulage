@@ -68,7 +68,7 @@
 .compass { width: 36px; height: 36px; padding: 0; display: grid; place-items: center; }
 .compass svg { transition: none; color: var(--ink-2); }
 .needle { transform-origin: 50% 50%; will-change: transform; }
-.scale { display: flex; align-items: center; gap: 10px; padding: 0 12px 0 14px; height: 36px; font: 600 13px/1 var(--font); color: var(--ink); font-variant-numeric: tabular-nums; overflow: hidden; flex: none; white-space: nowrap; }
+.scale { display: flex; align-items: center; gap: 8px; padding: 0 10px; height: 36px; font: 600 13px/1 var(--font); color: var(--ink); font-variant-numeric: tabular-nums; overflow: hidden; flex: none; white-space: nowrap; }
 .scaleBar { position: relative; height: 8px; border: 1.5px solid var(--ink-2); border-top: 0; transition: width .12s ease-out; }
 .scaleBar::after { content: ""; position: absolute; left: 50%; bottom: 0; height: 4px; border-left: 1.5px solid var(--ink-3); }
 .hint { position: absolute; left: 50%; top: 18px; transform: translateX(-50%); padding: 8px 14px; border-radius: 10px; background: var(--chrome-strong); border: 1px solid var(--hair); box-shadow: var(--shadow); font: 500 13px/18px var(--font); color: var(--ink-2); pointer-events: none; z-index: var(--z-chrome, 20); }

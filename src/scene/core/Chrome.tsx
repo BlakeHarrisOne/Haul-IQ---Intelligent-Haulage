@@ -14,8 +14,8 @@ import type { SceneCore, ViewInfo } from './SceneCore';
 import css from './core.module.css';
 
 const NICE = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000];
-/** Scale element chrome: padding 14 + 12, gap 10 (+ the live label width, + slack for a longer label). */
-const SCALE_FIXED = 14 + 12 + 10 + 6;
+/** Scale element chrome: padding 10 + 10, gap 8 (+ the live label width, + slack for a longer label). */
+const SCALE_FIXED = 10 + 10 + 8 + 4;
 const BAR_MIN = 24, BAR_MAX = 96;
 
 /** Grade ramp stops shared with the terrain slope overlay (fractions; matches geom GRADE_CLASS_LIMITS 4/8/10 %). */
@@ -93,10 +93,10 @@ export function SceneChrome({ core }: { core: SceneCore }) {
     const lg = surf.querySelector(`.${css.legend}`) as HTMLElement | null;
     if (lg) legendW.current = lg.offsetWidth;
     const rest = surf.scrollWidth - scaleW + 2;
-    const room = limit - rest - SCALE_FIXED - Math.max(34, label.current?.offsetWidth ?? 40);
+    const room = limit - rest - SCALE_FIXED - Math.max(32, label.current?.offsetWidth ?? 38);
     // the legend goes first when even a short bar would not fit; it comes back only when it would fit with room to spare
-    if (room < BAR_MIN + 8 && legendFits && lg && !ride) { setLegendFits(false); return; }
-    if (!legendFits && !ride && room - legendW.current > BAR_MIN + 24) { setLegendFits(true); return; }
+    if (room < BAR_MIN + 4 && legendFits && lg && !ride) { setLegendFits(false); return; }
+    if (!legendFits && !ride && room - legendW.current > BAR_MIN + 16) { setLegendFits(true); return; }
     maxPx.current = Math.max(BAR_MIN, Math.min(BAR_MAX, room));
     last.current.w = -1;
     applyScale(lastMpp.current);
