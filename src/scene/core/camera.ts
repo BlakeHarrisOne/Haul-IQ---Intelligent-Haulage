@@ -242,9 +242,11 @@ export class CameraRig {
   home(box: THREE.Box3) {
     // pick the azimuth (10–50°, looking north-east-ish) that frames the site largest: diagonal views fill the free area
     let p = this.fitParams(box, 24 * D2R, 34 * D2R, 0.97);
-    for (let a = 10; a <= 50; a += 5) {
-      const q = this.fitParams(box, a * D2R, 34 * D2R, 0.97);
-      if (q.dist < p.dist * 0.985) p = q;
+    let best = p.dist;
+    for (let e = 32; e <= 50; e += 6) for (let a = 10; a <= 50; a += 8) {
+      const q = this.fitParams(box, a * D2R, e * D2R, 0.97);
+      const score = q.dist * (1 + (e - 32) * 0.006) * (1 + Math.abs(a - 26) * 0.002);
+      if (score < best) { best = score; p = q; }
     }
     this.P = p; this.lastOrbit = cloneP(p); this.homeDist = p.dist;
     if (this.mode === 'plan') this.P = this.planFitParams(box);

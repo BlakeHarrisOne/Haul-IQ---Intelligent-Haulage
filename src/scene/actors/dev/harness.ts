@@ -243,6 +243,7 @@ export function startHarness(host: HTMLElement) {
 
   const mods = sceneModules.map(m => m(ctx));
   let last = performance.now();
+  const cpu: number[] = [];
   function resize() {
     const w = host.clientWidth, h = host.clientHeight, dpr = renderer.getPixelRatio();
     renderer.setSize(w, h, false);
@@ -264,7 +265,9 @@ export function startHarness(host: HTMLElement) {
     camDt = Math.min(1, (now - last) / 1000);
     last = now;
     updateCamera();
+    const c0 = performance.now();
     for (const cb of frameCbs) cb(dt, now);
+    cpu.push(performance.now() - c0); if (cpu.length > 30) cpu.shift();
     updateCamera();
     // sun follows the view target for crisp shadows
     const tgt = follow && useApp.getState().camera !== 'orbit' ? follow.position : cam.target;
@@ -306,6 +309,8 @@ export function startHarness(host: HTMLElement) {
     },
     key(k: string) { const e = new KeyboardEvent('keydown', { key: k }); for (const cb of keyCbs) if (cb(e)) { needs = true; return; } },
     mods,
+    /** Median CPU ms of the scene modules' per-frame work over the last 30 frames. */
+    cpuMs() { const a = [...cpu].sort((x, y) => x - y); return a[a.length >> 1] ?? 0; },
   };
   (window as unknown as { __h: typeof api }).__h = api;
   return api;

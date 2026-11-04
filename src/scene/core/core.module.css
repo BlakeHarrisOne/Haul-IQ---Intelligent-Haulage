@@ -70,5 +70,5 @@
 .lgTicks { position: absolute; left: 0; right: 0; top: 12px; height: 10px; }
 .lgTicks b { position: absolute; transform: translateX(-50%); font: 600 9.5px/10px var(--font); color: var(--ink-3); white-space: nowrap; }
 .lgTicks b:first-child { transform: none; }
-.lgTicks b:last-child { transform: translateX(-35%); }
+.lgTicks b.lgEnd { left: auto; right: 0; transform: none; }
 @container scenedock (max-width: 356px) { .legend { display: none; } }
