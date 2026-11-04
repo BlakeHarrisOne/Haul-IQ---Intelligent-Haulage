@@ -51,6 +51,8 @@ export interface AppState {
   future: HistoryEntry[];
   dirty: boolean;
   lastSavedAt?: string;
+  /** The scenario object last saved / opened clean; `dirty` = scenario !== cleanRef (undo back to it reads as saved). */
+  cleanRef: Scenario | null;
 
   view: ViewId;
   tool: ToolId;
@@ -131,6 +133,7 @@ export const useApp = create<AppState>()((set, get) => ({
   past: [],
   future: [],
   dirty: false,
+  cleanRef: null,
 
   view: 'site',
   tool: 'select',
@@ -144,14 +147,16 @@ export const useApp = create<AppState>()((set, get) => ({
 
   commit: (label, fn) => {
     const prev = get().scenario;
-    const next = touch(fn(prev));
-    if (next === prev) return;
+    const changed = fn(prev);
+    // No-op edits (fn returned the same object) must not wipe redo history or mark the document dirty.
+    if (changed === prev) return;
+    const next = touch(changed);
     set(st => ({
       scenario: next,
       revision: st.revision + 1,
       past: [...st.past, { label, scenario: prev }].slice(-HISTORY_CAP),
       future: [],
-      dirty: true,
+      dirty: next !== st.cleanRef,
     }));
   },
   replaceScenario: (s, opts) =>
@@ -161,6 +166,7 @@ export const useApp = create<AppState>()((set, get) => ({
       past: [],
       future: [],
       dirty: !opts?.markClean,
+      cleanRef: opts?.markClean ? s : null,
       selection: { kind: 'none' },
       hover: { kind: 'none' },
       timeline: { ...st.timeline, tMin: 0, playing: false },
@@ -169,17 +175,17 @@ export const useApp = create<AppState>()((set, get) => ({
     const { past, scenario, future } = get();
     const last = past[past.length - 1];
     if (!last) return;
-    set(st => ({ scenario: last.scenario, past: past.slice(0, -1), future: [{ label: last.label, scenario }, ...future], revision: st.revision + 1, dirty: true }));
+    set(st => ({ scenario: last.scenario, past: past.slice(0, -1), future: [{ label: last.label, scenario }, ...future], revision: st.revision + 1, dirty: last.scenario !== st.cleanRef }));
     get().toast('info', `Undid: ${last.label}`);
   },
   redo: () => {
     const { past, scenario, future } = get();
     const nxt = future[0];
     if (!nxt) return;
-    set(st => ({ scenario: nxt.scenario, past: [...past, { label: nxt.label, scenario }], future: future.slice(1), revision: st.revision + 1, dirty: true }));
+    set(st => ({ scenario: nxt.scenario, past: [...past, { label: nxt.label, scenario }], future: future.slice(1), revision: st.revision + 1, dirty: nxt.scenario !== st.cleanRef }));
     get().toast('info', `Redid: ${nxt.label}`);
   },
-  markSaved: () => set({ dirty: false, lastSavedAt: nowIso() }),
+  markSaved: () => set(st => ({ dirty: false, lastSavedAt: nowIso(), cleanRef: st.scenario })),
 
   addAsset: a => get().commit(`Import ${a.name}`, s => ({ ...s, assets: [...s.assets, a] })),
   updateAsset: (id, patch) => get().commit('Edit surface', s => ({ ...s, assets: mapById(s.assets, id, a => ({ ...a, ...patch })) })),
