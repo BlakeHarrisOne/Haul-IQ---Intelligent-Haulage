@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
-    "build:single": "tsc --noEmit && vite build --mode single",
+    "build": "tsc --noEmit -p tsconfig.app.json && vite build",
+    "build:single": "tsc --noEmit -p tsconfig.app.json && vite build --mode single",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

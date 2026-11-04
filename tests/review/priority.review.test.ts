@@ -1,0 +1,53 @@
+/**
+ * Independent review: src/engine/priority/plan.ts with the default crew rules (R7 bulk push is a prioritised site
+ * task whose count depends on totals.trucks: 7 − enabling − max(0, trucks − 12)).
+ */
+import { describe, expect, it } from 'vitest';
+import { computeAllCircuits, computeManning } from '@/engine';
+import { computePriority } from '@/engine/priority/plan';
+import { crewCircuits, evaluateCrew } from '@/engine/manning/evaluate';
+import { circuitFor, scenarioWith, straightString } from '@/engine/testing';
+
+/** 15 trucks requested (6 + 5 + 4): above the workbook's 12, so R7 bulk push = 6 − 3 = 3. LDR coal is P5 (< push P4). */
+function site() {
+  const h1 = straightString('h1', [{ len: 300, grade: 0 }, { len: 700, grade: 0.08 }, { len: 900, grade: 0 }]);
+  const h2 = straightString('h2', [{ len: 200, grade: 0 }, { len: 500, grade: 0.09 }, { len: 1000, grade: 0 }]);
+  const h3 = straightString('h3', [{ len: 400, grade: 0 }, { len: 1100, grade: 0.08 }, { len: 1650, grade: 0 }]);
+  const cs = [
+    circuitFor('c-ex09', 'EX09', 'CAT_789D', 'OB', 'h1', 6, {}, { priority: 1, name: 'EX09 OB' }),
+    circuitFor('c-ex04', 'EX04', 'KOM_HD1500_7', 'OB', 'h2', 5, {}, { priority: 2, name: 'EX04 OB' }),
+    circuitFor('c-ldr1', 'LDR1', 'CAT_789C', 'CL', 'h3', 4, {}, { priority: 5, name: 'LDR coal' }),
+  ];
+  const s = scenarioWith([h1, h2, h3], cs);
+  s.fleet.trucksAvailable = 15;
+  return { s, res: computeAllCircuits(s) };
+}
+
+describe('review: priority planner site-task accounting', () => {
+  it('R-PRIO-1 the reported bulk-push allocation equals the push dozers the plan actually mans', () => {
+    const { s, res } = site();
+    expect(computeManning(s, res).total).toBe(36);
+    const p = computePriority(s, res, { crewAvailable: 35 });
+    const alloc = new Map(p.allocations.map(a => [a.circuitId, a.allocatedTrucks]));
+    // people on R7 in the plan's own final crew evaluation (no task override was needed at 35 crew)
+    const ev = evaluateCrew({
+      circuits: crewCircuits(s, id => alloc.get(id) ?? 0), rules: s.crew.rules, trucksAvailable: 15, available: 35,
+      shift: s.crew.shifts[0],
+    });
+    expect(ev.total).toBe(p.crewUsed);                       // 32: the plan does man 6 push dozers …
+    const push = p.tasks.find(t => t.ruleId === 'R7_BULK_PUSH')!;
+    expect(push.allocated).toBe(ev.ruleCounts.R7_BULK_PUSH); // … but reports 3 (frozen at the 15-truck value)
+  });
+
+  it('R-PRIO-2 applying the plan (allocated trucks, no task reported as reduced) must fit the crew it was planned for', () => {
+    const { s, res } = site();
+    const p = computePriority(s, res, { crewAvailable: 30 });
+    expect(p.crewUsed).toBeLessThanOrEqual(30);
+    const push = p.tasks.find(t => t.ruleId === 'R7_BULK_PUSH')!;
+    expect(push.allocated).toBe(push.requested);             // planner says push is NOT reduced
+    // "Apply priority allocation" (PriorityView) writes allocatedTrucks back to the circuits
+    const applied = { ...s, circuits: s.circuits.map(c => ({ ...c, trucks: p.allocations.find(a => a.circuitId === c.id)!.allocatedTrucks })) };
+    const m = computeManning(applied, computeAllCircuits(applied));
+    expect(m.total).toBeLessThanOrEqual(30);                 // actual: 32 (R7 back to 6 at 11 trucks)
+  });
+});
