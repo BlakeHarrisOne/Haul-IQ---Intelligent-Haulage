@@ -1,0 +1,131 @@
+/*
+ * hAIul SIM design tokens.
+ * Lineage: Haul Road Lab v6 design system (white 44 px chrome surfaces, radius 14 cards / 10 controls / 6 cells,
+ * one blue accent, sage / rust / clay status scheme, Segoe UI Variable with tabular figures) + Rain Model HUD
+ * (frosted/smoked glass over the 3D pit, dark "night" variant). Light is the default; dark via [data-theme="dark"].
+ *
+ * Rules: one accent (blue) for selected / active / focus. Status: green = ok / balanced, clay = caution / over-trucked,
+ * red = fail / under-trucked / lost PT. Data colours come from --c1..--c8 (circuits) and the grade ramp.
+ */
+:root {
+  --font: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Cascadia Mono", "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+
+  /* surfaces */
+  --bg-app: #EEF0F3;
+  --surface: #FFFFFF;
+  --surface-2: #F6F7F9;
+  --surface-3: #F1F3F6;
+  --hair: #E3E6EB;
+  --hair-2: #EEF0F3;
+  --chrome: rgba(255, 255, 255, .88);
+  --chrome-strong: rgba(255, 255, 255, .95);
+  --chrome-blur: blur(18px) saturate(165%);
+  --scrim: rgba(22, 30, 42, .28);
+
+  /* ink */
+  --ink: #1F2329;
+  --ink-2: #4A5059;
+  --ink-3: #646A73;
+  --ink-4: #8E949C;
+  --ink-inv: #FFFFFF;
+
+  /* accent */
+  --accent: #0A6FE6;
+  --accent-ink: #0A5FC4;
+  --accent-press: #0A4FA6;
+  --accent-50: #EEF4FD;
+  --accent-100: #DCE9FB;
+  --accent-200: #CCDDF7;
+  --accent-glow: rgba(10, 111, 230, .22);
+
+  /* status - scheme A: sage, rust, clay */
+  --ok: #3E8A5A;      --ok-ink: #2E6B45;   --ok-50: #EDF6F0;   --ok-100: #D5EADD;
+  --bad: #B5564C;     --bad-ink: #9A3B32;  --bad-50: #FBEFED;  --bad-100: #F3D9D5;
+  --warn: #B8692E;    --warn-ink: #8F5422; --warn-50: #F7EDE3; --warn-100: #EFD9C4;
+  --na: #8E949C;      --na-50: #F1F2F4;
+
+  /* data: categorical (circuits), materials, grade ramp */
+  --c1: #0A6FE6; --c2: #B8692E; --c3: #3E8A5A; --c4: #7B5EA7; --c5: #1F8A8A; --c6: #B5564C; --c7: #A88A1E; --c8: #5B6B7F;
+  --mat-ob: #C79A6B; --mat-coal: #2E3238; --mat-ib: #9C8C7A; --mat-dump: #7FA58E;
+  --grade-flat: #3E8A5A; --grade-mod: #1F8A8A; --grade-steep: #B8692E; --grade-max: #B5564C;
+
+  /* interaction overlays */
+  --hover: #F1F3F6;
+  --press: #E6E9EE;
+  --ov1: rgba(18, 38, 70, .05);
+  --ov2: rgba(18, 38, 70, .10);
+
+  /* shape */
+  --r-card: 14px;
+  --r-ctl: 10px;
+  --r-cell: 6px;
+  --r-pill: 999px;
+  --shadow: 0 6px 20px rgba(20, 30, 50, .08);
+  --shadow-sm: 0 1px 2px rgba(20, 30, 50, .10);
+  --shadow-lg: 0 24px 60px rgba(20, 30, 50, .16), 0 2px 6px rgba(20, 30, 50, .06);
+
+  /* spacing */
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px; --s8: 32px;
+  --gutter: 14px;        /* map chrome inset */
+  --chrome-h: 44px;      /* chrome surface height */
+  --ctl-h: 36px;         /* control height inside chrome */
+
+  /* motion */
+  --ease: cubic-bezier(.23, 1, .32, 1);
+  --ease-io: cubic-bezier(.77, 0, .175, 1);
+  --t-fast: .12s;
+  --t-med: .22s;
+  --t-slow: .42s;
+
+  /* layers */
+  --z-scene: 0; --z-labels: 10; --z-chrome: 20; --z-panel: 30; --z-sheet: 35; --z-card: 40; --z-menu: 50; --z-tip: 60; --z-modal: 70; --z-toast: 80;
+
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg-app: #0E1116;
+  --surface: #161A20;
+  --surface-2: #1C2129;
+  --surface-3: #222832;
+  --hair: #2B323C;
+  --hair-2: #222831;
+  --chrome: rgba(22, 26, 32, .80);
+  --chrome-strong: rgba(22, 26, 32, .92);
+  --chrome-blur: blur(18px) saturate(140%);
+  --scrim: rgba(0, 0, 0, .45);
+
+  --ink: #E9EDF2;
+  --ink-2: #B3BCC7;
+  --ink-3: #8C96A4;
+  --ink-4: #6A7482;
+  --ink-inv: #0E1116;
+
+  --accent: #3D8BFF;
+  --accent-ink: #79AEFF;
+  --accent-press: #2C74E0;
+  --accent-50: rgba(61, 139, 255, .14);
+  --accent-100: rgba(61, 139, 255, .22);
+  --accent-200: rgba(61, 139, 255, .30);
+  --accent-glow: rgba(61, 139, 255, .30);
+
+  --ok: #5DB27E;   --ok-ink: #82C9A0;   --ok-50: rgba(93, 178, 126, .14);  --ok-100: rgba(93, 178, 126, .24);
+  --bad: #E0796D;  --bad-ink: #F0A097;  --bad-50: rgba(224, 121, 109, .14); --bad-100: rgba(224, 121, 109, .24);
+  --warn: #D9914F; --warn-ink: #EDB27E; --warn-50: rgba(217, 145, 79, .14); --warn-100: rgba(217, 145, 79, .24);
+  --na: #6A7482;   --na-50: rgba(140, 150, 164, .12);
+
+  --c1: #4C95FF; --c2: #D9914F; --c3: #5DB27E; --c4: #A58BD3; --c5: #3FB5B5; --c6: #E0796D; --c7: #D2B54A; --c8: #8C9BB0;
+
+  --hover: rgba(255, 255, 255, .06);
+  --press: rgba(255, 255, 255, .10);
+  --ov1: rgba(255, 255, 255, .05);
+  --ov2: rgba(255, 255, 255, .10);
+
+  --shadow: 0 8px 26px rgba(0, 0, 0, .35);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
+  --shadow-lg: 0 28px 70px rgba(0, 0, 0, .5), 0 2px 8px rgba(0, 0, 0, .3);
+
+  color-scheme: dark;
+}
