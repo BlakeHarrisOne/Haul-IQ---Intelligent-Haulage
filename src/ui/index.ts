@@ -6,3 +6,4 @@ export * from './chart';
 export { Brand } from './Brand';
 export { PageHeader } from './PageHeader';
 export * from './events';
+export { ErrorBoundary } from './ErrorBoundary';

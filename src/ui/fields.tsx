@@ -4,12 +4,15 @@ import { cx, uiStyles as s } from './primitives';
 import { Icon } from './icons';
 
 export function Field({ label, hint, children, style }: { label?: ReactNode; hint?: ReactNode; children: ReactNode; style?: CSSProperties }) {
+  // A labelled group, not a <label>: a <label> forwards caption clicks to its first control, which silently pressed
+  // segmented buttons / opened links when a planner clicked a caption (e2e D3).
+  const id = useId();
   return (
-    <label className={s.field} style={style}>
-      {label && <span className={s.fieldLabel}>{label}</span>}
+    <div className={s.field} style={style} role="group" aria-labelledby={label ? id : undefined}>
+      {label && <span id={id} className={s.fieldLabel}>{label}</span>}
       {children}
       {hint && <span className={s.fieldHint}>{hint}</span>}
-    </label>
+    </div>
   );
 }
 

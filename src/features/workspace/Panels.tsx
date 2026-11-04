@@ -8,7 +8,7 @@ import { CompareView } from '@/features/compare';
 import { ManningView } from '@/features/manning';
 import { PriorityView } from '@/features/priority';
 import { ScenariosView } from '@/features/scenarios';
-import { Button, Ctl, Icon, Segmented, StatusGlyph, cx } from '@/ui';
+import { Button, Ctl, Icon, Segmented, StatusGlyph, cx, ErrorBoundary } from '@/ui';
 import { VIEWS } from './defs';
 import { useShellUi, ui } from './uiStore';
 import s from './shell.module.css';
@@ -17,7 +17,7 @@ import s from './shell.module.css';
 export function InspectorCard() {
   return (
     <aside className={cx(s.inspector, s.fadeT, s.siteOnly)} aria-label="Inspector" data-hud>
-      <div className={s.host}><HaulageInspector /></div>
+      <div className={s.host}><ErrorBoundary region="The inspector" compact><HaulageInspector /></ErrorBoundary></div>
     </aside>
   );
 }
@@ -34,7 +34,7 @@ export function InsightsCard({ overSheet }: { overSheet: boolean }) {
         <Ctl icon="x" small tip="Close" shortcut="I" onClick={() => toggle('insights', false)} />
       </header>
       <div className={cx(s.host, s.hostPlaceholder)} data-empty="Insights review the open scenario – bottlenecks, over- and under-trucked circuits, crew shortfalls – and explain each one with the numbers behind it.">
-        <InsightsPanel />
+        <ErrorBoundary region="Insights" compact><InsightsPanel /></ErrorBoundary>
       </div>
     </aside>
   );
@@ -97,7 +97,7 @@ export function Sheet() {
     <div className={cx(s.sheet, closing && s.closing)} role="region" aria-label={def.title}>
       <div className={s.sheetScroll}>
         <div className={s.page} key={shown}>
-          <div className={s.viewHost} data-empty={`The ${def.title} view is being built.`}><View /></div>
+          <div className={s.viewHost} data-empty={`The ${def.title} view is being built.`}><ErrorBoundary region={`The ${def.title} view`}><View /></ErrorBoundary></div>
         </div>
       </div>
     </div>

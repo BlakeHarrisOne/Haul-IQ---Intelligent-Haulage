@@ -347,7 +347,9 @@ export const actorsModule: SceneModule = (ctx: SceneContext) => {
     // playback: the only place tMin advances while playing
     if (s.timeline.playing) {
       const end = s.scenario.shift.lengthH * 60;
-      let t = s.timeline.tMin + s.timeline.speed * Math.min(0.25, Math.max(0, dt));
+      // positions come from the deterministic shift simulation, so a long frame can step far without error; cap at
+      // 1 s (not 0.25 s) so the requested speed holds down to 1 fps (slow GPUs / software GL), but a tab switch can't jump
+      let t = s.timeline.tMin + s.timeline.speed * Math.min(1, Math.max(0, dt));
       if (t >= end) { t = end; s.setTimeline({ tMin: t, playing: false }); } else s.setTimeline({ tMin: t });
     }
     const f = ctx.frame();

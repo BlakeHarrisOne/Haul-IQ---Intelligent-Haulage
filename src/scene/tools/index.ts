@@ -439,13 +439,27 @@ export const toolsModule: SceneModule = (ctx: SceneContext) => {
       tip.style.display = '';
       const tw = tip.offsetWidth || 180, th = tip.offsetHeight || 60;
       let x = cursorPx.x + 18, y = cursorPx.y + 20;
+      // usable area = canvas minus the shell's docked chrome (timeline, profile/section dock carry data-hud)
+      const floor = chromeFloor(ctx.canvas, h);
       if (x + tw > w - 8) x = cursorPx.x - tw - 18;
-      if (y + th > h - 8) y = cursorPx.y - th - 16;
+      if (y + th > floor - 8) y = cursorPx.y - th - 16;
+      if (y + th > floor - 8) y = floor - th - 8;
       tip.style.transform = `translate(${x}px, ${y}px)`;
     } else tip.style.display = 'none';
   });
 
   const T = new Float64Array(3), T2 = new Float64Array(3);
+  /** Top edge (canvas px) of the highest docked shell element covering the bottom of the canvas. */
+  function chromeFloor(canvas: HTMLCanvasElement, h: number): number {
+    const c = canvas.getBoundingClientRect();
+    let floor = h;
+    document.querySelectorAll<HTMLElement>('[data-hud]').forEach(el => {
+      const r = el.getBoundingClientRect();
+      // docked bars in the lower part of the canvas (timeline, profile/section dock); not the tall inspector column
+      if (r.height > 0 && r.height < c.height * 0.5 && r.top > c.top + c.height * 0.35 && r.top - c.top < floor) floor = r.top - c.top;
+    });
+    return floor;
+  }
   const proj = (P: Projector, p: XYZ, out: Float64Array) => P.projectWorld(p.e, p.n, p.z, out);
 
   function strokeLeg(g: CanvasRenderingContext2D, P: Projector, a: XYZ, b: XYZ, color: string, dashed = false) {

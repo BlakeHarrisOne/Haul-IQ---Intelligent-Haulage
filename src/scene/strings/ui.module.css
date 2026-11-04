@@ -86,9 +86,11 @@
 /* ── hint chip (bottom centre, above the timeline area) - HRL toast style ────────── */
 .hint {
   position: absolute;
-  left: 50%;
-  bottom: 96px;
+  /* centred over the visible map (clear of the inspector column) and above the timeline / open dock (shell vars) */
+  left: calc((100% - var(--right-col, 0px)) / 2);
+  bottom: var(--hud-bottom, 96px);
   transform: translate(-50%, 0);
+  max-width: calc(100% - var(--right-col, 0px) - 120px);
   display: inline-flex;
   align-items: center;
   gap: 10px;

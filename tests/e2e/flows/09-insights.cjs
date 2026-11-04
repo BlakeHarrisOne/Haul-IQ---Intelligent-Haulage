@@ -48,6 +48,13 @@ module.exports = {
     const changed = res1.filter(r => { const o = res0.find(x => x.id === r.id); return o.trucks !== r.trucks || Math.abs((o.bcmDay || 0) - (r.bcmDay || 0)) > 1; }).map(r => `${r.name.split(' ')[0]}: ${res0.find(x => x.id === r.id).trucks}→${r.trucks} trucks`);
     t.check(changed.length > 0 || after !== before, `results move (${changed.join(', ') || 'crew/fleet edit'})`);
     t.check(s1.past === s0.past + 1, 'one undoable step');
+    if (label === 'Apply allocation') {
+      // the crew-limited allocation should leave a plan the shift can man (as Priority → Apply allocation does)
+      const man = await page.evaluate(async mi => { const __mod = (0, eval)('(' + mi + ')'); const { useApp } = await __mod('/src/state/store.ts'); const { manningFor } = await __mod('/src/state/derived.ts'); const m = manningFor(useApp.getState().scenario); return { total: m.total, available: m.available }; }, L.MODULE_IMPORT);
+      t.check(man.total <= man.available, `after "Apply allocation" the crew fits (required ${man.total} vs available ${man.available})`);
+      const still = await panel.locator('article').filter({ hasText: /Crew short by/ }).count();
+      t.check(still === 0, 'the crew-shortfall finding is resolved after applying its allocation', { remaining: (await panel.locator('article').first().innerText()).split('\n')[0] });
+    }
     const undoName = await page.getByRole('button', { name: /^Undo / }).getAttribute('aria-label');
     t.note(`undo button: ${undoName}`);
     await t.shot('insight_applied');

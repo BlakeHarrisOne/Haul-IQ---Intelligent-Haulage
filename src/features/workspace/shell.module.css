@@ -16,6 +16,9 @@
   position: fixed; inset: 0; overflow: hidden; background: var(--bg-app); color: var(--ink);
 }
 .app.noTimeline { --below: var(--scene-dock); }
+/* where scene HUD chips (tool hints) sit: above the timeline, and above the profile / section dock when it is open */
+.app { --hud-bottom: calc(var(--below) + 10px); }
+.app:has(.dockPanel) { --hud-bottom: calc(var(--below) + var(--dock-panel-h) + 10px); }
 .app.noInspector { --insp-w: 0px; --right-col: 0px; }
 
 .stage { position: absolute; inset: 0; z-index: var(--z-scene); }

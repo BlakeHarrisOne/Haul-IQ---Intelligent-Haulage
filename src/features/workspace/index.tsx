@@ -8,7 +8,7 @@ import { useApp } from '@/state/store';
 import { loadDemo } from '@/state/demo';
 import { clock } from '@/core/format';
 import { checkRecovery, startAutosave, useLibrary } from '@/features/scenarios';
-import { cx } from '@/ui';
+import { cx, ErrorBoundary } from '@/ui';
 import { DocChrome, RightChrome, ViewSwitcher } from './TopBar';
 import { ToolHint, ToolRail } from './ToolRail';
 import { Timeline } from './Timeline';
@@ -85,7 +85,7 @@ export function Shell() {
       className={cx(s.app, !site && s.sheetUp, rested && s.rested, ride && s.ride, !showTimeline && s.noTimeline,
         !showInspector && !insightsOn && s.noInspector, insightsOn && !site && s.insightsOpen,
         density >= 1 && s.dShowIcons, density >= 2 && s.dNavIcons, density >= 3 && s.dNarrowDoc, density >= 4 && s.dNavBare, density >= 5 && s.dStack)}>
-      <div className={s.stage}><Viewport /></div>
+      <div className={s.stage}><ErrorBoundary region="The 3D view"><Viewport /></ErrorBoundary></div>
 
       {site && !hasAssets && <Welcome />}
 

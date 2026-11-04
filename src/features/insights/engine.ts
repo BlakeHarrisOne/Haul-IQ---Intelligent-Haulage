@@ -403,9 +403,18 @@ export function generateInsights(input: InsightInput): Insight[] {
           ...(p?.narrative ?? []).slice(0, 6).map(t => ({ label: t, value: '' })),
         ],
         actions: [
-          ...(p && p.allocations.some(x => x.allocatedTrucks !== x.requestedTrucks) ? [{
+          ...(p && (p.allocations.some(x => x.allocatedTrucks !== x.requestedTrucks) || (p.tasks ?? []).some(t => t.allocated < t.requested)) ? [{
             kind: 'apply' as const, label: 'Apply allocation', commitLabel: 'Apply crew-limited allocation',
-            apply: (st: Scenario) => ({ ...st, circuits: st.circuits.map(c => { const al = p.allocations.find(x => x.circuitId === c.id); return al ? { ...c, trucks: al.allocatedTrucks } : c; }) }),
+            // the whole plan, as on the Priority view: trucks per circuit AND caps for stood-down site tasks (e2e D4)
+            apply: (st: Scenario) => {
+              const taskCaps: Record<string, number> = {};
+              for (const t of p.tasks ?? []) if (t.allocated < t.requested) taskCaps[t.ruleId] = t.allocated;
+              return {
+                ...st,
+                circuits: st.circuits.map(c => { const al = p.allocations.find(x => x.circuitId === c.id); return al ? { ...c, trucks: al.allocatedTrucks } : c; }),
+                crew: { ...st.crew, taskCaps: Object.keys(taskCaps).length ? taskCaps : undefined },
+              };
+            },
           }] : []),
           { kind: 'view', label: 'Priority plan', view: 'priority' },
         ],
