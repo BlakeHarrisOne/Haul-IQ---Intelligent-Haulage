@@ -1,11 +1,23 @@
 /** Form fields. NumberField keeps a local draft and commits on Enter / blur (Esc reverts, ↑/↓ steps, Shift ×10). */
-import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { cx, uiStyles as s } from './primitives';
+import { isValidElement, useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { cx, Segmented, uiStyles as s } from './primitives';
 import { Icon } from './icons';
 
 export function Field({ label, hint, children, style }: { label?: ReactNode; hint?: ReactNode; children: ReactNode; style?: CSSProperties }) {
-  // A real <label> so the control keeps its accessible name, but a click on the caption itself is swallowed: a label
-  // forwards caption clicks to its first control, which silently pressed segmented buttons / opened links (e2e D3).
+  const id = useId();
+  // Multi-button controls (segmented) are a labelled GROUP: a <label> would name only their first button with the
+  // caption ("Speed model Spreadsheet") and forward caption clicks to it (e2e D3).
+  if (isValidElement(children) && children.type === Segmented) {
+    return (
+      <div className={s.field} style={style} role="group" aria-labelledby={label ? id : undefined}>
+        {label && <span id={id} className={s.fieldLabel}>{label}</span>}
+        {children}
+        {hint && <span className={s.fieldHint}>{hint}</span>}
+      </div>
+    );
+  }
+  // Single controls keep a real <label> (accessible name), but a click on the caption itself is swallowed so it can't
+  // activate the control.
   return (
     <label className={s.field} style={style}
       onClick={e => { if (!(e.target as HTMLElement).closest('input, select, textarea, button, a, [role="switch"], [role="checkbox"]')) e.preventDefault(); }}>
