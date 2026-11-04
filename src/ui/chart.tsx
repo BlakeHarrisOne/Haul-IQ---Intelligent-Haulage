@@ -105,6 +105,22 @@ export const CAT_HEX = ['#2A78D6', '#EDA100', '#6250D6', '#1BAF7A', '#4A5FC1', '
 /** Dark-theme steps of the same hues (for WebGL / canvas in dark mode). */
 export const CAT_HEX_DARK = ['#3987E5', '#9B8D14', '#9085E9', '#199E70', '#7385E0', '#D55181', '#6A7482', '#8C96A4'];
 
+/**
+ * Circuit colours are stored as hex in the scenario (light-theme palette values). In the UI resolve them to the
+ * palette slot's CSS variable so dark mode shows the dark step of the same hue; unknown hex passes through.
+ */
+export function circuitColor(hex: string | undefined): string {
+  if (!hex) return 'var(--c8)';
+  const i = CAT_HEX.findIndex(h => h.toLowerCase() === hex.toLowerCase());
+  return i >= 0 ? CAT[i] : hex;
+}
+/** Same for WebGL / canvas: the hex to draw with in the current theme. */
+export function circuitHex(hex: string | undefined, dark: boolean): string {
+  if (!hex) return dark ? CAT_HEX_DARK[7] : CAT_HEX[7];
+  const i = CAT_HEX.findIndex(h => h.toLowerCase() === hex.toLowerCase());
+  return i >= 0 ? (dark ? CAT_HEX_DARK[i] : CAT_HEX[i]) : hex;
+}
+
 /** Grade → colour (road / string colouring), thresholds match geom gradeClass. */
 export function gradeColor(g: number): string {
   const a = Math.abs(g);

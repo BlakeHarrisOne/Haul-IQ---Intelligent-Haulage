@@ -4,3 +4,5 @@ export * from './fields';
 export * from './icons';
 export * from './chart';
 export { Brand } from './Brand';
+export { PageHeader } from './PageHeader';
+export * from './events';

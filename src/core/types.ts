@@ -110,6 +110,10 @@ export interface HaulString {
   digId?: Id;
   dumpId?: Id;
   source: 'drawn' | 'imported' | 'auto-route' | 'demo';
+  /** Carriageway width, m (two-way haul road; default 30 m ≈ 3.5 × the widest truck for the demo fleet). */
+  roadWidthM?: number;
+  /** Safety bund / windrow height on the road edges, m (default: ½ the largest tyre diameter ≈ 1.8 m). */
+  bundHeightM?: number;
   visible: boolean;
   locked?: boolean;
   notes?: string;

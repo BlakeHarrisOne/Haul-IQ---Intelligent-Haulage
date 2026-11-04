@@ -31,12 +31,17 @@ export type Selection =
 
 export interface SectionLine { a: [number, number]; b: [number, number]; widthM: number }
 
+/** What the depletion slider shows: this shift's work, a week of production, or time-lapse to block completion. */
+export type DepletionHorizon = 'shift' | 'week' | 'completion';
+
 export interface Timeline {
   /** Minutes since shift start. */
   tMin: number;
   playing: boolean;
   /** Simulated minutes per real second. */
   speed: number;
+  /** Depletion horizon mapped onto the shift timeline (default 'shift'). */
+  horizon?: DepletionHorizon;
 }
 
 /** A transient message; `action` renders a ghost button (e.g. "Deleted · Undo"). */
@@ -142,7 +147,7 @@ export const useApp = create<AppState>()((set, get) => ({
   camera: 'orbit',
   selection: { kind: 'none' },
   hover: { kind: 'none' },
-  timeline: { tMin: 0, playing: false, speed: 12 },
+  timeline: { tMin: 0, playing: false, speed: 12, horizon: 'shift' },
   layers: { contours: true, grade: true, solids: true, strings: true, trucks: true, labels: true, sky: true, topo: true },
   panels: { inspector: true, profile: true, insights: false },
   toasts: [],

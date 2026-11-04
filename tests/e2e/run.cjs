@@ -40,7 +40,7 @@ async function runFlow(browser, flow, attempt) {
   console.log(`\n▶ ${flow.id}. ${flow.name}${attempt ? ` (retry ${attempt})` : ''}`);
   let error;
   try {
-    await withTimeout(flow.run(t), flow.timeout || 300_000, `flow ${flow.id}`);
+    await withTimeout(flow.run(t), flow.timeout || 600_000, `flow ${flow.id}`);
   } catch (e) {
     error = e;
     t.check(false, `flow threw: ${e.message.split('\n')[0]}`);

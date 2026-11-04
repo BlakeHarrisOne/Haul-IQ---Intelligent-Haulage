@@ -201,6 +201,9 @@
 .menuItem:hover svg { color: var(--accent); }
 .menuItem .gap { flex: 1; }
 .menuSep { height: 1px; background: var(--hair-2); margin: 5px 4px; }
+.menuOpen .tip { display: none; }
+.menuKeys { display: inline-flex; gap: 3px; margin-left: 12px; }
+.menuKey { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 5px; background: var(--surface-3); box-shadow: inset 0 -1px 0 var(--hair); font: 600 11px/1 var(--font); color: var(--ink-2); }
 .menuLabel { padding: 8px 10px 4px; font-size: 11.5px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
 
 /* ── tooltip ───────────────────────────────────────────────────────────────── */

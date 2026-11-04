@@ -1,0 +1,9 @@
+/* The one page header for every sheet view (Assumptions, Truck curves, Compare, Manning, Priority, Scenarios). */
+.head { display: flex; align-items: flex-end; gap: 16px 24px; flex-wrap: wrap; min-height: 96px; padding-top: 4px; }
+.headText { min-width: 0; flex: 1 1 520px; }
+.eyebrow { font-size: 12px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.eyebrow svg { color: var(--accent); }
+.title { font: 650 28px/34px var(--font-display); letter-spacing: -.018em; color: var(--ink); margin: 0; }
+.desc { margin: 6px 0 0; color: var(--ink-2); font-size: 14.5px; line-height: 21px; max-width: 860px; }
+.actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+@media print { .actions { display: none !important; } }

@@ -29,7 +29,9 @@ const FIX = {
 };
 fs.mkdirSync(OUT, { recursive: true });
 
-const GL_ARGS = ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'];
+// SwiftShader WebGL; software compositing keeps page captures fast (GPU compositing over SwiftShader stalls the
+// first screenshot after each change for 20-120 s).
+const GL_ARGS = ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--disable-gpu-compositing'];
 
 async function launch() {
   return chromium.launch({ headless: !process.env.E2E_HEADED, args: GL_ARGS });
@@ -66,7 +68,8 @@ async function newSession(browser, opts = {}) {
   page.on('framenavigated', f => { if (f === page.mainFrame()) nav.count++; });
   page.on('console', m => { if (/\[vite\]/.test(m.text())) log.push({ type: 'vite', text: m.text().slice(0, 300), noise: true, at: Date.now() }); });
   page.__nav = nav;
-  page.setDefaultTimeout(30_000);
+  // SwiftShader renders a 1M-triangle frame in seconds; a selection change can queue several - be patient.
+  page.setDefaultTimeout(120_000);
   return { context, page, log, nav };
 }
 

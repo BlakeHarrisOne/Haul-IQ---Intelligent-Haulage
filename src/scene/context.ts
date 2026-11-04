@@ -64,6 +64,8 @@ export interface SceneContext {
    * Optional until every core implements it: modules fall back to `labelLayer`.
    */
   hudLayer?: HTMLDivElement;
+  /** Shared collision-avoiding label placer (optional until scene core implements it). */
+  labels?: LabelService;
   frame(): Frame;
   /** Named groups the modules add their objects to. */
   layers: Record<'terrain' | 'solids' | 'strings' | 'actors' | 'tools' | 'labels' | 'fx', THREE.Group>;
@@ -93,6 +95,25 @@ export interface SceneContext {
   /** Temporarily suspend camera mouse controls (e.g. while dragging a vertex). */
   setControlsEnabled(on: boolean): void;
   setCursor(css: string): void;
+}
+
+/** A screen-space label managed by the scene's shared label placer (collision-avoided with every other label). */
+export interface PlacedLabel {
+  id: string;
+  /** World anchor [E, N, Z]. */
+  world: Vec3;
+  /** The element to position (the placer sets transform / visibility; it lives in labelLayer). */
+  el: HTMLElement;
+  /** Higher wins a collision: selected 100, hovered 90, dig/dump block 50, string pin 40, grade chip 20. */
+  priority: number;
+  /** Draw a leader line to the anchor when displaced (default true). */
+  leader?: boolean;
+}
+
+/** The shared label placer (owned by scene core). One pass per frame over every registered label. */
+export interface LabelService {
+  upsert(label: PlacedLabel): void;
+  remove(id: string): void;
 }
 
 /** A scene module mounts itself on the context and returns its disposer. */

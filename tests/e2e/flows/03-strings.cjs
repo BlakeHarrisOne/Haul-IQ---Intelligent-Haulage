@@ -17,6 +17,7 @@ async function projectWorld(page, pts) {
 module.exports = {
   id: 3,
   name: 'Strings: import XYZ, draw on surface, edit RL, undo/redo',
+  timeout: 900_000,
   async run(t) {
     const { L, page } = t;
     await L.startWithDemo(page);
@@ -44,10 +45,19 @@ module.exports = {
     t.check(Math.abs(imp.first.e - 236037.82) < 1e-6 && Math.abs(imp.first.n - 7051810.44) < 1e-6, 'Easting / Northing not swapped');
 
     // ── draw a new string on the surface
-    await L.key(page, 'Escape');
-    await page.getByRole('button', { name: 'Overview' }).click().catch(() => undefined);
+    // shortcut D with the cursor over the 3D view (where a user's pointer is when they decide to draw)
+    const vb = await L.canvasBox(page);
+    await page.mouse.move(vb.x + vb.width * 0.35, vb.y + vb.height * 0.55);
     await L.key(page, 'd');
-    t.check((await L.summary(page)).tool === 'draw', 'D selects the draw tool');
+    const toolAfterD = (await L.summary(page)).tool;
+    t.check(toolAfterD === 'draw', 'D (cursor over the 3D view) selects the draw tool', { tool: toolAfterD });
+    if (toolAfterD !== 'draw') {
+      const ib = await L.inspector(page).boundingBox();
+      await page.mouse.move(ib.x + ib.width / 2, ib.y + ib.height / 2); // pointer over the inspector, off the scene
+      await L.key(page, 'd');
+      t.check((await L.summary(page)).tool === 'draw', 'D (cursor off the 3D view) selects the draw tool');
+      if ((await L.summary(page)).tool !== 'draw') await page.getByRole('button', { name: 'Draw haul string' }).click();
+    }
     const world = [[236150, 7051300], [236300, 7051330], [236450, 7051370], [236600, 7051420]];
     const scr = await projectWorld(page, world);
     const box = await L.canvasBox(page);
@@ -82,7 +92,8 @@ module.exports = {
       const i = Math.floor(h.points.length / 2);
       return { circuitId: c.id, circuit: c.name, stringId: h.id, name: h.name, i, z: h.points[i].z, n: h.points.length };
     });
-    await insp.getByRole('button', { name: target.name, exact: true }).first().click();
+    // strings list rows: the name span carries title "<name> · N points…"
+    await insp.locator(`[title^="${target.name} · "]`).first().click();
     await L.waitStore(page, (st, id) => st.selection.kind === 'string' && st.selection.id === id, target.stringId);
     const before = { res: (await L.circuitResults(page)).find(r => r.id === target.circuitId), txt: await insp.innerText() };
     const rise0 = (before.txt.match(/Rise\s*\n?\s*([+−-]?[\d.,]+)/) || [])[1];

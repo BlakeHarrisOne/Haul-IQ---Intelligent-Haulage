@@ -213,7 +213,7 @@ export function Modal({ open, title, sub, onClose, children, footer, width }: {
 }
 
 // ── menu (anchored popover) ───────────────────────────────────────────────────
-export interface MenuItem { label: ReactNode; icon?: IconName; onSelect?: () => void; hint?: ReactNode; separator?: boolean; header?: boolean; danger?: boolean; disabled?: boolean }
+export interface MenuItem { label: ReactNode; icon?: IconName; onSelect?: () => void; hint?: ReactNode; /** Keyboard shortcut, rendered as key caps (e.g. 'Ctrl+S'). */ shortcut?: string; separator?: boolean; header?: boolean; danger?: boolean; disabled?: boolean }
 export function MenuButton({ items, children, align = 'left', up }: { items: MenuItem[]; children: (open: boolean, toggle: () => void) => ReactNode; align?: 'left' | 'right'; up?: boolean }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -225,7 +225,7 @@ export function MenuButton({ items, children, align = 'left', up }: { items: Men
     return () => { window.removeEventListener('mousedown', close); window.removeEventListener('keydown', esc); };
   }, [open]);
   return (
-    <div ref={ref} style={{ position: 'relative', display: 'inline-flex' }}>
+    <div ref={ref} className={open ? s.menuOpen : undefined} style={{ position: 'relative', display: 'inline-flex' }}>
       {children(open, () => setOpen(o => !o))}
       {open && (
         <div className={s.menu} role="menu" style={{ [align]: 0, ...(up ? { bottom: 'calc(100% + 8px)' } : { top: 'calc(100% + 8px)' }) }}>
@@ -235,6 +235,7 @@ export function MenuButton({ items, children, align = 'left', up }: { items: Men
               onClick={() => { setOpen(false); it.onSelect?.(); }}>
               {it.icon && <Icon name={it.icon} size={18} />}<span>{it.label}</span><span className={s.gap} />
               {it.hint && <span style={{ color: 'var(--ink-3)', fontSize: 12.5 }}>{it.hint}</span>}
+              {it.shortcut && <span className={s.menuKeys}>{it.shortcut.split('+').map((k, j) => <kbd key={j} className={s.menuKey}>{k}</kbd>)}</span>}
             </button>
           ))}
         </div>
