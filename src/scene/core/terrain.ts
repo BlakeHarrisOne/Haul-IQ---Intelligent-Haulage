@@ -155,7 +155,7 @@ float hk_tanS; float hk_rl; float hk_fw; vec2 hk_pw; float hk_bh;`);
     vec3 nT = normalize(vNObj);
     hk_rl = vLoc.y + uZ0;
     hk_pw = vec2(vLoc.x, -vLoc.z);
-    hk_fw = max(length(fwidth(hk_pw)), 1e-4);
+    hk_fw = hk_footprint(hk_pw);
     hk_tanS = length(nT.xz) / max(nT.y, 1e-3);
     float t = clamp((hk_rl - uRange.x) / max(uRange.y - uRange.x, 1.0), 0.0, 1.0);
     vec3 base = mix(mix(uLow, uMid, smoothstep(0.0, 0.42, t)), uHigh, smoothstep(0.42, 1.0, t));
@@ -180,7 +180,7 @@ float hk_tanS; float hk_rl; float hk_fw; vec2 hk_pw; float hk_bh;`);
     if (wv > 0.001) {
       float bx = smoothstep(-0.25, 0.25, abs(nT.x) - abs(nT.z));
       vec2 pa = vec2(vLoc.x, hk_rl * 1.6), pb = vec2(vLoc.z, hk_rl * 1.6);
-      float fa = max(length(fwidth(pa)), 1e-4), fb = max(length(fwidth(pb)), 1e-4);
+      float fa = hk_footprint(pa), fb = hk_footprint(pb);
       float ga = bx < 0.999 ? hk_ground(pa, fa) : 0.0, gb = bx > 0.001 ? hk_ground(pb + 17.0, fb) : 0.0;
       float ba = bx < 0.999 ? hk_bump(pa, fa) : 0.0, bb = bx > 0.001 ? hk_bump(pb + 17.0, fb) : 0.0;
       g += mix(ga, gb, bx) * wv;
@@ -263,7 +263,7 @@ float hk_tanS; float hk_rl; float hk_fw; vec2 hk_pw; float hk_bh;`);
   }`, 'before');
       sh.fragmentShader = f;
     };
-    m.customProgramCacheKey = () => 'hk-terrain-v4';
+    m.customProgramCacheKey = () => 'hk-terrain-v5';
     return m;
   }
 

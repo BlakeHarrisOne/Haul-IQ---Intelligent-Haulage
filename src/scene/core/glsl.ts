@@ -16,15 +16,20 @@ float hk_vnoise(vec2 p) {
 // Multi-scale ground detail in metres, each octave faded out before it aliases (fw = metres per pixel):
 // broad tonal drift, soft patches, then pebbles / grit / grain that only appear close up (POV).
 float hk_fade(float fw, float a, float b) { return 1.0 - smoothstep(a, b, fw); }
+// Pixel footprint (m/px) with up to 4x anisotropy: keeps grazing-angle detail (POV) without shimmering.
+float hk_footprint(vec2 p) {
+  float fx = length(dFdx(p)), fy = length(dFdy(p));
+  return max(max(sqrt(fx * fy), max(fx, fy) * 0.25), 1e-4);
+}
 float hk_ground(vec2 p, float fw) {
   float s = (hk_vnoise(p / 210.0) - 0.5) * 0.8;
   s += (hk_vnoise(p / 53.0 + 3.1) - 0.5) * 0.42 * hk_fade(fw, 5.0, 15.0);
   s += (hk_vnoise(p / 13.0 + 7.7) - 0.5) * 0.22 * hk_fade(fw, 1.3, 3.8);
-  s += (hk_vnoise(p / 3.1 + 1.3) - 0.5) * 0.24 * hk_fade(fw, 0.3, 0.9);
+  s += (hk_vnoise(p / 3.1 + 1.3) - 0.5) * 0.4 * hk_fade(fw, 0.3, 0.9);
   // gravel grain that survives out to ~150 m in POV (period ~0.9 m, fades by ~0.45 m/px)
-  s += (hk_vnoise(p / 0.9 + 4.4) - 0.5) * 0.26 * hk_fade(fw, 0.18, 0.45);
-  s -= smoothstep(0.5, 0.9, hk_vnoise(p / 0.35 + 2.7)) * 0.2 * hk_fade(fw, 0.035, 0.1);
-  s += (hk_vnoise(p / 0.11 + 6.1) - 0.5) * 0.2 * hk_fade(fw, 0.012, 0.035);
+  s += (hk_vnoise(p / 0.9 + 4.4) - 0.5) * 0.7 * hk_fade(fw, 0.18, 0.45);
+  s -= smoothstep(0.5, 0.9, hk_vnoise(p / 0.35 + 2.7)) * 0.6 * hk_fade(fw, 0.035, 0.1);
+  s += (hk_vnoise(p / 0.11 + 6.1) - 0.5) * 0.5 * hk_fade(fw, 0.012, 0.035);
   return s;
 }
 // Bump height for the micro relief (fine octaves + pebbles).
