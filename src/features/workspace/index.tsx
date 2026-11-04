@@ -73,7 +73,7 @@ export function Shell() {
   const showInspector = hasAssets && inspectorOn && !insightsOn;
 
   return (
-    <div className={cx(s.app, !site && s.sheetUp, rested && s.rested, !showTimeline && s.noTimeline, !showInspector && s.noInspector)}>
+    <div className={cx(s.app, !site && s.sheetUp, rested && s.rested, !showTimeline && s.noTimeline, !showInspector && !insightsOn && s.noInspector)}>
       <div className={s.stage}><Viewport /></div>
 
       {site && !hasAssets && <Welcome />}

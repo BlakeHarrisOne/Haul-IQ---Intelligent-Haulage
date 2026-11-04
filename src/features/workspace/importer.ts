@@ -32,13 +32,21 @@ export const STRING_EXT = ['.txt', '.csv', '.str', '.tsv'];
 
 // ── worker pool (one worker, reused) ─────────────────────────────────────────────────────────────
 let worker: Worker | null = null;
+let workerBroken = false;
 const waiting = new Map<string, (r: ParseReply) => void>();
 function getWorker(): Worker | null {
   if (worker) return worker;
+  if (workerBroken) return null;
   try {
     worker = new ParseWorker();
     worker.onmessage = (e: MessageEvent<ParseReply>) => { const cb = waiting.get(e.data.key); waiting.delete(e.data.key); cb?.(e.data); };
-    worker.onerror = e => { console.warn('[import] worker error', e.message); };
+    worker.onerror = e => {
+      // a worker that fails to start would leave files "reading" forever: fail them and parse on the main thread from now on
+      console.warn('[import] worker error, falling back to the main thread', e.message);
+      workerBroken = true; worker?.terminate(); worker = null;
+      for (const [key, cb] of waiting) cb({ key, ok: false, error: 'The background reader stopped – add the file again.' });
+      waiting.clear();
+    };
     return worker;
   } catch (e) {
     console.warn('[import] Web Worker unavailable, parsing on the main thread', e);

@@ -6,16 +6,17 @@
   --insp-w: 400px;
   --dock-h: 92px;
   --dock-panel-h: 252px;
-  /* the scene's own bottom-right dock (fit · compass · scale bar) lives under the right column */
-  --scene-dock: calc(var(--g) + var(--chrome-h) + 8px);
-  --scene-dock-w: 292px;
-  /* the timeline spans the stage column; the right column keeps the inspector above the scene dock */
-  --tl-right: calc(var(--g) + var(--insp-w) + 8px);
+  /* Right column (x ≥ W − 414) is reserved top to bottom: inspector above, the scene's bottom-right map chrome
+     (legend · fit · compass · scale) below it. --right-col is read by scene core (0 when the inspector is hidden). */
+  --right-col: calc(var(--insp-w) + var(--g));
+  --scene-dock: calc(var(--g) + var(--chrome-h) + var(--g));
+  /* the timeline never extends under the right column, even with the inspector hidden (map chrome lives there) */
+  --tl-right: calc(var(--g) + 400px + var(--g));
   --below: calc(var(--g) + var(--dock-h) + 8px);
   position: fixed; inset: 0; overflow: hidden; background: var(--bg-app); color: var(--ink);
 }
 .app.noTimeline { --below: var(--scene-dock); }
-.app.noInspector { --insp-w: 0px; --tl-right: calc(var(--g) + var(--scene-dock-w)); }
+.app.noInspector { --insp-w: 0px; --right-col: 0px; }
 
 .stage { position: absolute; inset: 0; z-index: var(--z-scene); }
 /* a quiet ground behind the canvas while the scene module is still loading / absent */
@@ -131,7 +132,7 @@
   border: 1px solid var(--hair); border-radius: var(--r-card); box-shadow: var(--shadow); overflow: hidden;
   animation: slideU var(--t-slow) var(--ease);
 }
-.app:not(.noInspector) .dockPanel { right: calc(var(--g) + var(--insp-w) + 8px); }
+.app:not(.noInspector) .dockPanel { right: calc(var(--g) + var(--insp-w) + var(--g)); }
 .app.noInspector .dockPanel { right: var(--g); }
 .app.noTimeline:not(.noInspector) .dockPanel { bottom: var(--g); }
 .dockTabs { display: flex; align-items: center; height: 40px; padding: 0 8px; border-bottom: 1px solid var(--hair-2); flex: none; background: var(--surface-2); }

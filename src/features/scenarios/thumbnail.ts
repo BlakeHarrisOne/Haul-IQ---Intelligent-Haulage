@@ -47,7 +47,9 @@ export async function makeThumbnail(s: Scenario, opts: { preferScene?: boolean }
     try {
       const api = sceneApi();
       if (api?.screenshot) {
-        const url = await toDataUrl(api.screenshot({ width: W * 2, height: H * 2 }));
+        // never let a slow GPU hold up a save: fall back to the plan drawing after 1.5 s
+        const shot = Promise.race([toDataUrl(api.screenshot({ width: W * 2, height: H * 2 })), new Promise<undefined>(r => setTimeout(() => r(undefined), 1500))]);
+        const url = await shot;
         if (url) return await shrink(url);
       }
     } catch (e) { console.warn('[scenarios] scene screenshot failed', e); }
@@ -121,11 +123,17 @@ export function planThumbnail(s: Scenario, w = W, h = H): string | undefined {
   const gw = Math.round(w / 2), gh = Math.round(h / 2);
   const cell = Math.max(spanX / gw, spanY / gh);
   const ox = (x0 + x1) / 2 - (gw * cell) / 2, oy = (y0 + y1) / 2 + (gh * cell) / 2;
+  // topo and solids rasterise into separate buffers: a dig block sits below the topo, but its footprint should still read
   const zb = new Float32Array(gw * gh).fill(-Infinity);
   const ob = new Int16Array(gw * gh).fill(-1);
-  const order = s.assets.map((a, i) => ({ a, i })).filter(({ a }) => a.visible !== false)
-    .sort((p, q) => (p.a.role === 'topo' ? 0 : 1) - (q.a.role === 'topo' ? 0 : 1));
-  for (const { a, i } of order) rasterise(a, i, zb, ob, gw, gh, ox, oy, cell);
+  const zs = new Float32Array(gw * gh).fill(-Infinity);
+  const os = new Int16Array(gw * gh).fill(-1);
+  s.assets.forEach((a, i) => {
+    if (a.visible === false) return;
+    if (a.role === 'topo' || a.role === 'design' || a.kind === 'surface') rasterise(a, i, zb, ob, gw, gh, ox, oy, cell);
+    else rasterise(a, i, zs, os, gw, gh, ox, oy, cell);
+  });
+  for (let k = 0; k < zb.length; k++) if (!(zb[k] > -Infinity) && zs[k] > -Infinity) zb[k] = zs[k];
 
   // hillshade
   let zmin = Infinity, zmax = -Infinity;
@@ -149,10 +157,10 @@ export function planThumbnail(s: Scenario, w = W, h = H): string | undefined {
       const shade = Math.max(0, (-dzdx * L[0] - dzdy * L[1] + L[2]) / nl);
       const t = zmax > zmin ? (z - zmin) / (zmax - zmin) : 0.5;
       let r = 226 + 14 * t, gg = 224 + 10 * t, b = 218 + 6 * t; // cream hypsometric tint
-      const a = ob[k] >= 0 ? s.assets[ob[k]] : undefined;
+      const a = os[k] >= 0 ? s.assets[os[k]] : ob[k] >= 0 ? s.assets[ob[k]] : undefined;
       if (a && a.role !== 'topo') {
         const [cr, cg, cb] = hexRgb(a.color);
-        const m = a.role === 'design' ? 0.35 : 0.72;
+        const m = a.role === 'design' ? 0.35 : 0.6;
         r = r * (1 - m) + cr * m; gg = gg * (1 - m) + cg * m; b = b * (1 - m) + cb * m;
       }
       const sh = 0.52 + 0.62 * shade;

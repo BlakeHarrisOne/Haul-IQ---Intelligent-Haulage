@@ -188,9 +188,11 @@ export function Timeline() {
                 title={`${c.name}\n${num(pc.bcmSoFar)} of ${num(pc.bcmShift)} bcm this shift · dig ${pct(pc.digFraction, 0)} · dump ${pct(pc.dumpFraction, 0)} · ${pc.loads} loads`}>
                 <span style={{ width: 8, height: 8, borderRadius: 3, background: c.color, flex: 'none' }} />
                 <b>{c.loaderUnitId}</b>
-                <span className={t.metric} title="Dig block mined"><Icon name="dig" size={14} />{pct(pc.digFraction, 0)}</span>
-                <span className={t.metric} title="Dump filled"><Icon name="dump" size={14} />{pct(pc.dumpFraction, 0)}</span>
-                <span className={t.metric} title="Truck loads so far"><Icon name="truck" size={14} />{num(pc.loads)}</span>
+                <span className={t.metric}><Icon name="dig" size={14} />{pct(pc.digFraction, 0)}</span>
+                <span className={t.more}>
+                  <span className={t.metric}><Icon name="dump" size={14} />{pct(pc.dumpFraction, 0)}</span>
+                  <span className={t.metric}><Icon name="truck" size={14} />{num(pc.loads)}</span>
+                </span>
                 <span className={t.chipBar} style={{ width: `${Math.min(1, pc.digFraction) * 100}%`, background: c.color }} />
               </button>
             );

@@ -13,7 +13,7 @@ import { createDemoScenario } from '@/state/demo';
 /** Evaluate a substituted arithmetic string (×, −, MIN/MAX/ROUNDUP); undefined when it is not plain arithmetic. */
 export function evalSubst(src: string): number | undefined {
   let s = src.replace(/×/g, '*').replace(/−/g, '-').replace(/÷/g, '/');
-  s = s.replace(/ROUNDUP\(([^,()]+),\s*0\)/g, 'Math.ceil($1)').replace(/\bMIN\(/g, 'Math.min(').replace(/\bMAX\(/g, 'Math.max(').replace(/\bmax\(/g, 'Math.max(').replace(/\bmin\(/g, 'Math.min(');
+  s = s.replace(/ROUNDUP\(([^,()]+),\s*0\)/g, 'Math.ceil($1)').replace(/(?<![.\w])MIN\(/g, 'Math.min(').replace(/(?<![.\w])MAX\(/g, 'Math.max(').replace(/(?<![.\w])max\(/g, 'Math.max(').replace(/(?<![.\w])min\(/g, 'Math.min(');
   s = s.replace(/,(?=\d{3}\b)/g, ''); // thousands separators
   if (!/^[\d\s.+\-*/(),]*$/.test(s.replace(/Math\.(min|max|ceil)/g, ''))) return undefined;
   try {
@@ -78,6 +78,17 @@ function circuitSteps(t: Tally, tag: string, c: Circuit, r: CircuitResultExt) {
     if (st.id in field && field[st.id] != null && !rel(st.value, field[st.id] as number)) t.bad.push(`${tag} ${st.id}: value ${st.value} ≠ result field ${field[st.id]}`);
     if (st.id in expect && !rel(st.value, expect[st.id])) t.bad.push(`${tag} ${st.id}: value ${st.value} ≠ recomputed ${expect[st.id]}`);
     if (st.id.startsWith('travel.dropped.') && st.value !== 0) t.bad.push(`${tag} ${st.id}: dropped step value ${st.value}`);
+    if (r.speedModel === 'spreadsheet' && (st.id === 'travel.loaded' || st.id === 'travel.empty')) {
+      // "115 segments: 97 @ 30 km/h, 1 @ 20 km/h, 17 @ 12 km/h; 2 dropped" must match the segment table
+      const loaded = st.id === 'travel.loaded';
+      const counts = new Map<number, number>();
+      for (const g of segs) { const v = loaded ? g.speedLoadedKmh : g.speedEmptyKmh; if (v > 0) counts.set(v, (counts.get(v) ?? 0) + 1); }
+      const shown = new Map([...(st.substituted ?? '').matchAll(/(\d+) @ ([\d.]+) km\/h/g)].map(m => [+m[2], +m[1]]));
+      if ([...counts].some(([v, k]) => shown.get(v) !== k) || shown.size !== counts.size) t.bad.push(`${tag} ${st.id}: bands "${st.substituted}" vs ${JSON.stringify([...counts])}`);
+      const nSeg = Number(st.substituted?.match(/^(\d+) segments/)?.[1]);
+      if (nSeg !== segs.length) t.bad.push(`${tag} ${st.id}: ${nSeg} segments shown vs ${segs.length}`);
+      t.parsed++;
+    }
     if (st.id.startsWith('queue.')) {
       const m = st.id.slice(6) as 'deterministic' | 'mm1n' | 'binomial';
       const q = queueEstimate(m, n, p.spotS + p.loadS, r.cycleS);
@@ -87,9 +98,13 @@ function circuitSteps(t: Tally, tag: string, c: Circuit, r: CircuitResultExt) {
       // "<m> × 9.81 × (<sin> + <cos> × <rr>/100) = <F> kN → F_rim(<v>) = <F> kN": the LHS must equal the shown force, the
       // value must be a segment's steady speed in that direction
       const loaded = st.id.includes('.loaded.');
-      const hit = segs.find(g => Math.abs(((loaded ? g.physLoaded : g.physEmpty)?.steadyKmh ?? NaN) - st.value) < 1e-9);
-      if (!hit) t.bad.push(`${tag} ${st.id}: value ${st.value} km/h is not any segment's steady ${loaded ? 'loaded' : 'empty'} speed`);
-      const m = st.substituted?.match(/^(.*) = ([\d.]+) kN/);
+      const segNo = Number(st.label.match(/segment (\d+)/)?.[1]);
+      const hit = segs.find(g => g.i + 1 === segNo);
+      const steady = hit ? (loaded ? hit.physLoaded : hit.physEmpty)?.steadyKmh : undefined;
+      if (steady == null || Math.abs(steady - st.value) > 1e-9) t.bad.push(`${tag} ${st.id}: value ${st.value} km/h ≠ segment ${segNo} steady ${loaded ? 'loaded' : 'empty'} speed ${steady}`);
+      const gShown = Number(st.label.match(/, (-?[\d.]+) %\)/)?.[1]);
+      if (hit && Math.abs(gShown - (loaded ? hit.grade : -hit.grade) * 100) > 0.051) t.bad.push(`${tag} ${st.id}: label grade ${gShown} % ≠ segment grade ${(loaded ? hit.grade : -hit.grade) * 100}`);
+      const m = st.substituted?.match(/^(.*?) = ([\d.]+) kN/);
       if (m) {
         const lhs = evalSubst(m[1]);
         if (lhs != null) { t.parsed++; if (!close(lhs, +m[2])) t.bad.push(`${tag} ${st.id}: "${m[1]}" = ${lhs} vs shown ${m[2]} kN`); }
