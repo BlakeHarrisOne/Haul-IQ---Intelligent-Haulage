@@ -128,13 +128,12 @@ export function kinematicLeg(tp: TruckPhysics, segs: LegSeg[], o: KinOpts): LegR
     return a < o.accelMax ? a : o.accelMax;
   };
   const v = new Float64Array(N + 1);
-  const intervals: TravelInterval[] = new Array(N);
+  const intervals: TravelInterval[] = [];
   const segTime = new Float64Array(nSeg);
   const segShare = new Float64Array(nSeg * NT);
   const legShare = new Float64Array(NT);
   const warnings: string[] = [];
   let t = 0, s = 0, stallWarned = false;
-  const extra: TravelInterval[] = [];
   for (let i = 0; i < N; i++) {
     const k = stepSeg[i];
     const h = sH[k];
@@ -160,28 +159,18 @@ export function kinematicLeg(tp: TruckPhysics, segs: LegSeg[], o: KinOpts): LegR
     if (v1 > cap) { tag = vb[i + 1] < capS - 1e-9 ? TAG.decel : sTag[k]; v1 = cap; }
     v[i + 1] = v1;
     const dt = v0 + v1 > 1e-9 ? (2 * h) / (v0 + v1) : h / crawl;
-    intervals[i] = { s0: s, ds: h, t0: t, dt, v0, v1, seg: segs[k].segIndex };
+    intervals.push({ s0: s, ds: h, t0: t, dt, v0, v1, seg: segs[k].segIndex });
     t += dt;
     s += h;
     segTime[k] += dt;
     segShare[k * NT + tag] += dt;
     legShare[tag] += dt;
     if (nodeStop[i + 1] && o.dwellS > 0) {
-      extra.push({ s0: s, ds: 0, t0: t, dt: o.dwellS, v0: 0, v1: 0, seg: segs[k].segIndex, dwell: true });
-      (intervals as (TravelInterval & { _dwellAfter?: TravelInterval })[])[i]._dwellAfter = extra[extra.length - 1];
+      intervals.push({ s0: s, ds: 0, t0: t, dt: o.dwellS, v0: 0, v1: 0, seg: segs[k].segIndex, dwell: true });
       t += o.dwellS;
       segTime[k] += o.dwellS;
       segShare[k * NT + TAG.stop] += o.dwellS;
       legShare[TAG.stop] += o.dwellS;
-    }
-  }
-  const all: TravelInterval[] = extra.length ? [] : intervals;
-  if (extra.length) {
-    for (const x of intervals as (TravelInterval & { _dwellAfter?: TravelInterval })[]) {
-      const d = x._dwellAfter;
-      if (d) delete x._dwellAfter;
-      all.push(x);
-      if (d) all.push(d);
     }
   }
   // per-segment entry/exit/max speeds and shares
@@ -193,7 +182,7 @@ export function kinematicLeg(tp: TruckPhysics, segs: LegSeg[], o: KinOpts): LegR
     for (let q = 0; q < sN[k]; q++) { j++; if (v[j] > vmax) vmax = v[j]; }
     perSeg[k] = { timeS: segTime[k], vEntryKmh: vEntry * 3.6, vExitKmh: v[j] * 3.6, vMaxKmh: vmax * 3.6, shares: shareRecord(segShare, k * NT, segTime[k]) };
   }
-  return { intervals: all, timeS: t, perSeg, shares: shareRecord(legShare, 0, t), warnings };
+  return { intervals, timeS: t, perSeg, shares: shareRecord(legShare, 0, t), warnings };
 }
 
 function shareRecord(a: Float64Array, off: number, total: number): Record<string, number> {

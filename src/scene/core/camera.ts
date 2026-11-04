@@ -73,6 +73,9 @@ export class CameraRig {
   chaseHeight = 11;
   /** Bumped when the view changes (for chrome). */
   version = 0;
+  /** Screen insets covered by app chrome: fits frame into the remaining rect. */
+  safe = { top: 0, right: 0, bottom: 0, left: 0 };
+  private homeDist = 0;
 
   private host: RigHost;
   private tr: null | { kind: 'param'; from: Params; to: Params; t0: number; dur: number; end: CamMode }
@@ -179,15 +182,17 @@ export class CameraRig {
       }
       return !behind;
     };
-    const fits = (dist: number) => place(dist) && Math.max(-lo.x, hi.x, -lo.y, hi.y) <= margin;
+    const sr = this.safeNdc();
+    const hx = ((sr.x1 - sr.x0) / 2) * margin, hy = ((sr.y1 - sr.y0) / 2) * margin;
+    const fits = (dist: number) => place(dist) && (hi.x - lo.x) / 2 <= hx && (hi.y - lo.y) / 2 <= hy;
     let dist = 1000;
     const fwd = new THREE.Vector3(Math.sin(az), 0, -Math.cos(az)), right = new THREE.Vector3(Math.cos(az), 0, Math.sin(az));
-    for (let round = 0; round < 4; round++) {
+    for (let round = 0; round < 5; round++) {
       let a = Math.log(5), b = Math.log(5e6);
       for (let i = 0; i < 30; i++) { const m = (a + b) / 2; if (fits(Math.exp(m))) b = m; else a = m; }
       dist = Math.exp(b);
       place(dist);
-      const cx = (lo.x + hi.x) / 2, cy = (lo.y + hi.y) / 2;
+      const cx = (lo.x + hi.x) / 2 - sr.cx, cy = (lo.y + hi.y) / 2 - sr.cy;
       if (Math.abs(cx) < 0.01 && Math.abs(cy) < 0.01) break;
       const halfH = dist * Math.tan((ORBIT_FOV * D2R) / 2), halfW = halfH * (this.w / this.h);
       target.addScaledVector(right, cx * halfW).addScaledVector(fwd, (cy * halfH) / Math.max(0.3, Math.sin(el)));
@@ -195,10 +200,34 @@ export class CameraRig {
     return { target, dist, az, el, fov: ORBIT_FOV };
   }
 
-  private planFitParams(box: THREE.Box3, margin = 1.1): Params {
+  /** The safe rect (screen minus chrome insets) in NDC. */
+  safeNdc() {
+    const s = this.safe, W = this.w, H = this.h;
+    const x0 = -1 + (2 * s.left) / W, x1 = 1 - (2 * s.right) / W, y0 = -1 + (2 * s.bottom) / H, y1 = 1 - (2 * s.top) / H;
+    return { x0, x1, y0, y1, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 };
+  }
+
+  private planFitParams(box: THREE.Box3, margin = 1.08): Params {
     const c = box.getCenter(new THREE.Vector3());
-    const halfH = Math.max((box.max.z - box.min.z) / 2, (box.max.x - box.min.x) / 2 / (this.w / this.h)) * margin;
-    return { target: c, dist: halfH / Math.tan((PLAN_FOV * D2R) / 2), az: 0, el: 90 * D2R, fov: PLAN_FOV };
+    const sr = this.safeNdc(), a = this.w / this.h;
+    const fy = Math.max(0.2, (sr.y1 - sr.y0) / 2), fx = Math.max(0.2, (sr.x1 - sr.x0) / 2);
+    const halfH = Math.max((box.max.z - box.min.z) / 2 / fy, (box.max.x - box.min.x) / 2 / (a * fx)) * margin;
+    const target = new THREE.Vector3(c.x - sr.cx * halfH * a, c.y, c.z + sr.cy * halfH);
+    return { target, dist: halfH / Math.tan((PLAN_FOV * D2R) / 2), az: 0, el: 90 * D2R, fov: PLAN_FOV };
+  }
+
+  /** Plan params for leaving the current orbit view: whole site from the overview, else what's under the view centre. */
+  private toPlanParams(from: Params): Params {
+    if (this.homeDist > 0 && from.dist >= this.homeDist * 0.8) return this.planFitParams(this.bounds);
+    const p = cloneP(from);
+    const sr = this.safeNdc();
+    const g = this.host.pickGround(((sr.cx + 1) / 2) * this.w, ((1 - sr.cy) / 2) * this.h);
+    if (g) {
+      const eye = this.eyeOf(from, this.v1);
+      p.dist = eye.distanceTo(g);
+      p.target.copy(g);
+    }
+    return this.planParams(p);
   }
 
   /** Frame a box in the current mode (animated unless dur = 0). */
@@ -211,8 +240,8 @@ export class CameraRig {
 
   /** Immediately set the default overview. */
   home(box: THREE.Box3) {
-    const p = this.fitParams(box, 24 * D2R, 33 * D2R, 0.94);
-    this.P = p; this.lastOrbit = cloneP(p);
+    const p = this.fitParams(box, 24 * D2R, 33 * D2R, 0.96);
+    this.P = p; this.lastOrbit = cloneP(p); this.homeDist = p.dist;
     if (this.mode === 'plan') this.P = this.planFitParams(box);
     this.tr = null;
     this.version++;
@@ -245,7 +274,7 @@ export class CameraRig {
       if (prev === 'orbit' || prev === 'plan') {
         // param flight (log-scale FOV trick); plan always swaps to ortho at the end
         if (this.active === this.ortho) { this.active = this.persp; }
-        const to = m === 'plan' ? this.planParams(this.P) : (() => {
+        const to = m === 'plan' ? this.toPlanParams(this.P) : (() => {
           const h = this.P.dist * Math.tan((this.P.fov * D2R) / 2);
           const p = cloneP(this.lastOrbit);
           p.target.copy(this.P.target);

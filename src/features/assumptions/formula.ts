@@ -70,6 +70,10 @@ export function tokenize(src: string): Tok[] {
     const ws = /^\s+/.exec(s);
     if (ws) { s = s.slice(ws[0].length); continue; }
 
+    // Excel error literals (#N/A, #REF!, #VALUE!, #DIV/0!, #NAME?)
+    const xe = /^#(?:N\/A|REF!|VALUE!|DIV\/0!|NAME\?|NUM!|NULL!)/.exec(s);
+    if (xe) { out.push({ k: 'ref', v: xe[0] }); s = s.slice(xe[0].length); continue; }
+
     // quoted text
     const q = /^"([^"]*)"/.exec(s);
     if (q) { out.push({ k: 'text', v: q[1] }); s = s.slice(q[0].length); continue; }

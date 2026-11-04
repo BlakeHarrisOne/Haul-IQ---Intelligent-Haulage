@@ -43,6 +43,7 @@ function ViewportInner({ className, style, chrome = true, harness = false }: Vie
     const el = host.current;
     if (!el) return;
     const c = new SceneCore(el, sceneModules);
+    if (harness) c.setInsets({ top: 16, right: 16, bottom: 72, left: 16 });
     _attachCore(c);
     setCore(c);
     return () => { _detachCore(c); c.dispose(); setCore(null); };

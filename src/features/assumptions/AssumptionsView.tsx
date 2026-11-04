@@ -19,6 +19,7 @@ import { SegmentTable, REASON } from './SegmentTable';
 import { ModelCompare } from './ModelCompare';
 import { ChangedKey, LoaderAssumptionsCard, MaterialsCard, ShiftProfileCard, SpeedTablesCard, TruckLoadsCard } from './SiteAssumptions';
 import { excelRound } from './shared/excel';
+import { CircuitParamsCard } from './CircuitParams';
 import s from './assumptions.module.css';
 
 const CIRCUIT_GROUPS = new Set(['route', 'travel', 'cycle', 'productivity', 'fleet', 'loader']);
@@ -175,9 +176,10 @@ export function AssumptionsView() {
             <ModelCompare sheet={both.spreadsheet} rim={both.rimpull} assigned={circuit.trucks} />
             <Lineage scenario={scenario} circuit={circuit} result={r} />
           </div>
-          <div className={p.s12}><SegmentTable result={r} onExport={exportSegs} /></div>
         </div>
       )}
+      {r.ok && <div className={p.grid}><div className={p.s12}><SegmentTable result={r} onExport={exportSegs} /></div></div>}
+      <div className={p.grid}><div className={p.s12}><CircuitParamsCard scenario={scenario} circuit={circuit} /></div></div>
 
       <div className={p.head} style={{ marginTop: 12 }}>
         <div className={p.headText}>

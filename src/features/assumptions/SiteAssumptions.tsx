@@ -57,6 +57,7 @@ export function LoaderAssumptionsCard({ scenario }: { scenario: Scenario }) {
         if (patch.spotS != null) pp.spotS = patch.spotS;
         if (patch.loadS != null) pp.loadS = patch.loadS;
         if (patch.plannedRateBcmPerPtHr != null) pp.plannedRateBcmPerPtHr = patch.plannedRateBcmPerPtHr;
+        if (patch.ptHrsPerDay != null) pp.loaderPtHrsPerDay = patch.ptHrsPerDay;
         return { ...c, params: pp };
       }),
     }));
@@ -95,7 +96,7 @@ export function LoaderAssumptionsCard({ scenario }: { scenario: Scenario }) {
           </tbody>
         </table>
       </div>
-      <p className={s.cardNote}>Dump / spot / load times and the planned rate also update every circuit on that loader (the workbook's INDEX/MATCH into the EX block, C8–C10). Ideal = rate × PT (ActiveRoute!C19).</p>
+      <p className={s.cardNote}>Edits flow to every circuit on that loader: dump / spot / load and the planned rate (the workbook's INDEX/MATCH into the EX block, C8–C10, I32) and PT h/day as the circuit's loader PT target. Ideal = rate × PT (ActiveRoute!C19).</p>
     </Card>
   );
 }

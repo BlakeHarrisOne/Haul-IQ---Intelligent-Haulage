@@ -13,6 +13,7 @@ import type { DepletionMode, MeshAsset, Vec3 } from '@/core/types';
 import { num, pct } from '@/core/format';
 import { capLoops, depletionPlane, prepareSolid, type SolidHandle } from '@/geom';
 import { toLocal, type LocalMesh } from './meshUtil';
+import { LabelPlacer, makeLabelItem, type Insets, type LabelItem } from './labels';
 import type { Palette } from './theme';
 import css from './core.module.css';
 
@@ -67,9 +68,10 @@ interface SolidItem {
   fraction: number;
   applied: number;
   label: HTMLDivElement;
-  labelParts: { title: HTMLElement; value: HTMLElement; sub: HTMLElement; bar: HTMLElement };
+  labelParts: { title: HTMLElement; value: HTMLElement; sub: HTMLElement; bar: HTMLElement; name: HTMLElement; pct: HTMLElement };
   anchor: THREE.Vector3;
-  lastLX: number; lastLY: number; lastVis: boolean;
+  li: LabelItem;
+  expanded: boolean;
   bcm: number;
 }
 
@@ -105,6 +107,11 @@ export class SolidsLayer {
   private selected: string | null = null;
   private pal: Palette | null = null;
   private labelsOn = true;
+  private placer = new LabelPlacer();
+  private hovered: string | null = null;
+  private playingIds = new Set<string>();
+  private onPick: ((id: string) => void) | null = null;
+  private onHover: ((id: string | null) => void) | null = null;
   private tmp = new THREE.Vector3();
   private origin: Vec3 = [0, 0, 0];
 
@@ -215,21 +222,21 @@ export class SolidsLayer {
 
     const label = document.createElement('div');
     label.className = css.solidLabel;
-    label.innerHTML = `<div class="${css.slTitle}"></div><div class="${css.slValue}"></div><div class="${css.slBar}"><i></i></div><div class="${css.slSub}"></div>`;
-    const parts = {
-      title: label.querySelector(`.${css.slTitle}`) as HTMLElement,
-      value: label.querySelector(`.${css.slValue}`) as HTMLElement,
-      sub: label.querySelector(`.${css.slSub}`) as HTMLElement,
-      bar: label.querySelector(`.${css.slBar} i`) as HTMLElement,
-    };
+    label.innerHTML = `<div class="${css.slPill}"><i class="${css.slDot}"></i><b class="${css.slName}"></b><span class="${css.slPct}"></span></div>`
+      + `<div class="${css.slCard}"><div class="${css.slTitle}"></div><div class="${css.slValue}"></div><div class="${css.slBar}"><i></i></div><div class="${css.slSub}"></div></div>`;
+    const q = (c: string) => label.querySelector(`.${c}`) as HTMLElement;
+    const parts = { title: q(css.slTitle), value: q(css.slValue), sub: q(css.slSub), bar: label.querySelector(`.${css.slBar} i`) as HTMLElement, name: q(css.slName), pct: q(css.slPct) };
     label.style.setProperty('--sl-c', a.color);
+    label.addEventListener('pointerenter', () => this.onHover?.(a.id));
+    label.addEventListener('pointerleave', () => this.onHover?.(null));
+    label.addEventListener('click', e => { e.stopPropagation(); this.onPick?.(a.id); });
     this.labelLayer.appendChild(label);
     const anchor = new THREE.Vector3(cx, local.max[1], cz);
     const it: SolidItem = {
       asset: a, local, geom, edgesGeom, volume: handle.volume, handle, mode, az: a.block?.advanceAzimuthDeg ?? 0, kind, group,
       front, back, xray, edges, ghost, ghostFill, cap, capLine,
       mats: [frontM, backM, xrayM, edgeM, ghostM, ghostFillM, capM, capLineM], keepVis, keepGhost,
-      fraction: 0, applied: -1, label, labelParts: parts, anchor, lastLX: NaN, lastLY: NaN, lastVis: true,
+      fraction: 0, applied: -1, label, labelParts: parts, anchor, li: makeLabelItem(a.id, label), expanded: false,
       bcm: a.block?.plannedBcm ?? a.stats.volume ?? handle.volume,
     };
     this.applyStyle(it);
@@ -241,7 +248,7 @@ export class SolidsLayer {
     const sel = this.selected === it.asset.id;
     const vis = it.asset.visible !== false;
     it.group.visible = vis;
-    it.label.style.display = vis && this.labelsOn ? '' : 'none';
+    it.li.enabled = vis && this.labelsOn && this.root.visible;
     const op = it.asset.opacity ?? 1;
     (it.front.material as THREE.MeshStandardMaterial).opacity = 0.5 * op + (sel ? 0.12 : 0);
     (it.back.material as THREE.MeshStandardMaterial).opacity = 0.28 * op;
@@ -253,12 +260,28 @@ export class SolidsLayer {
     capLine.color.set(dark ? '#FFE3A8' : '#FFFFFF');
     it.label.classList.toggle(css.slSel, sel);
     it.label.dataset.kind = it.kind;
+    this.applyExpanded(it);
+  }
+
+  private applyExpanded(it: SolidItem) {
+    const id = it.asset.id;
+    const ex = this.selected === id || this.hovered === id || this.playingIds.has(id);
+    if (ex !== it.expanded) { it.expanded = ex; it.label.classList.toggle(css.slOpen, ex); it.li.w = 0; }
+  }
+
+  /** Label interaction hooks (pill hover → store.hover, click → select). */
+  setLabelHandlers(onPick: (id: string) => void, onHover: (id: string | null) => void) { this.onPick = onPick; this.onHover = onHover; }
+  /** Hovered asset (store.hover) and assets whose labels expand while playing (selected circuit's dig/dump). */
+  setLabelFocus(hovered: string | null, playing: Iterable<string>) {
+    this.hovered = hovered;
+    this.playingIds = new Set(playing);
+    for (const it of this.items.values()) this.applyExpanded(it);
   }
 
   setTheme(p: Palette) { this.pal = p; for (const it of this.items.values()) this.applyStyle(it); }
   setSelected(id: string | null) { this.selected = id; for (const it of this.items.values()) this.applyStyle(it); }
   setLabels(on: boolean) { this.labelsOn = on; for (const it of this.items.values()) this.applyStyle(it); }
-  setVisible(on: boolean) { this.root.visible = on; for (const it of this.items.values()) it.label.style.display = on && this.labelsOn && it.asset.visible !== false ? '' : 'none'; }
+  setVisible(on: boolean) { this.root.visible = on; for (const it of this.items.values()) this.applyStyle(it); }
 
   /** Set done fractions (dug / placed) per asset id; recompute only when a fraction moved > 0.2 %. */
   setFractions(f: Map<string, number>, force = false): boolean {
@@ -296,18 +319,23 @@ export class SolidsLayer {
     const capOn = f > 1e-4 && f < 1 - 1e-4;
     it.cap.visible = it.capLine.visible = capOn;
     if (capOn) this.buildCap(it, dp);
-    // label
+    // label (wording: "38 % mined" / "38 % placed")
     const done = f * it.bcm;
     const P = it.labelParts;
+    const pc = `${num(f * 100, 0)}\u202f%`;
     P.title.textContent = it.asset.name;
+    P.name.textContent = it.asset.name;
     if (it.kind === 'dig') {
       P.value.textContent = `${num(it.bcm - done)} bcm`;
-      P.sub.textContent = `remaining · ${pct(f, 0)} mined`;
+      P.sub.textContent = `remaining · ${pc} mined`;
+      P.pct.textContent = `${pc} mined`;
     } else {
       P.value.textContent = `${num(done)} bcm`;
-      P.sub.textContent = `placed of ${num(it.bcm)} · ${pct(f, 0)}`;
+      P.sub.textContent = `of ${num(it.bcm)} bcm · ${pc} placed`;
+      P.pct.textContent = `${pc} placed`;
     }
     P.bar.style.transform = `scaleX(${f.toFixed(4)})`;
+    it.li.w = 0;
     // anchor: top of the remaining body near its centre
     const L = it.local;
     it.anchor.set((L.min[0] + L.max[0]) / 2, L.max[1], (L.min[2] + L.max[2]) / 2);
@@ -353,21 +381,31 @@ export class SolidsLayer {
     lg.computeBoundingSphere();
   }
 
-  /** Per frame: place labels (projected anchors). */
-  updateLabels(camera: THREE.Camera, w: number, h: number, ve: number) {
-    if (!this.labelsOn || !this.root.visible) return;
+  /**
+   * Per frame: priorities (selected > hovered > dig > dump > volume), distance fade, POV/chase = selected only,
+   * then greedy screen-space placement inside the safe rect.
+   */
+  updateLabels(camera: THREE.Camera, w: number, h: number, ve: number, insets: Insets, refDist: number, follow: boolean) {
+    const list: LabelItem[] = [];
+    const cam = camera.position;
     for (const it of this.items.values()) {
-      if (it.asset.visible === false) continue;
-      const p = this.tmp.set(it.anchor.x, it.anchor.y * ve, it.anchor.z).project(camera);
-      const vis = p.z < 1 && p.x > -1.2 && p.x < 1.2 && p.y > -1.2 && p.y < 1.2;
-      if (vis !== it.lastVis) { it.label.style.opacity = vis ? '1' : '0'; it.lastVis = vis; }
-      if (!vis) continue;
-      const x = (p.x * 0.5 + 0.5) * w, y = (-p.y * 0.5 + 0.5) * h;
-      if (!(Math.abs(x - it.lastLX) <= 0.3 && Math.abs(y - it.lastLY) <= 0.3)) {
-        it.label.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) translate(-50%, calc(-100% - 14px))`;
-        it.lastLX = x; it.lastLY = y;
-      }
+      const li = it.li;
+      li.enabled = this.labelsOn && this.root.visible && it.asset.visible !== false && (!follow || this.selected === it.asset.id);
+      li.anchor.set(it.anchor.x, it.anchor.y * ve, it.anchor.z);
+      const id = it.asset.id;
+      li.priority = (this.selected === id ? 1e9 : 0) + (this.hovered === id ? 1e8 : 0) + (it.kind === 'dig' ? 1e7 : 0) + Math.min(9e6, it.bcm / 10);
+      const d = li.anchor.distanceTo(cam);
+      li.alpha = this.selected === id || this.hovered === id ? 1 : 1 - THREE.MathUtils.smoothstep(d, refDist * 1.5, refDist * 2.6);
+      list.push(li);
     }
+    this.placer.place(list, camera, w, h, insets);
+  }
+
+  drawLeaders(ctx: CanvasRenderingContext2D) {
+    const dark = (this.pal?.def.stars ?? 0) > 0;
+    const list = [...this.items.values()].map(i => i.li);
+    this.placer.drawLeaders(ctx, list, dark ? 'rgba(233,237,242,0.75)' : 'rgba(31,35,41,0.55)', dark ? 'rgba(14,17,22,0.7)' : 'rgba(255,255,255,0.9)',
+      li => this.items.get(li.id)?.asset.color ?? '#888');
   }
 
   /** Local meshes for section cuts. */

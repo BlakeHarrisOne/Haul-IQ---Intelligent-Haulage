@@ -44,8 +44,6 @@ export function InsightsCard({ overSheet }: { overSheet: boolean }) {
 export function DockPanel() {
   const selection = useApp(st => st.selection);
   const section = useApp(st => st.section);
-  const setSection = useApp(st => st.setSection);
-  const togglePanel = useApp(st => st.togglePanel);
   const scenario = useApp(st => st.scenario);
   const tab = useShellUi(st => st.dockTab);
   const stringId = selection.kind === 'string' ? selection.id
@@ -59,19 +57,16 @@ export function DockPanel() {
   const active = tab === 'section' && section ? 'section' : hs ? 'profile' : section ? 'section' : null;
   if (!active) return null;
   return (
-    <section className={cx(s.dockPanel, s.fadeB, s.siteOnly)} aria-label="Long section" data-hud>
-      <header className={s.dockHead}>
-        <Segmented<'profile' | 'section'> small value={active} onChange={v => ui().set({ dockTab: v })} options={[
-          { value: 'profile', label: 'Profile', icon: 'string', title: hs ? `Long section of ${hs.name}` : 'Select a haul string' },
-          { value: 'section', label: 'Section', icon: 'section', title: section ? 'Cross-section A–B' : 'Use the Section tool (X) to cut one' },
-        ]} />
-        <span className={s.dockTitle}>
-          {active === 'section' && section && <>A–B · {Math.round(Math.hypot(section.b[0] - section.a[0], section.b[1] - section.a[1])).toLocaleString('en-AU')} m</>}
-        </span>
-        <span style={{ flex: 1 }} />
-        {active === 'section' && <Ctl icon="trash" small tip="Clear section" onClick={() => setSection(undefined)} />}
-        <Ctl icon="collapse" small tip="Hide panel" onClick={() => togglePanel('profile', false)} />
-      </header>
+    <section className={cx(s.dockPanel, s.fadeB, s.siteOnly)} aria-label={active === 'profile' ? 'Long section' : 'Cross-section'} data-hud>
+      {hs && section && (
+        // both available: a slim tab row; each panel brings its own header and close
+        <div className={s.dockTabs}>
+          <Segmented<'profile' | 'section'> small value={active} onChange={v => ui().set({ dockTab: v })} options={[
+            { value: 'profile', label: 'Profile', icon: 'string', title: `Long section of ${hs.name}` },
+            { value: 'section', label: 'Section A–B', icon: 'section', title: 'Cross-section A–B' },
+          ]} />
+        </div>
+      )}
       <div className={cx(s.dockBody, s.hostPlaceholder)} data-empty={active === 'profile' ? 'The long section of the selected haul string appears here.' : 'The A–B cross-section appears here.'}>
         {active === 'profile' ? <ProfileStrip /> : <SectionPanel />}
       </div>

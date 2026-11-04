@@ -134,8 +134,8 @@
 .app:not(.noInspector) .dockPanel { right: calc(var(--g) + var(--insp-w) + 8px); }
 .app.noInspector .dockPanel { right: var(--g); }
 .app.noTimeline:not(.noInspector) .dockPanel { bottom: var(--g); }
-.dockHead { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 6px 0 8px; border-bottom: 1px solid var(--hair-2); flex: none; }
-.dockTitle { font: 600 13.5px/18px var(--font); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 8px; }
+.dockTabs { display: flex; align-items: center; height: 40px; padding: 0 8px; border-bottom: 1px solid var(--hair-2); flex: none; background: var(--surface-2); }
+.dockTabs > * { width: 280px; }
 .dockBody { flex: 1; min-height: 0; overflow: auto; position: relative; }
 @keyframes slideU { from { opacity: 0; translate: 0 8px; } }
 

@@ -13,8 +13,8 @@ import { PageHeader } from '@/features/assumptions/shared/PageHeader';
 import p from '@/features/assumptions/shared/page.module.css';
 import { downloadCsv, fileSafe, type CsvCell } from '@/features/assumptions/shared/csv';
 import { excelRound } from '@/features/assumptions/shared/excel';
-import { withPhysics } from './oem';
-import { balanceForForce, balanceOnGrade, curveForce, effGradeForce, range, resistanceKN, tableSpeed, type TruckX } from './physics';
+import { curveForce, effGradeForce, range, type TruckX } from './physics';
+import { balanceAt, chartPoints, chartTruck, limitShort, speedRows } from './model';
 import { RimpullChart, type OpPoint, type SeriesTruck } from './RimpullChart';
 import { SpeedGradePanels } from './SpeedGradeChart';
 import { SpecSheet } from './SpecSheet';
@@ -57,7 +57,7 @@ export function CurvesView() {
   const series: SeriesTruck[] = useMemo(() => {
     if (!primary0) return [];
     const list = [primary0, ...overlays.map(id => trucks.find(t => t.id === id)).filter((t): t is TruckModel => !!t && t.id !== primary0.id)].slice(0, 3);
-    return list.map((t, i) => ({ t: withPhysics(t), color: TRUCK_COLORS[i] }));
+    return list.map((t, i) => ({ t: chartTruck(t), color: TRUCK_COLORS[i] }));
   }, [primary0, overlays, trucks]);
 
   const payloadT = useCallback((t: TruckX) => {
@@ -89,19 +89,7 @@ export function CurvesView() {
   const mL = prim.emptyMassT + payloadT(prim);
   const mE = prim.emptyMassT;
 
-  const points: OpPoint[] = !result?.ok ? [] : (result.segments as SegX[]).flatMap(sg => {
-    const mLo = sg.physLoaded?.massT ?? result.massLoadedT ?? (prim.emptyMassT + (sitePayload(scenario, circ) ?? prim.payloadT));
-    const mEo = sg.physEmpty?.massT ?? result.massEmptyT ?? prim.emptyMassT;
-    const fl = sg.physLoaded?.resistanceKN ?? resistanceKN(mLo, sg.grade, sg.rrPct);
-    const fe = sg.physEmpty?.resistanceKN ?? resistanceKN(mEo, -sg.grade, sg.rrPct);
-    const mk = (dir: 'loaded' | 'empty', f: number, v: number, g: number, lim: OpPoint['limit'], time: number, m: number, ph?: DirPhys): OpPoint => ({
-      key: `${sg.i}-${dir}`, seg: sg, dir, v, f: Math.abs(f), mode: f >= 0 ? 'propel' : 'retard', grade: g, limit: lim, time, massT: m, gear: ph?.gear, binding: ph?.binding,
-    });
-    return [
-      mk('loaded', fl, sg.speedLoadedKmh, sg.grade, sg.limitLoaded, sg.timeLoadedS, mLo, sg.physLoaded),
-      mk('empty', fe, sg.speedEmptyKmh, -sg.grade, sg.limitEmpty, sg.timeEmptyS, mEo, sg.physEmpty),
-    ];
-  }).filter(q => q.v > 0 && q.seg.dist3dM > 0);
+  const points: OpPoint[] = chartPoints(result);
 
   const toggleOverlay = (id: string) => setOverlays(o => (o.includes(id) ? o.filter(x => x !== id) : o.length >= 2 ? o : [...o, id]));
   const limit = circ?.params.speedLimitKmh;
@@ -112,10 +100,9 @@ export function CurvesView() {
     rows.push([], ['Retarder envelope', 'km/h', 'kN']); prim.retarder.forEach(q => rows.push(['', q[0], q[1]]));
     (prim.rimpullGears ?? []).forEach(g => { rows.push([], [`Rimpull gear ${g.gear} (max ${g.maxKmh} km/h)`, 'km/h', 'kN']); g.points.forEach(q => rows.push(['', q[0], q[1]])); });
     rows.push([], ['Speed vs grade', 'grade', 'workbook loaded km/h', 'physics loaded km/h', 'loaded limit', 'workbook empty km/h', 'physics empty km/h', 'empty limit']);
-    range(-0.16, 0.16, 0.01).forEach(g => {
-      const bl = balanceOnGrade(prim, mL, g, rr, limit), be = balanceOnGrade(prim, mE, g, rr, limit);
-      rows.push(['', +g.toFixed(2), tableSpeed(prim.spreadsheetSpeeds?.loaded, excelRound(g, 2)), bl.kmh, bl.limit, tableSpeed(prim.spreadsheetSpeeds?.empty, excelRound(g, 2)), be.kmh, be.limit]);
-    });
+    const grades = range(-0.16, 0.16, 0.01);
+    const rl = speedRows(prim, true, rr, payloadT(prim), grades, limit), re = speedRows(prim, false, rr, 0, grades, limit);
+    rl.forEach((r, k) => rows.push(['', +r.grade.toFixed(2), r.spreadsheetKmh, r.kmh, r.binding, re[k].spreadsheetKmh, re[k].kmh, re[k].binding]));
     downloadCsv(`${fileSafe(prim.name)}-curves`, rows);
   };
 
@@ -211,12 +198,12 @@ export function CurvesView() {
                       <td className={c.l}><b>{g > 0 ? '+' : ''}{g} %</b> <span className={c.lim}>{g < 0 ? 'retarding' : g === 0 ? 'level, no RR' : 'propelling'}</span></td>
                       {series.map(s => {
                         const ml = s.t.emptyMassT + payloadT(s.t), me = s.t.emptyMassT;
-                        const fl = effGradeForce(ml, g), fe = effGradeForce(me, g);
-                        const bl = balanceForForce(s.t, fl, limit), be = balanceForForce(s.t, fe, limit);
+                        const fl = effGradeForce(ml, g);
+                        const bl = balanceAt(s.t, ml, g / 100, limit), be = balanceAt(s.t, me, g / 100, limit);
                         return [
-                          <td key={s.t.id + 'l'} className={c.sepL}>{bl.kmh > 0 ? num(bl.kmh, 1) : '—'}<span className={c.lim}>{lim(bl)}</span></td>,
+                          <td key={s.t.id + 'l'} className={c.sepL}>{bl.kmh > 0 ? num(bl.kmh, 1) : '—'}<span className={c.lim}>{limitShort(bl)}</span></td>,
                           <td key={s.t.id + 'f'} style={{ color: 'var(--ink-3)' }}>{num(Math.abs(fl), 0)}</td>,
-                          <td key={s.t.id + 'e'}>{be.kmh > 0 ? num(be.kmh, 1) : '—'}<span className={c.lim}>{lim(be)}</span></td>,
+                          <td key={s.t.id + 'e'}>{be.kmh > 0 ? num(be.kmh, 1) : '—'}<span className={c.lim}>{limitShort(be)}</span></td>,
                         ];
                       })}
                     </tr>
@@ -265,9 +252,6 @@ export function CurvesView() {
     </div>
   );
 }
-
-const lim = (b: ReturnType<typeof balanceForForce>) =>
-  b.limit === 'rimpull' ? (b.gear ? `G${b.gear}` : 'rimpull') : b.limit === 'retarder' ? (b.gear ? `ret G${b.gear}` : 'retarder') : b.limit === 'top-speed' ? 'top' : b.limit === 'speed-limit' ? 'limit' : b.limit;
 
 function LegendKey({ line, fill, label, w = 2 }: { line?: string; fill?: string; label: string; w?: number }) {
   return (

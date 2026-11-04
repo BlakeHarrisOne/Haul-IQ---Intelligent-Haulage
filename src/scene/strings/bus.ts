@@ -34,6 +34,8 @@ export interface TruckInfo {
   stringId?: Id;
   modelName: string;
   materialName?: string;
+  /** Shift event holding the truck (e.g. 'Crib'), if any. */
+  pauseLabel?: string;
   /** Screen position of the truck's roof (CSS px), null when off-screen. */
   screen?: { x: number; y: number } | null;
 }

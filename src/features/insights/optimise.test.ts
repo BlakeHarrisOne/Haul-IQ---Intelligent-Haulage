@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { evaluate, optimiseFleet, solveAllocation, weightsFor, type OptCircuit, type OptProblem } from './optimise';
+import { evaluate, optimiseFleet, solveAllocation, taskWeightsFor, weightsFor, type OptCircuit, type OptProblem } from './optimise';
 import { syntheticScenario } from './synthetic';
 import { computeAllCircuits, computeCircuit, computeManning } from '@/engine';
 
@@ -95,6 +95,48 @@ describe('fleet optimiser', () => {
     }
   });
 
+  it('sheds site tasks optimally: brute force over circuits AND task people (150 random problems)', () => {
+    const r = rng(99);
+    for (let k = 0; k < 150; k++) {
+      const nC = 1 + Math.floor(r() * 3), nT = 1 + Math.floor(r() * 2);
+      const T = 2 + Math.floor(r() * 7);
+      const circuits = Array.from({ length: nC }, (_, i) => circuit(`C${i}`, i + 1, 150 + r() * 300, 600 + r() * 2400, Math.floor(r() * 3), T));
+      const tasks = Array.from({ length: nT }, (_, i) => {
+        const base = 1 + Math.floor(r() * 5);
+        // push-dozer style: one person fewer per truck above 6
+        return { id: `T${i}`, name: `T${i}`, rank: nC + i + 1, valuePerPerson: Math.round(r() * 600), req: Array.from({ length: T + 1 }, (_, t) => Math.max(0, base - Math.max(0, t - 6))) };
+      });
+      const p: OptProblem = { circuits, tasks, trucksAvailable: T, crewAvailable: 2 + Math.floor(r() * (T + 4 * nC + 6)), siteCrew: new Array(T + 1).fill(2), mode: r() < 0.5 ? 'weighted' : 'volume' };
+      const w = weightsFor(p), wt = taskWeightsFor(p);
+      // brute force
+      let best = -Infinity;
+      const cur = new Array(nC).fill(0);
+      const recC = (i: number) => {
+        if (i === nC) {
+          let obj = 0, crew = 0, trucks = 0;
+          circuits.forEach((c, j) => { obj += w[j] * c.bcm[cur[j]]; crew += c.crew[cur[j]]; trucks += cur[j]; });
+          obj -= 0.01 * trucks;
+          crew += p.siteCrew[trucks];
+          if (trucks > T || crew > p.crewAvailable) return;
+          const tp = new Array(nT).fill(0);
+          const recT = (j: number, left: number, val: number) => {
+            if (j === nT) { best = Math.max(best, val); return; }
+            for (let n = 0; n <= Math.min(tasks[j].req[trucks], left); n++) recT(j + 1, left - n, val + wt[j] * tasks[j].valuePerPerson * n);
+          };
+          recT(0, p.crewAvailable - crew, obj);
+          void tp;
+          return;
+        }
+        for (let n = 0; n <= circuits[i].maxTrucks; n++) { cur[i] = n; recC(i + 1); }
+      };
+      recC(0);
+      const s = solveAllocation(p);
+      if (best === -Infinity) { expect(s.feasible).toBe(false); continue; }
+      expect(s.feasible).toBe(true);
+      expect(s.objective).toBeCloseTo(best, 6);
+    }
+  });
+
   it('handles 8 circuits exactly and > 8 with the greedy fallback', () => {
     const r = rng(7);
     const mk = (n: number) => Array.from({ length: n }, (_, i) => circuit(`C${i}`, i + 1, 200 + r() * 200, 800 + r() * 1600, 2, 14));
@@ -125,5 +167,11 @@ describe('fleet optimiser', () => {
     expect(o.solution.trucks).toBeLessThanOrEqual(12);
     expect(o.solution.objective).toBeGreaterThanOrEqual(o.current.objective - 1e-6);
     expect(o.crewExact).toBeGreaterThan(0);
+    // bulk push (R7, P4) is a sheddable task: at 34 crew the optimum keeps every circuit and sheds push dozers or trucks
+    const o34 = optimiseFleet(s, res, { crewAvailable: 34, computeManning, evalCircuit: (c, opts) => computeCircuit(s, c, opts) });
+    expect(o34.taskRows.map(t => t.rule.id)).toEqual(['R7_BULK_PUSH']);
+    expect(o34.solution.feasible).toBe(true);
+    expect(o34.crewExact).toBeLessThanOrEqual(34);
+    expect(o34.solution.objective).toBeGreaterThanOrEqual(o34.current.objective - 1e-6);
   });
 });

@@ -38,6 +38,7 @@ export function InsightsPanel() {
   const [optOn, setOptOn] = useState(false);
   const [mode, setMode] = useState<WeightMode>('weighted');
   const [keep, setKeep] = useState(true);
+  const [locks, setLocks] = useState<string[]>([]);
   const shift = s.crew.shifts.find(x => x.id === s.crew.activeShiftId);
   const crewAvailable = shift?.available ?? manning.total;
 
@@ -58,9 +59,9 @@ export function InsightsPanel() {
   const opt = useMemo(() => {
     if (!optOn) return null;
     try {
-      return optimiseFleet(s, results, { crewAvailable, mode, keepDeliberate: keep, computeManning, evalCircuit: (c, o) => computeCircuit(s, c, o) });
+      return optimiseFleet(s, results, { crewAvailable, mode, keepDeliberate: keep, lockedIds: locks, computeManning, evalCircuit: (c, o) => computeCircuit(s, c, o) });
     } catch (e) { console.error(e); return null; }
-  }, [optOn, s, results, crewAvailable, mode, keep]);
+  }, [optOn, s, results, crewAvailable, mode, keep, locks]);
 
   const counts = useMemo(() => {
     const c: Record<Severity, number> = { critical: 0, warning: 0, opportunity: 0, info: 0 };
@@ -125,7 +126,8 @@ export function InsightsPanel() {
           </div>
           <div className={css.optMeta}>
             Maximises Σ {mode === 'weighted' ? 'priority weight × ' : ''}bcm/day within {opt.problem.trucksAvailable} trucks and {opt.problem.crewAvailable} crew
-            {mode === 'weighted' && <> ({opt.rows.map((r, i) => `P${i + 1} ×${num(opt.solution.weights[i], 2)}`).join(', ')})</>}.
+            {mode === 'weighted' && <> (weight ×0.85 per priority step: {opt.rows.map((r, i) => `${r.circuit.loaderUnitId} ×${num(opt.solution.weights[i], 2)}`).concat(opt.taskRows.map((t, i) => `${t.rule.name.split(' ')[0].toLowerCase()} ×${num(opt.solution.taskWeights[i], 2)}`)).join(', ')})</>}.
+            {' '}Site tasks with a priority are sheddable.
             {' '}{opt.solution.method === 'branch-and-bound' ? `Branch-and-bound, ${num(opt.solution.nodes, 0)} nodes - provably optimal.` : 'Greedy by bcm per operator (more than 8 circuits).'}
           </div>
           <div className={css.optCtl}>
@@ -135,11 +137,29 @@ export function InsightsPanel() {
           {gainRows.map(r => {
             const d = r.proposed - r.current;
             const db = r.bcmNew - r.bcmNow;
+            const pinned = locks.includes(r.circuit.id);
             return (
               <div key={r.circuit.id} className={css.optRow} title={`${r.circuit.name}: crew ${r.crewNow} → ${r.crewNew}`}>
                 <Dot color={r.circuit.color} />
-                <span className={css.optName}>P{r.circuit.priority} {r.circuit.loaderUnitId}{r.locked && <Icon name="lock" size={12} style={{ display: 'inline', marginLeft: 5, verticalAlign: '-1px', color: 'var(--ink-3)' }} />}</span>
+                <span className={css.optName}>P{r.circuit.priority} {r.circuit.loaderUnitId}
+                  <button type="button" className={css.lockBtn} aria-pressed={r.locked} title={r.locked ? (pinned ? 'Unpin - let the optimiser move it' : 'Kept: marked deliberate') : 'Pin at current trucks and re-optimise'}
+                    onClick={() => setLocks(pinned ? locks.filter(x => x !== r.circuit.id) : [...locks, r.circuit.id])} disabled={r.locked && !pinned}>
+                    <Icon name={r.locked ? 'lock' : 'unlock'} size={13} />
+                  </button>
+                </span>
                 <span className={css.optNum}>{r.current} → <b style={{ color: d > 0 ? 'var(--ok-ink)' : d < 0 ? 'var(--bad-ink)' : undefined }}>{r.proposed}</b></span>
+                <span className={css.optNum} style={{ color: db > 0.5 ? 'var(--ok-ink)' : db < -0.5 ? 'var(--bad-ink)' : 'var(--ink-3)' }}>{Math.abs(db) < 0.5 ? '–' : `${db > 0 ? '+' : '−'}${kb(Math.abs(db))}`}</span>
+              </div>
+            );
+          })}
+          {opt.taskRows.map(t => {
+            const d = t.proposed - t.current;
+            const db = t.bcmNew - t.bcmNow;
+            return (
+              <div key={t.rule.id} className={css.optRow} title={`Site task (P${t.rule.priority}) - people`}>
+                <Dot color="var(--c7)" />
+                <span className={css.optName}>P{t.rule.priority} {t.rule.name} <span style={{ color: 'var(--ink-3)' }}>ppl</span></span>
+                <span className={css.optNum}>{t.current} → <b style={{ color: d > 0 ? 'var(--ok-ink)' : d < 0 ? 'var(--bad-ink)' : undefined }}>{t.proposed}</b></span>
                 <span className={css.optNum} style={{ color: db > 0.5 ? 'var(--ok-ink)' : db < -0.5 ? 'var(--bad-ink)' : 'var(--ink-3)' }}>{Math.abs(db) < 0.5 ? '–' : `${db > 0 ? '+' : '−'}${kb(Math.abs(db))}`}</span>
               </div>
             );

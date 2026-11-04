@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { TruckModel } from '@/core/types';
-import { balanceForForce, balanceOnGrade, curveForce, effGradeForce, gradeability, resistanceKN, supSpeed, gearAt, tableSpeed, range, type TruckX } from './physics';
+import { curveForce, effGradeForce, gradeability, resistanceKN, supSpeed, gearAt, tableSpeed, range, type TruckX } from './physics';
+import { balanceAt, limitShort } from './model';
 import { forceDomain, speedDomain, speedAxisMax } from './domains';
 
 const env: [number, number][] = [[0, 800], [5, 600], [10, 400], [20, 200], [40, 100], [40.2, 0]];
@@ -33,37 +34,27 @@ describe('resistance and balance speed', () => {
     expect(effGradeForce(250, 10)).toBeCloseTo(245.25, 6);
     expect(gradeability(245.25, 250)).toBeCloseTo(10, 9);
   });
-  it('is monotone: steeper uphill is never faster', () => {
+  it('engine balance speed is monotone: steeper uphill is never faster', () => {
     let last = Infinity;
     for (const g of range(0, 0.16, 0.01)) {
-      const b = balanceOnGrade(truck, 250, g, 2);
+      const b = balanceAt(truck, 250, g);
       expect(b.kmh).toBeLessThanOrEqual(last + 1e-9);
       last = b.kmh;
     }
   });
-  it('caps at top speed / speed limit and reports the binding constraint', () => {
-    expect(balanceForForce(truck, 1).limit).toBe('top-speed');
-    expect(balanceForForce(truck, 1, 30).limit).toBe('speed-limit');
-    expect(balanceForForce(truck, 1, 30).kmh).toBe(30);
-    expect(balanceForForce(truck, 400).limit).toBe('rimpull');
-    expect(balanceForForce(truck, 2000).limit).toBe('stall');
+  it('engine balance caps at top speed / speed limit and reports the binding constraint', () => {
+    expect(balanceAt(truck, 250, 0.0001).limit).toBe('top-speed');
+    expect(balanceAt(truck, 250, 0.0001, 30).limit).toBe('speed-limit');
+    expect(balanceAt(truck, 250, 0.0001, 30).kmh).toBe(30);
+    expect(balanceAt(truck, 250, 0.163).limit).toBe('rimpull');
+    expect(balanceAt(truck, 250, -0.143).mode).toBe('retard');
+    expect(balanceAt(truck, 250, -0.143).limit).toBe('retarder');
   });
-  it('limits descents by the retarder (continuous rule without gear curves)', () => {
-    const b = balanceForForce(truck, -350);
-    expect(b.mode).toBe('retard');
-    expect(b.limit).toBe('retarder');
-    expect(b.kmh).toBeCloseTo(20, 0);
-  });
-  it('uses the highest sustainable gear for the discrete (Cat ARC) rule', () => {
-    const t: TruckX = { ...truck, descentRule: 'discrete_gear', retarderGears: [
-      { gear: 1, maxKmh: 10, points: [[5, 900], [10, 700]] },
-      { gear: 2, maxKmh: 20, points: [[10, 700], [20, 350]] },
-      { gear: 3, maxKmh: 40, points: [[20, 350], [40, 175]] },
-    ] };
-    const b = balanceForForce(t, -500);
-    expect(b.gear).toBe(1);
-    expect(b.kmh).toBe(10);
-    expect(balanceForForce(t, -300).kmh).toBe(20);
+  it('shortens binding labels', () => {
+    expect(limitShort({ limit: 'rimpull', binding: 'governor_g1', gear: 1 })).toBe('gov. G1');
+    expect(limitShort({ limit: 'rimpull', binding: 'rimpull_g3', gear: 3 })).toBe('G3');
+    expect(limitShort({ limit: 'retarder', binding: 'retarder_g2', gear: 2 })).toBe('ret G2');
+    expect(limitShort({ limit: 'top-speed', binding: 'top-speed' })).toBe('top');
   });
   it('picks the gear with most force at a speed', () => {
     const gears = [{ gear: 1, maxKmh: 12, points: [[0, 800], [12, 400]] as [number, number][] }, { gear: 2, maxKmh: 20, points: [[10, 300], [20, 200]] as [number, number][] }];

@@ -34,6 +34,9 @@ interface Entry {
   pinStart: HTMLDivElement;
   pinEnd: HTMLDivElement;
   pinText: string;
+  /** The end sits on a dig / dump block the scene core already labels. */
+  startLinked: boolean;
+  endLinked: boolean;
 }
 
 const frameKey = (f: Frame) => `${f.origin[0]},${f.origin[1]},${f.origin[2]},${f.vx}`;
@@ -142,13 +145,17 @@ export const stringsModule: SceneModule = (ctx: SceneContext) => {
         group.name = `string:${hs.name}`;
         group.add(glow, ghost, road);
         ctx.layers.strings.add(group);
-        e = { id: hs.id, hs, pts, path, scene, color, key, group, road, glow, ghost, mats, pinStart: makePin('start'), pinEnd: makePin('end'), pinText: '' };
+        e = { id: hs.id, hs, pts, path, scene, color, key, group, road, glow, ghost, mats, pinStart: makePin('start'), pinEnd: makePin('end'), pinText: '', startLinked: false, endLinked: false };
         entries.set(hs.id, e);
       } else {
         e.road.geometry.dispose();
         e.road.geometry = geo; e.glow.geometry = geo; e.ghost.geometry = geo;
         Object.assign(e, { hs, pts, path, scene, color, key });
       }
+      const circ = circuitOfString(s.scenario, hs.id);
+      const linked = (id: Id | undefined) => !!id && s.scenario.assets.some(a => a.id === id && a.visible !== false);
+      e.startLinked = linked(hs.digId ?? circ?.digId);
+      e.endLinked = linked(hs.dumpId ?? circ?.dumpId);
       const names = endNames(s.scenario, hs);
       const text = `${names.start.join('|')}|${names.end.join('|')}|${color}`;
       if (text !== e.pinText) {
@@ -278,8 +285,12 @@ export const stringsModule: SceneModule = (ctx: SceneContext) => {
     // strings hauled by a circuit first, so a shared dig / dump shows that circuit's pin
     const ordered = [...entries.values()].sort((a, b) => Number(!!circuitOfString(s.scenario, b.id)) - Number(!!circuitOfString(s.scenario, a.id)));
     for (const e of ordered) {
-      placePin(e.pinStart, P, e, 0, labelsOn);
-      placePin(e.pinEnd, P, e, e.path.n - 1, labelsOn);
+      // ends on a labelled block: the core's block label already names it - show ours only for the focused string,
+      // lifted above that label; free ends (drawn strings) always carry their pin
+      const focus = (s.selection.kind === 'string' && s.selection.id === e.id) || (s.hover.kind === 'string' && s.hover.id === e.id);
+      placePin(e.pinStart, P, e, 0, labelsOn && (!e.startLinked || focus), e.startLinked ? 46 : 16);
+      placePin(e.pinEnd, P, e, e.path.n - 1, labelsOn && (!e.endLinked || focus), e.endLinked ? 46 : 16);
+      drawEnds(g, P, e);
       drawStops(g, P, e);
     }
     const sel = s.selection;
@@ -296,17 +307,41 @@ export const stringsModule: SceneModule = (ctx: SceneContext) => {
       const e = entries.get(sel.id);
       if (e) drawHandles(g, P, e, sel.pointIndex, s.tool === 'edit');
     }
+    // a hovered vertex (from the 3D view, the point table or the profile strip): HRL halo ring, any string
+    const hv = s.hover;
+    if (hv.kind === 'string' && hv.pointIndex !== undefined && !(sel.kind === 'string' && sel.id === hv.id)) {
+      const e = entries.get(hv.id);
+      const p = e?.pts[hv.pointIndex];
+      if (p) {
+        const sp = worldToScene(ctx.frame(), p.e, p.n, p.z);
+        if (P.project(sp[0], sp[1], sp[2], tmpB)) drawHandle(g, tmpB[0], tmpB[1], 4.5, { hover: true });
+      }
+    }
     drawTip(s, P, w, h);
   });
 
   const placed: [number, number][] = [];
-  function placePin(pin: HTMLDivElement, P: Projector, e: Entry, i: number, on: boolean) {
+  function placePin(pin: HTMLDivElement, P: Projector, e: Entry, i: number, on: boolean, leader = 16) {
     const ok = on && P.project(e.scene[3 * i], e.scene[3 * i + 1], e.scene[3 * i + 2], tmp);
     if (!ok || tmp[0] < -50 || tmp[1] < -50 || tmp[0] > P.w + 50 || tmp[1] > P.h + 80) { pin.style.display = 'none'; return; }
     if (placed.some(([x, y]) => Math.abs(x - tmp[0]) < 14 && Math.abs(y - tmp[1]) < 14)) { pin.style.display = 'none'; return; }
     placed.push([tmp[0], tmp[1]]);
+    const ld = pin.querySelector(`.${css.pinLeader}`) as HTMLElement;
+    if (ld.dataset.h !== String(leader)) { ld.style.height = `${leader}px`; ld.dataset.h = String(leader); }
     pin.style.display = '';
     pin.style.transform = `translate(${tmp[0].toFixed(1)}px, ${(tmp[1] + 5).toFixed(1)}px) translate(-50%, -100%)`;
+  }
+
+  /** Leader dots at the string's ends (dig: filled, dump: ring) - always, so a pin-less end still reads. */
+  function drawEnds(g: CanvasRenderingContext2D, P: Projector, e: Entry) {
+    for (const [i, dump] of [[0, false], [e.path.n - 1, true]] as [number, boolean][]) {
+      if (!P.project(e.scene[3 * i], e.scene[3 * i + 1], e.scene[3 * i + 2], tmp)) continue;
+      g.save();
+      g.beginPath(); g.arc(tmp[0], tmp[1], 4.5, 0, Math.PI * 2);
+      g.fillStyle = dump ? '#ffffff' : '#1F2329'; g.fill();
+      g.lineWidth = dump ? 2.5 : 2; g.strokeStyle = dump ? '#1F2329' : '#ffffff'; g.stroke();
+      g.restore();
+    }
   }
 
   function drawStops(g: CanvasRenderingContext2D, P: Projector, e: Entry) {

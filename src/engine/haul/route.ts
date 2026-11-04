@@ -63,6 +63,14 @@ export function buildRoute(hs: HaulString | undefined, p: Pick<CircuitParams, 'r
       return out;
     }
   }
+  // the workbook's blank-row bug: a point at the grid origin among real site coordinates
+  const far = pts.filter(q => Math.abs(q.e) + Math.abs(q.n) > 1000).length;
+  const origin = pts.findIndex(q => q.e === 0 && q.n === 0);
+  if (origin >= 0 && far >= pts.length / 2) {
+    out.error = `Point ${origin + 1} of "${hs.name}" is at the grid origin (0, 0) while the rest are site coordinates: a blank row? `
+      + `(the workbook would measure a phantom segment from (0,0,0)).`;
+    return out;
+  }
   let chain = 0;
   const lens: number[] = [];
   for (let k = 0; k + 1 < pts.length; k++) {

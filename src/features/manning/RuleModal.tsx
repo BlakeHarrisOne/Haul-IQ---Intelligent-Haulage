@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { CrewRole, CrewRule, LoaderType, RuleScope, Scenario } from '@/core/types';
 import { Button, Field, Icon, Modal, NumberField, Select, TextField, cx } from '@/ui';
 import { ROLE_META, ROLE_ORDER } from './roles';
-import { SCOPE_META, cleanCondition, describeRule } from './rules';
+import { SCOPE_META, cleanCondition, describeRule, type Rule } from './rules';
 import css from './manning.module.css';
 
 function ChipSet<T extends string>({ all, value, onChange, label }: { all: { id: T; label: string }[]; value: T[] | undefined; onChange: (v: T[]) => void; label?: (id: T) => string }) {
@@ -24,19 +24,33 @@ function ChipSet<T extends string>({ all, value, onChange, label }: { all: { id:
 export function RuleModal({ open, rule, scenario, onClose, onSave, isNew }: {
   open: boolean; rule: CrewRule | null; scenario: Scenario; onClose: () => void; onSave: (r: CrewRule) => void; isNew?: boolean;
 }) {
-  const [d, setD] = useState<CrewRule | null>(rule);
+  const [d, setD] = useState<Rule | null>(rule as Rule | null);
   const [tags, setTags] = useState('');
-  useEffect(() => { setD(rule); setTags(rule?.when?.tags?.join(', ') ?? ''); }, [rule, open]);
-  const ctx = useMemo(() => ({ materials: scenario.materials }), [scenario.materials]);
+  const [params, setParams] = useState('');
+  useEffect(() => {
+    setD(rule as Rule | null);
+    setTags(rule?.when?.tags?.join(', ') ?? '');
+    setParams(Object.entries((rule as Rule | null)?.params ?? {}).map(([k, v]) => `${k} = ${v}`).join(', '));
+  }, [rule, open]);
+  const ctx = useMemo(() => ({ materials: scenario.materials, rules: scenario.crew.rules }), [scenario.materials, scenario.crew.rules]);
   if (!open || !d) return null;
-  const set = (p: Partial<CrewRule>) => setD({ ...d, ...p });
+  const set = (p: Partial<Rule>) => setD({ ...d, ...p });
+  const parseParams = (txt: string) => {
+    const out: Record<string, number> = {};
+    for (const part of txt.split(',')) {
+      const m = /^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(-?[0-9.]+)\s*$/.exec(part);
+      if (m) out[m[1]] = Number(m[2]);
+    }
+    return Object.keys(out).length ? out : undefined;
+  };
   const when = (p: Partial<NonNullable<CrewRule['when']>>) => setD({ ...d, when: { ...d.when, ...p } });
-  const sentence = describeRule({ ...d, when: cleanCondition(d.when) }, ctx);
+  const sentence = describeRule({ ...d, when: cleanCondition(d.when), params: parseParams(params) } as Rule, ctx);
   const loaderUnits = scenario.fleet.units.filter(u => u.kind === 'loader').map(u => ({ id: u.id, label: u.id }));
   const allTags = [...new Set(scenario.circuits.flatMap(c => c.tags ?? []))];
   const save = () => {
     const t = tags.split(',').map(x => x.trim()).filter(Boolean);
-    onSave({ ...d, name: d.name.trim() || 'Untitled rule', when: cleanCondition({ ...d.when, tags: t }) });
+    onSave({ ...d, name: d.name.trim() || 'Untitled rule', when: cleanCondition({ ...d.when, tags: t }), params: parseParams(params),
+      expr: d.expr?.trim() || undefined, whenExpr: d.whenExpr?.trim() || undefined } as Rule);
   };
   const scopeUsesCondition = d.scope !== 'site' || !!d.when;
   return (
@@ -75,6 +89,22 @@ export function RuleModal({ open, rule, scenario, onClose, onSave, isNew }: {
             <TextField value={tags} onChange={setTags} placeholder="e.g. coal, prestrip" />
           </Field>
         </>}
+        <div className={css.span2} style={{ font: '650 12px/16px var(--font)', letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--ink-2)', marginTop: 4 }}>Derived count &amp; task priority (optional)</div>
+        <Field label="Count expression" hint="Replaces “people each time”, e.g. params.pushFleet − params.enabling − max(0, totals.trucks − params.maxTrucks)" style={{ gridColumn: '1 / -1' }}>
+          <TextField value={d.expr ?? ''} onChange={v => set({ expr: v || undefined })} placeholder="leave empty to use the fixed count" />
+        </Field>
+        <Field label="Extra condition" hint="Fires only when true, e.g. roles.pushDozer > 0">
+          <TextField value={d.whenExpr ?? ''} onChange={v => set({ whenExpr: v || undefined })} placeholder="e.g. totals.trucks >= 10" />
+        </Field>
+        <Field label="Parameters" hint="name = value, comma separated">
+          <TextField value={params} onChange={setParams} placeholder="pushFleet = 7, enabling = 1" />
+        </Field>
+        <Field label="Task priority" hint={d.scope === 'site' ? 'Site tasks with a priority are shed like circuits when crew is short' : 'Site-wide rules only'}>
+          <NumberField value={d.priority ?? null} onChange={v => set({ priority: Math.max(1, Math.round(v)) })} onClear={() => set({ priority: undefined })} dp={0} min={1} placeholder="not a task" disabled={d.scope !== 'site'} />
+        </Field>
+        <Field label="Production per person" hint="For lost-production reporting when the task is shed">
+          <NumberField value={d.bcmPerUnitDay ?? null} onChange={v => set({ bcmPerUnitDay: Math.max(0, v) })} onClear={() => set({ bcmPerUnitDay: undefined })} dp={0} min={0} unit="bcm/day" placeholder="—" disabled={d.scope !== 'site'} />
+        </Field>
         <Field label="Note" style={{ gridColumn: '1 / -1' }}>
           <textarea className={css.textarea} value={d.note ?? ''} onChange={e => set({ note: e.target.value || undefined })} placeholder="Why the rule exists (shown under the sentence)" />
         </Field>

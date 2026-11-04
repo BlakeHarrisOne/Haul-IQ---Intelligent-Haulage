@@ -9,7 +9,9 @@ import { num } from '@/core/format';
 import { AxisX, GridY, chartText, linePath, linear } from '@/ui';
 import { useWidth } from '@/features/assumptions/shared/useWidth';
 import { excelRound } from '@/features/assumptions/shared/excel';
-import { balanceOnGrade, range, tableSpeed, type Balance, type TruckX } from './physics';
+import { range, tableSpeed, type TruckX } from './physics';
+import { speedRows, limitShort } from './model';
+import type { DerivedSpeedRow } from '@/engine';
 import { speedAxisMax } from './domains';
 import type { SeriesTruck } from './RimpullChart';
 import c from './curves.module.css';
@@ -17,7 +19,7 @@ import c from './curves.module.css';
 const GMAX = 20; // % shown either side (table covers ±16 %)
 const GRADES = range(-GMAX / 100, GMAX / 100, 0.0025);
 
-interface Panel { dir: 'loaded' | 'empty'; mass: (t: TruckX) => number; table?: GradeSpeedPoint[] }
+interface Panel { dir: 'loaded' | 'empty'; mass: (t: TruckX) => number; payload: (t: TruckX) => number; table?: GradeSpeedPoint[] }
 
 export interface Verdict { optimistic: [number, number][]; pessimistic: [number, number][] }
 
@@ -47,7 +49,7 @@ function PanelChart({ p, series, rr, limit, W, hoverG, setHoverG }: {
 }) {
   const H = 300, L = 46, R = 14, T = 16, B = 46;
   const prim = series[0];
-  const data = useMemo(() => series.map(s => GRADES.map(g => ({ g, b: balanceOnGrade(s.t, p.mass(s.t), g, rr, limit) }))), [series, p, rr, limit]);
+  const data = useMemo(() => series.map(s => speedRows(s.t, p.dir === 'loaded', rr, p.payload(s.t), GRADES, limit).map(row => ({ g: row.grade, b: row }))), [series, p, rr, limit]);
   const sheetAt = (g: number) => tableSpeed(p.table, excelRound(g, 2));
   const ymax = speedAxisMax([...data.flat().map(d => d.b.kmh), ...(p.table ?? []).map(q => q[1])]);
   const x = linear([-GMAX, GMAX], [L, W - R]);
@@ -119,7 +121,7 @@ function PanelChart({ p, series, rr, limit, W, hoverG, setHoverG }: {
   );
 }
 
-const limTxt = (b: Balance) => (b.limit === 'rimpull' ? `rimpull${b.gear ? ` G${b.gear}` : ''}` : b.limit === 'retarder' ? `retarder${b.gear ? ` G${b.gear}` : ''}` : b.limit === 'top-speed' ? 'top speed' : b.limit === 'speed-limit' ? 'speed limit' : b.limit);
+const limTxt = (b: DerivedSpeedRow) => limitShort(b);
 
 function TipRow({ k, v, color }: { k: string; v: string; color: string }) {
   return <div className={c.tipRow}><span className={c.tipKey} style={{ background: color }} /><span>{k}</span><b>{v}</b></div>;
@@ -132,11 +134,12 @@ export function SpeedGradePanels({ series, rr, payloadT, limit }: { series: Seri
   const W = two ? Math.floor((W0 - 20) / 2) : W0;
   const prim = series[0].t;
   const panels: Panel[] = useMemo(() => [
-    { dir: 'loaded', mass: t => t.emptyMassT + payloadT(t), table: prim.spreadsheetSpeeds?.loaded },
-    { dir: 'empty', mass: t => t.emptyMassT, table: prim.spreadsheetSpeeds?.empty },
+    { dir: 'loaded', mass: t => t.emptyMassT + payloadT(t), payload: t => payloadT(t), table: prim.spreadsheetSpeeds?.loaded },
+    { dir: 'empty', mass: t => t.emptyMassT, payload: () => 0, table: prim.spreadsheetSpeeds?.empty },
   ], [prim, payloadT]);
   const verdicts = useMemo(() => panels.map(p => {
-    const rows = range(-0.16, 0.16, 0.01).map(g => ({ g: Math.round(g * 100), sheet: tableSpeed(p.table, excelRound(g, 2)), phys: balanceOnGrade(prim, p.mass(prim), g, rr, limit).kmh }));
+    const rows = speedRows(prim, p.dir === 'loaded', rr, p.payload(prim), range(-0.16, 0.16, 0.01), limit)
+      .map(r => ({ g: Math.round(r.grade * 100), sheet: tableSpeed(p.table, excelRound(r.grade, 2)), phys: r.kmh }));
     return verdictRanges(rows);
   }), [panels, prim, rr, limit]);
   return (

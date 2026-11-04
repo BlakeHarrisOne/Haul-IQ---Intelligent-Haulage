@@ -12,14 +12,14 @@ import type { SceneContext, SceneModule } from '../context';
 import type { Circuit, CircuitResult, Id, Scenario, TruckModel } from '@/core/types';
 import { useApp, type AppState } from '@/state/store';
 import { resultsFor } from '@/state/derived';
-import * as engine from '@/engine';
+import { truckStatesAt } from '@/engine';
 import { worldToScene } from '@/core/frame';
 import { busOf, type TruckInfo, type TruckPhase } from '../strings/bus';
 import { buildPath, legAt, legGrade, sampleAt, type PathTable } from '../strings/path';
 import { makeProjector } from '../strings/screen';
 import { ACCENT, literalColor, materialColor } from '../strings/palette';
 import css from '../strings/ui.module.css';
-import { buildPlan, truckStateAt, type CircuitPlan, type TruckSimState } from './sim';
+import { buildPlan, presentEngineState, truckStateAt, type CircuitPlan, type EngineTruckState, type TruckSimState } from './sim';
 import { poseOnPath, wrapAngle, type Pose } from './pose';
 import { buildTruck, type TruckGeoms } from './vehicle';
 import { machineMaterial } from './kit';
@@ -55,6 +55,8 @@ interface CircuitRt {
   matName: string;
   stops: number[];
   states: TruckSimState[];
+  /** Shift-event pause label per truck (engine), e.g. 'Crib'. */
+  pause: (string | undefined)[];
   poses: Pose[];
   scales: number[];
 }
@@ -80,7 +82,6 @@ export const PHASE_COLOR: Record<TruckPhase, string> = {
   queue: '#B8692E', spot: '#7B5EA7', load: '#3E8A5A', haul: '#0A6FE6', dump: '#A88A1E', return: '#1F8A8A', parked: '#8E949C',
 };
 
-type EngineStates = (s: Scenario, r: Record<Id, CircuitResult>, circuitId: Id, tMin: number) => unknown;
 
 const M = new THREE.Matrix4(), MT = new THREE.Matrix4(), TRAY = new THREE.Matrix4(), MW = new THREE.Matrix4(), MX = new THREE.Matrix4();
 const Q = new THREE.Quaternion(), EUL = new THREE.Euler(0, 0, 0, 'YZX'), V = new THREE.Vector3(), S = new THREE.Vector3();
@@ -99,6 +100,7 @@ export const actorsModule: SceneModule = (ctx: SceneContext) => {
   let builtFrame = '';
   let lastFollow: TruckInfo | null = null;
   let followKey = '';
+  let engineWarned = false;
   const st = () => useApp.getState();
 
   // label DOM: selected truck card
@@ -194,7 +196,7 @@ export const actorsModule: SceneModule = (ctx: SceneContext) => {
       next.push({
         circuit: c, result, plan, path, model, res, units,
         matColor: new THREE.Color(materialColor(s, c.materialId)), bodyColor: new THREE.Color(literalColor(model.color || '#E3A21B')),
-        matName: mat?.name ?? c.materialId, stops: stops.map(x => x.s), states: [], poses: [], scales: [],
+        matName: mat?.name ?? c.materialId, stops: stops.map(x => x.s), states: [], pause: [], poses: [], scales: [],
       });
     }
     circuits = next;
@@ -250,43 +252,28 @@ export const actorsModule: SceneModule = (ctx: SceneContext) => {
     (root.userData as Record<string, unknown>).truckYaw = truckYaw;
   }
 
-  // ── truck states (engine shift simulation when available, else the interim model) ─────
-  const engineStates = (engine as unknown as { truckStatesAt?: EngineStates }).truckStatesAt;
-
+  // ── truck states: the engine's deterministic shift simulation (truckStatesAt) drives phase / chainage / speed / load;
+  //    sim.ts adds the presentation. Falls back to the interim model when the engine has no states for a circuit.
   function statesFor(c: CircuitRt, tMin: number) {
     c.states.length = 0;
-    for (let k = 0; k < c.plan.N; k++) c.states.push(truckStateAt(c.plan, k, tMin));
-    if (engineStates) adaptEngine(c, tMin);
-  }
-
-  /** Overlay the engine's phase / chainage / speed / loaded on the presentation states (defensive field mapping). */
-  function adaptEngine(c: CircuitRt, tMin: number) {
-    let raw: unknown;
-    try { raw = engineStates!(st().scenario, resultsFor(st().scenario), c.circuit.id, tMin); } catch { return; }
-    const arr = Array.isArray(raw) ? raw : (raw as { trucks?: unknown[] } | null)?.trucks;
-    if (!Array.isArray(arr)) return;
-    const scale = c.result.lengthM > 0 ? c.path.length / c.result.lengthM : 1;
-    arr.forEach((o, i) => {
-      const r = o as Record<string, unknown>;
-      const k = typeof r.truckIndex === 'number' ? r.truckIndex : i;
-      const s0 = c.states[k];
-      if (!s0) return;
-      const ph = r.phase as TruckPhase | undefined;
-      const ch = (r.chainageM ?? r.chainage ?? r.s) as number | undefined;
-      if (ph && ph in PHASE_LABEL) {
-        if (ph !== s0.phase) {
-          // the engine's phase wins; recompute presentation for travel phases from its chainage
-          s0.phase = ph;
-          s0.loaded = ph === 'haul' || ph === 'dump';
-          s0.fill = s0.loaded ? 1 : 0;
-          s0.tray = 0;
-          s0.rev = ph === 'return' || ph === 'queue' ? 1 : 0;
-        }
+    let es: EngineTruckState[] = [];
+    try {
+      const s = st().scenario;
+      es = truckStatesAt(s, resultsFor(s), c.circuit.id, tMin) as EngineTruckState[];
+    } catch (err) {
+      if (!engineWarned) { console.warn('truckStatesAt failed, using the interim truck model', err); engineWarned = true; }
+    }
+    if (es.length) {
+      const scale = c.result.lengthM > 0 ? c.path.length / c.result.lengthM : 1;
+      es.sort((a, b) => a.truckIndex - b.truckIndex);
+      for (const e of es) {
+        c.states.push(presentEngineState(e, tMin, c.path.length, scale, c.plan));
+        if (e.unitId) c.units[e.truckIndex] = e.unitId;
+        c.pause[c.states.length - 1] = e.paused ? e.pauseLabel ?? 'Paused' : undefined;
       }
-      if (typeof ch === 'number' && (s0.phase === 'haul' || s0.phase === 'return')) s0.s = ch * scale;
-      if (typeof r.speedKmh === 'number') s0.speedKmh = r.speedKmh;
-      if (typeof r.loaded === 'boolean') s0.loaded = r.loaded;
-    });
+      return;
+    }
+    for (let k = 0; k < c.plan.N; k++) { c.states.push(truckStateAt(c.plan, k, tMin)); c.pause[k] = undefined; }
   }
 
   // ── per-frame update ───────────────────────────────────────────────────────────────
@@ -318,12 +305,12 @@ export const actorsModule: SceneModule = (ctx: SceneContext) => {
         const pose = poseOnPath(c.path, ts.s, ts.rev, ts.lateral, g.wheelbase, f.vx);
         c.poses.push(pose);
         const sp = worldToScene(f, pose.e, pose.n, pose.z);
-        // keep far trucks readable: never shorter than ~18 px on screen (not the followed truck, not in POV/chase)
+        // keep far trucks readable: never shorter than ~22 px on screen (not the followed truck, not in POV/chase)
         let scale = 1;
         const followed = followSel && followSel.c === c && followSel.k === k;
         if (!followed && (s.camera === 'orbit' || s.camera === 'plan') && P.project(sp[0], sp[1], sp[2], tmp)) {
           const mpp = P.mppAt(tmp[2]);
-          scale = Math.min(3.5, Math.max(1, (18 * mpp) / g.L));
+          scale = Math.min(5, Math.max(1, (22 * mpp) / g.L));
         }
         c.scales.push(scale);
         // in POV the driver sits inside the followed truck: the cockpit overlay draws it, the 3D model is hidden
@@ -388,7 +375,7 @@ export const actorsModule: SceneModule = (ctx: SceneContext) => {
     for (const l of loaders) {
       const c = l.circuit;
       let loading = -1;
-      for (let k = 0; k < c.states.length; k++) if (c.states[k].phase === 'load') { loading = k; break; }
+      for (let k = 0; k < c.states.length; k++) if (c.states[k].phase === 'load' && !c.pause[k]) { loading = k; break; }
       const truckYaw = ((l.ex ?? l.wl)!.root.userData as { truckYaw: number }).truckYaw;
       if (l.ex) {
         if (loading >= 0) {
@@ -464,7 +451,7 @@ export const actorsModule: SceneModule = (ctx: SceneContext) => {
       circuitId: c.circuit.id, truckIndex: k, unitId: c.units[k] ?? `T${k + 1}`, phase: ts.phase, speedKmh: ts.speedKmh, loaded: ts.loaded,
       chainage: ts.s, dir, phaseRemainS: ts.phaseRemainS, etaDumpS: ts.etaDumpS, grade: g,
       limit: seg ? (ts.loaded ? seg.limitLoaded : seg.limitEmpty) : undefined, pathLength: L, nextStopM: nextStop,
-      stringId: c.circuit.haulStringId, modelName: c.model.name, materialName: c.matName,
+      stringId: c.circuit.haulStringId, modelName: c.model.name, materialName: c.matName, pauseLabel: c.pause[k],
     };
   }
 
@@ -562,7 +549,7 @@ export const actorsModule: SceneModule = (ctx: SceneContext) => {
     const col = PHASE_COLOR[info.phase];
     const cycleFrac = (() => { const pl = c.plan; const tau = pl.effCycleS - info.etaDumpS; return Math.max(0, Math.min(1, ((tau % pl.effCycleS) + pl.effCycleS) % pl.effCycleS / pl.effCycleS)); })();
     return `<div class="${css.cardHead}"><span class="${css.cardTitle}">${info.unitId}</span><span class="${css.cardModel}">${info.modelName}</span></div>`
-      + `<div class="${css.phase}" style="color:${col};background:${col}1a"><i></i>${PHASE_LABEL[info.phase]}</div>`
+      + `<div class="${css.phase}" style="color:${col};background:${col}1a"><i></i>${PHASE_LABEL[info.phase]}${info.pauseLabel ? ` · ${info.pauseLabel}` : ''}</div>`
       + `<div class="${css.cardGrid}">`
       + `<span>Speed</span><b>${info.speedKmh.toFixed(0)} km/h</b>`
       + `<span>Load</span><b>${info.loaded ? `Loaded · ${info.materialName ?? ''}` : 'Empty'}</b>`

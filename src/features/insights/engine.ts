@@ -275,10 +275,11 @@ export function generateInsights(input: InsightInput): Insight[] {
     const hsId = c.haulStringId;
     if (drops.length && hsId) {
       const m = drops.reduce((acc, g) => acc + g.dist3dM, 0);
+      const dropsLive = c.params.speedModel === 'spreadsheet' && (c.params as { outOfRange?: string }).outOfRange !== 'clamp';
       push({
-        id: `drop-${c.id}`, kind: 'spreadsheet-drop', circuitId: c.id, severity: 'warning', impactBcmDay: 0,
+        id: `drop-${c.id}`, kind: 'spreadsheet-drop', circuitId: c.id, severity: dropsLive ? 'warning' : 'info', impactBcmDay: 0,
         headline: `Spreadsheet would drop ${drops.length} segment${drops.length > 1 ? 's' : ''} (${num(m, 1)} m) on ${short(c)}'s haul`,
-        detail: `|ROUND(grade, 2)| > ${Math.round(o.tableMaxGrade * 100)} % is outside the speed table: Excel times it as 0 s (quirk Q3). Physics mode times it properly.`,
+        detail: `|ROUND(grade, 2)| > ${Math.round(o.tableMaxGrade * 100)} % is outside the speed table: Excel times it as 0 s (quirk Q3). ${dropsLive ? 'This circuit uses that behaviour now - switch to clamp or rimpull mode.' : 'This circuit clamps or uses physics, so its times are complete.'}`,
         figures: [{ label: 'Segments', value: String(drops.length), tone: 'warn' }, { label: 'Length', value: `${num(m, 1)} m` },
           { label: 'Steepest', value: `${num(Math.max(...drops.map(g => Math.abs(g.grade))) * 100, 1)} %`, tone: 'bad' }],
         explain: drops.slice(0, 6).map(g => ({ label: `Seg ${g.i + 1} @ ch ${num(g.chainageM, 0)} m`, formula: `ROUND(${num(g.grade, 4)}, 2) = ${num(excelRound2(g.grade), 2)}`, value: `${num(g.dist3dM, 1)} m → 0 s` })),
@@ -380,13 +381,17 @@ export function generateInsights(input: InsightInput): Insight[] {
     const p = input.priority;
     if (m.surplus < 0) {
       const cut = p?.allocations.filter(x => x.status !== 'full').sort((x, y) => y.priority - x.priority) ?? [];
-      const lost = cut.reduce((acc, x) => acc + x.bcmDayLost, 0);
-      const cutTxt = cut.length
-        ? cut.map(x => {
+      const tasks = ((p as { tasks?: { ruleId: string; name: string; priority: number; requested: number; allocated: number; bcmDayLost: number }[] } | undefined)?.tasks ?? [])
+        .filter(t => t.allocated < t.requested);
+      const lost = cut.reduce((acc, x) => acc + x.bcmDayLost, 0) + tasks.reduce((acc, t) => acc + t.bcmDayLost, 0);
+      const parts = [
+        ...tasks.map(t => ({ prio: t.priority, txt: `${t.name} (P${t.priority}) ${t.requested} → ${t.allocated}` })),
+        ...cut.map(x => {
           const c = s.circuits.find(cc => cc.id === x.circuitId);
-          return `${c ? short(c) : x.circuitId} (P${x.priority}) ${x.status === 'parked' ? 'parked' : `cut to ${x.allocatedTrucks} truck${x.allocatedTrucks === 1 ? '' : 's'}`}`;
-        }).join(', ')
-        : 'the lowest-priority circuit gives first';
+          return { prio: x.priority, txt: `${c ? short(c) : x.circuitId} (P${x.priority}) ${x.status === 'parked' ? 'parked' : `cut to ${x.allocatedTrucks} truck${x.allocatedTrucks === 1 ? '' : 's'}`}` };
+        }),
+      ].sort((a, b) => b.prio - a.prio);
+      const cutTxt = parts.length ? parts.map(x => x.txt).join(', ') : 'the lowest-priority circuit gives first';
       push({
         id: 'crew-shortfall', kind: 'crew-shortfall', severity: 'critical', impactBcmDay: lost,
         headline: `Crew short by ${-m.surplus}${shift ? ` on ${shift.name}` : ''}: ${cutTxt}`,

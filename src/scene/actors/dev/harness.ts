@@ -258,7 +258,7 @@ export function startHarness(host: HTMLElement) {
     const anyAlive = [...alive].some(f => f()) || useApp.getState().camera === 'pov' || useApp.getState().camera === 'chase';
     if (!needs && !anyAlive) return;
     // headless screenshots (SwiftShader): throttle continuous rendering so captures are not starved
-    if (navigator.webdriver && !needs && now - last < 400) return;
+    if (navigator.webdriver && !needs && now - last < 2500) return;
     needs = false;
     const dt = Math.min(0.1, (now - last) / 1000);
     camDt = Math.min(1, (now - last) / 1000);

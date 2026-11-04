@@ -5,7 +5,7 @@ import { uid } from '@/core/ids';
 import { useApp } from '@/state/store';
 import { Badge, Button, Card, CardBody, CardHead, Ctl, Empty, Icon, MenuButton, Modal, Toggle, cx } from '@/ui';
 import { ROLE_META } from './roles';
-import { blankRule, describeRule, workbookRules } from './rules';
+import { asExt, blankRule, describeRule, workbookRules } from './rules';
 import { RuleModal } from './RuleModal';
 import css from './manning.module.css';
 import page from './page.module.css';
@@ -18,7 +18,7 @@ export function RuleSet({ scenario, manning }: { scenario: Scenario; manning: Ma
   const [confirmReset, setConfirmReset] = useState(false);
   const [drag, setDrag] = useState<number | null>(null);
   const [over, setOver] = useState<number | null>(null);
-  const ctx = useMemo(() => ({ materials: scenario.materials }), [scenario.materials]);
+  const ctx = useMemo(() => ({ materials: scenario.materials, rules: scenario.crew.rules }), [scenario.materials, scenario.crew.rules]);
 
   const fires = useMemo(() => {
     const f: Record<string, { n: number; people: number }> = {};
@@ -82,6 +82,7 @@ export function RuleSet({ scenario, manning }: { scenario: Scenario; manning: Ma
                   <div className={css.ruleMeta}>
                     <span style={{ fontWeight: 600, color: 'var(--ink-2)' }}>{r.name}</span>
                     <span className={page.chip}>{r.id}</span>
+                    {asExt(r).priority != null && <span className={page.chip} title="Prioritised site task - shed like a circuit when crew is short"><Icon name="priority" size={12} />Task P{asExt(r).priority}</span>}
                     {r.sheetRef && <span className={page.chip} title={r.sheetRef}><Icon name="table" size={12} />{r.sheetRef.replace('Targets & Haulage Priorities!', 'Targets!')}</span>}
                     {r.note && <span style={{ minWidth: 0 }}>{r.note}</span>}
                   </div>

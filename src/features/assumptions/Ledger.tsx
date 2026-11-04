@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import type { CalcGroup, CalcStep } from '@/core/types';
 import { num } from '@/core/format';
 import { Badge, Button, Card, CardHead, Icon, Tip, TextField, type IconName } from '@/ui';
@@ -95,12 +95,40 @@ function StepRow({ st, open, onToggle }: { st: CalcStep; open: boolean; onToggle
   );
 }
 
+/** Consecutive steps sharing one formula (per-segment repeats) → runs. */
+export function runsOf(items: CalcStep[]): CalcStep[][] {
+  const out: CalcStep[][] = [];
+  for (const st of items) {
+    const last = out[out.length - 1];
+    if (last && last[0].formula === st.formula && last[0].unit === st.unit) last.push(st);
+    else out.push([st]);
+  }
+  return out;
+}
+
+function RepeatRun({ steps, open, onToggle, renderStep }: { steps: CalcStep[]; open: boolean; onToggle: () => void; renderStep: (st: CalcStep) => ReactNode }) {
+  const total = steps.reduce((a, x) => a + (Number.isFinite(x.value) ? x.value : 0), 0);
+  const label = steps[0].label.replace(/\b\d+\b/, 'N');
+  return (
+    <>
+      <div className={s.step}>
+        <div className={s.stepLabel}><span>{steps.length} × {label}</span><span className={s.stepNote}>{steps.map(x => x.sheetRef).filter(Boolean).slice(0, 6).join(' · ')}{steps.length > 6 ? ' …' : ''}</span></div>
+        <div className={s.stepBody}><FormulaText text={steps[0].formula} /><div className={s.stepNote} style={{ marginTop: 3 }}>{open ? 'Each step listed below.' : 'Collapsed: identical formula, one row per segment.'}</div></div>
+        <div className={s.stepVal}><span className={s.stepNum}>{fmtStepValue(total, steps[0].unit)}</span>{steps[0].unit && <span className={s.stepUnit}>{steps[0].unit} Σ</span>}</div>
+        <div><button type="button" className={s.expBtn} aria-expanded={open} aria-label={`${open ? 'Hide' : 'Show'} ${steps.length} steps`} onClick={onToggle}><Icon name="right" size={16} /></button></div>
+      </div>
+      {open && steps.map(renderStep)}
+    </>
+  );
+}
+
 export function Ledger({ steps, reconstructed, warnings, title, sub, onExport }: {
   steps: CalcStep[]; reconstructed?: boolean; warnings: string[]; title: string; sub?: string; onExport: () => void;
 }) {
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [allOpen, setAllOpen] = useState(false);
   const [q, setQ] = useState('');
+  const [allWarn, setAllWarn] = useState(false);
   const groups = useMemo(() => {
     const ql = q.trim().toLowerCase();
     const match = (st: CalcStep) => !ql || [st.label, st.formula, st.sheetRef ?? '', st.note ?? ''].some(x => x.toLowerCase().includes(ql));
@@ -132,7 +160,14 @@ export function Ledger({ steps, reconstructed, warnings, title, sub, onExport }:
       )}
       {warnings.length > 0 && (
         <Callout tone="warn">
-          <ul className={s.whyList} style={{ padding: 0, gap: 2 }}>{warnings.map((w, i) => <li key={i}>{w}</li>)}</ul>
+          <ul className={s.whyList} style={{ padding: 0, gap: 4, color: 'inherit' }}>
+            {(allWarn ? warnings : warnings.slice(0, 2)).map((w, i) => <li key={i}>{w}</li>)}
+          </ul>
+          {warnings.length > 2 && (
+            <button type="button" className={s.warnMore} onClick={() => setAllWarn(v => !v)}>
+              {allWarn ? 'Show fewer' : `Show ${warnings.length - 2} more warning${warnings.length - 2 === 1 ? '' : 's'}`}
+            </button>
+          )}
         </Callout>
       )}
       <div>
@@ -144,7 +179,10 @@ export function Ledger({ steps, reconstructed, warnings, title, sub, onExport }:
               <span className={s.groupCount}>{items.length} {items.length === 1 ? 'step' : 'steps'}</span>
               <span className={s.groupRule} />
             </div>
-            {items.map(st => <StepRow key={st.id} st={st} open={isOpen(st.id)} onToggle={() => setOpen(o => ({ ...o, [st.id]: !isOpen(st.id) }))} />)}
+            {runsOf(items).map(run => run.length >= 3 && !q
+              ? <RepeatRun key={run[0].id} steps={run} open={!!open[`run-${run[0].id}`]} onToggle={() => setOpen(o => ({ ...o, [`run-${run[0].id}`]: !o[`run-${run[0].id}`] }))}
+                  renderStep={st => <StepRow key={st.id} st={st} open={isOpen(st.id)} onToggle={() => setOpen(o => ({ ...o, [st.id]: !isOpen(st.id) }))} />} />
+              : run.map(st => <StepRow key={st.id} st={st} open={isOpen(st.id)} onToggle={() => setOpen(o => ({ ...o, [st.id]: !isOpen(st.id) }))} />))}
           </section>
         ))}
         {!groups.length && <div className={s.emptyGroup} style={{ padding: 20 }}>No steps match “{q}”.</div>}

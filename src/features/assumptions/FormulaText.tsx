@@ -31,7 +31,8 @@ export const FormulaText = memo(function FormulaText({ text, className }: { text
   return <span className={`${s.math} ${className ?? ''}`} aria-label={toPlainText(toks)}>{out}</span>;
 });
 
-/** Substituted-numbers line, prefixed by "=". Plain tabular sans keeps numbers easy to scan. */
+/** Substituted-numbers line, prefixed by "=". Shown verbatim (the engine formats it); ASCII operators prettified. */
 export function Substituted({ text }: { text: string }) {
-  return <div className={s.subst}><span className={s.eq}>=</span>{toPlainText(tokenize(text))}</div>;
+  const pretty = text.replace(/(\d)\s*\*\s*(\d)/g, '$1 × $2').replace(/<=/g, '≤').replace(/>=/g, '≥');
+  return <div className={s.subst}><span className={s.eq}>=</span>{pretty}</div>;
 }

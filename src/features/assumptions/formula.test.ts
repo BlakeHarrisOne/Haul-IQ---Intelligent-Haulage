@@ -61,3 +61,19 @@ describe('unicode superscripts and comma spacing', () => {
     expect(toPlainText(tokenize('max(0, -x)'))).toBe('max(0, −x)');
   });
 });
+
+describe('excel error literals', () => {
+  it('keeps #N/A and #REF! whole', () => {
+    expect(kinds('VLOOKUP(x) → #N/A → IFERROR → 0 s')).toEqual(['fn:VLOOKUP', 'punc:(', 'var:x', 'punc:)', 'op:→', 'ref:#N/A', 'op:→', 'word:IFERROR', 'op:→', 'num:0', 'var:s']);
+    expect(kinds('A3 = #REF!')[2]).toBe('ref:#REF!');
+  });
+});
+
+import { runsOf } from './Ledger';
+describe('ledger runs', () => {
+  it('groups consecutive steps with the same formula', () => {
+    const st = (id: string, formula: string) => ({ id, group: 'travel' as const, label: id, formula, value: 1, unit: 's' });
+    const runs = runsOf([st('a', 'x'), st('b', 'y'), st('c', 'y'), st('d', 'y'), st('e', 'x')]);
+    expect(runs.map(r => r.map(x => x.id).join(''))).toEqual(['a', 'bcd', 'e']);
+  });
+});

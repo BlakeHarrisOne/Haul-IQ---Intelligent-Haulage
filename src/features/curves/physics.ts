@@ -1,13 +1,7 @@
 /**
- * Truck-curve maths for the Truck curves tab (pure, unit-tested).
- *
- * Mirrors the engine's documented method (docs/spec/04 §B.1–B.4, oem-curves.json conventions) so the chart's
- * intersections, crosshair gradeability and payload / RR what-ifs are exact and instant:
- *   F_res = m·g·(sin θ + cos θ·RR/100)       (kN; m in t; sin θ = ΔZ / slope distance)
- *   propel:  v* = sup { v : F_rim(v) ≥ F_res }                       rimpull envelope, power-space interpolation
- *   retard:  'discrete_gear' v* = max { v_max,g : F_ret,g(v_max,g) ≥ F_req }   (Cat ARC)
- *            'continuous'    v* = sup { v : F_ret(v) ≥ F_req }                    (Komatsu ARSC / electric)
- * Operating points on the chart come from the engine's own SegmentResults.
+ * Drawing helpers for the truck-curve charts (pure, unit-tested): curve sampling with power-space interpolation
+ * (oem-curves.json convention, same as the engine), gear lookup and force ↔ effective-grade conversion
+ * (F = m·g·G_eff, the OEM chart form). Speeds themselves come from the engine (see ./model).
  */
 import type { CurvePoint, LimitReason, TruckModel } from '@/core/types';
 
@@ -77,56 +71,6 @@ export function gearAt(gears: GearCurveX[] | undefined, v: number): number | und
     if (!best || f > best.f) best = { g: g.gear, f };
   }
   return best?.g;
-}
-
-export interface Balance {
-  kmh: number;
-  limit: LimitReason | 'stall';
-  mode: 'propel' | 'retard';
-  gear?: number;
-  /** Resistance (propel) or required braking (retard), kN, positive. */
-  forceKN: number;
-  /** Rimpull / retarder available at kmh, kN. */
-  availKN: number;
-}
-
-export function descentRuleOf(t: TruckX): 'discrete_gear' | 'continuous' {
-  if (t.descentRule) return t.descentRule;
-  return t.drive === 'mechanical' && /cat|caterpillar/i.test(t.make) ? 'discrete_gear' : 'continuous';
-}
-
-/** Balance speed for a signed resistance force (kN; < 0 = net downhill). */
-export function balanceForForce(t: TruckX, fRes: number, speedLimitKmh = Infinity): Balance {
-  const top = Math.min(t.topSpeedKmh || Infinity, speedLimitKmh);
-  const capReason = (t.topSpeedKmh || Infinity) <= speedLimitKmh ? 'top-speed' : 'speed-limit';
-  if (fRes >= 0) {
-    const v = supSpeed(t.rimpull, fRes);
-    if (v == null || v <= 0.05) return { kmh: 0, limit: 'stall', mode: 'propel', forceKN: fRes, availKN: curveForce(t.rimpull, 0) };
-    if (v >= top - 1e-9) return { kmh: top, limit: capReason, mode: 'propel', forceKN: fRes, availKN: curveForce(t.rimpull, top), gear: gearAt(t.rimpullGears, top) };
-    return { kmh: v, limit: 'rimpull', mode: 'propel', forceKN: fRes, availKN: curveForce(t.rimpull, v), gear: gearAt(t.rimpullGears, v) };
-  }
-  const req = -fRes;
-  if (descentRuleOf(t) === 'discrete_gear' && t.retarderGears?.length) {
-    const ok = [...t.retarderGears].sort((a, b) => b.gear - a.gear).find(g => curveForce(g.points, g.maxKmh, false) >= req - 1e-9);
-    if (!ok) return { kmh: 0, limit: 'stall', mode: 'retard', forceKN: req, availKN: 0 };
-    const v = Math.min(ok.maxKmh, top);
-    return { kmh: v, limit: v < ok.maxKmh ? capReason : 'retarder', mode: 'retard', forceKN: req, availKN: curveForce(ok.points, ok.maxKmh, false), gear: ok.gear };
-  }
-  const v = supSpeed(t.retarder, req);
-  if (v == null) return { kmh: 0, limit: 'stall', mode: 'retard', forceKN: req, availKN: 0 };
-  const retTop = t.retarder.length ? t.retarder[t.retarder.length - 1][0] : 0;
-  if (v >= top - 1e-9 || (v >= retTop - 1e-9 && retTop >= top - 0.5)) return { kmh: top, limit: capReason, mode: 'retard', forceKN: req, availKN: curveForce(t.retarder, top) };
-  return { kmh: v, limit: 'retarder', mode: 'retard', forceKN: req, availKN: curveForce(t.retarder, v), gear: gearAt(t.retarderGears, v) };
-}
-
-/** Balance speed on a grade (fraction, + uphill in direction of travel) at mass m and RR %. */
-export function balanceOnGrade(t: TruckX, massT: number, grade: number, rrPct: number, speedLimitKmh = Infinity): Balance {
-  return balanceForForce(t, resistanceKN(massT, grade, rrPct), speedLimitKmh);
-}
-
-/** Physics speed vs grade table (grades as fractions). */
-export function physicsSpeedCurve(t: TruckX, massT: number, rrPct: number, grades: number[], speedLimitKmh = Infinity): { grade: number; b: Balance }[] {
-  return grades.map(grade => ({ grade, b: balanceOnGrade(t, massT, grade, rrPct, speedLimitKmh) }));
 }
 
 /** Workbook lookup at a grade: exact match on ROUND(grade, 2); undefined when outside the table (dropped). */

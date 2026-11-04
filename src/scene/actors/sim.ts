@@ -247,7 +247,8 @@ export function cycleState(plan: CircuitPlan, tau: number): TruckSimState {
   if (tau < tHaul0) {
     const el = tau - W - sp;
     const st = base('load', el, ld);
-    st.fill = Math.min(1, Math.ceil((el / Math.max(1e-6, ld)) * plan.passes - 0.35) / plan.passes);
+    // a bucket lands in the body ~60 % into each pass (the excavator's dump, see machines.excavatorPass)
+    st.fill = Math.max(0, Math.min(1, Math.ceil((el / Math.max(1e-6, ld)) * plan.passes - 0.6) / plan.passes));
     st.loaded = st.fill > 0;
     st.wheelDist = 0;
     return st;
@@ -292,5 +293,91 @@ export function cycleState(plan: CircuitPlan, tau: number): TruckSimState {
   st.speedKmh = st.s <= endS + 1e-6 ? 0 : tr.v;
   st.dir = st.speedKmh > 0 ? -1 : 0;
   st.wheelDist = L + 12 + sAlong;
+  return st;
+}
+
+// ── engine shift simulation → presentation ───────────────────────────────────────────
+
+/** The fields of the engine's TruckState ('@/engine' truckStatesAt) the scene uses. */
+export interface EngineTruckState {
+  truckIndex: number;
+  unitId?: string;
+  phase: TruckPhase;
+  paused: boolean;
+  pauseLabel?: string;
+  chainageM: number;
+  speedKmh: number;
+  loaded: boolean;
+  dir: 1 | -1 | 0;
+  queueIndex?: number;
+  fill: number;
+  phaseStartMin: number;
+  phaseEndMin: number;
+}
+
+/**
+ * Presentation of one engine truck state: the engine decides WHERE and WHAT (phase, chainage, speed, load, pauses);
+ * this adds HOW it looks - keep-left lanes, the turn-around arcs while spotting and at the tip, the staggered queue,
+ * body tip and a bucket-by-bucket heap. `scale` maps engine chainage onto the scene path; `plan` supplies typical
+ * phase durations for the ETA to the dump.
+ */
+export function presentEngineState(es: EngineTruckState, tMin: number, L: number, scale: number, plan: CircuitPlan): TruckSimState {
+  const dur = Math.max(1e-6, (es.phaseEndMin - es.phaseStartMin) * 60);
+  const el = Math.max(0, Math.min(dur, (tMin - es.phaseStartMin) * 60));
+  const u = el / dur, e = ease(u);
+  const s = es.chainageM * scale;
+  const st: TruckSimState = {
+    phase: es.phase, s, lateral: 0, rev: 0, speedKmh: es.speedKmh, loaded: es.loaded, tray: 0, fill: Math.max(0, Math.min(1, es.fill)),
+    wheelDist: 0, dir: es.dir, phaseElapsedS: el, phaseRemainS: Math.max(0, dur - el), etaDumpS: 0, queueIndex: es.queueIndex,
+  };
+  const H = plan.haul.dur;
+  switch (es.phase) {
+    case 'queue': {
+      const q = es.queueIndex ?? 0;
+      st.lateral = LANE_M + (q % 2) * 3.5; st.rev = 1; st.wheelDist = 2 * L + s;
+      st.etaDumpS = st.phaseRemainS + plan.spotS + plan.loadS + H;
+      break;
+    }
+    case 'spot':
+      st.lateral = LANE_M * (1 - e) + 9 * Math.sin(Math.PI * e); st.rev = 1 - e; st.wheelDist = 2 * L + s;
+      st.etaDumpS = st.phaseRemainS + plan.loadS + H;
+      break;
+    case 'load':
+      st.s = 0;
+      st.fill = Math.max(0, Math.min(1, Math.ceil(u * plan.passes - 0.6) / plan.passes));
+      st.loaded = st.fill > 0;
+      st.etaDumpS = st.phaseRemainS + H;
+      break;
+    case 'haul':
+      st.lateral = -LANE_M * ease(s / 25); st.wheelDist = s; st.fill = 1;
+      st.etaDumpS = st.phaseRemainS;
+      break;
+    case 'dump': {
+      const ut = ease(Math.min(1, u / 0.32));
+      st.s = L + 10 * Math.sin(Math.PI * ut) * 0.6 + 4 * ut;
+      st.lateral = -LANE_M * (1 - ut) + LANE_M * ut - 8 * Math.sin(Math.PI * ut);
+      st.rev = ut;
+      st.tray = ease(Math.min(1, Math.max(0, (u - 0.34) / 0.22))) * (1 - ease(Math.min(1, Math.max(0, (u - 0.78) / 0.2))));
+      st.fill = 1 - ease(Math.min(1, Math.max(0, (u - 0.45) / 0.25)));
+      st.loaded = st.fill > 0.02;
+      st.speedKmh = u < 0.32 && !es.paused ? 8 * Math.sin(Math.PI * ut) : 0;
+      st.wheelDist = L + 12 * ut;
+      st.etaDumpS = 0;
+      break;
+    }
+    case 'return':
+      st.rev = 1; st.lateral = LANE_M; st.wheelDist = 2 * L - s;
+      // ease out of the dump's turn-around point (L + 4) over the first 30 m
+      if (s > L - 30) st.s = s + 4 * ease(1 - (L - s) / 30);
+      st.etaDumpS = st.phaseRemainS + plan.spotS + plan.loadS + H;
+      break;
+    case 'parked':
+      st.rev = 1; st.lateral = LANE_M + PARK_M; st.s = Math.max(s, QUEUE_FRONT_M);
+      break;
+  }
+  if (es.paused) {
+    st.speedKmh = 0; st.dir = 0;
+    st.phase = 'parked';
+  }
   return st;
 }

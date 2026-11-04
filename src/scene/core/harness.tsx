@@ -76,6 +76,7 @@ export async function mountStandalone(root: HTMLElement) {
     useEffect(() => {
       const c = new Core(host.current!, modules);
       api._attachCore(c);
+      c.setInsets({ top: 16, right: 16, bottom: 72, left: 16 });
       setCore(c);
       void bootHarness();
       return () => { api._detachCore(c); c.dispose(); };

@@ -145,3 +145,16 @@
   .groupHead { position: static; }
   .expBtn { display: none; }
 }
+
+/* ── circuit assumptions ───────────────────────────────────────────────────── */
+.pSection { padding: 14px 16px 6px; font-size: 12px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
+.pSection:first-of-type { padding-top: 10px; }
+.pGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px 16px; padding: 0 16px 6px; }
+.pField { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.pLabel { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: var(--ink-2); white-space: nowrap; overflow: hidden; }
+.pLabel > span:first-child { overflow: hidden; text-overflow: ellipsis; }
+.pInfo { display: inline-flex; color: var(--ink-4); cursor: help; }
+.pInfo:hover { color: var(--accent); }
+.pInput { display: flex; align-items: center; gap: 2px; }
+.pCell { font: 500 10.5px/14px var(--font-mono); color: var(--ok-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.warnMore { all: unset; cursor: pointer; font-weight: 650; text-decoration: underline; text-underline-offset: 2px; }

@@ -8,7 +8,8 @@ import type { LimitReason, SegmentResult } from '@/core/types';
 import { num } from '@/core/format';
 import { AxisX, GridY, chartText, gradeColor, linePath, linear } from '@/ui';
 import { useWidth } from '@/features/assumptions/shared/useWidth';
-import { balanceForForce, curveForce, effGradeForce, gearAt, gradeability, type Balance, type TruckX } from './physics';
+import { curveForce, effGradeForce, gearAt, gradeability, type TruckX } from './physics';
+import { balanceAt, limitShort, type Balance } from './model';
 import { forceDomain, speedDomain, clampTo } from './domains';
 import c from './curves.module.css';
 
@@ -52,8 +53,8 @@ export function RimpullChart({ series, effGradePct, onGrade, massLoaded, massEmp
   const x = linear(sdom, [L, W - R]);
   const y = linear(fdom, [H - B, T]);
   const down = effGradePct < 0;
-  const balL: Balance = balanceForForce(prim.t, down ? -fL : fL, speedLimit);
-  const balE: Balance = balanceForForce(prim.t, down ? -fE : fE, speedLimit);
+  const balL: Balance = balanceAt(prim.t, massLoaded, effGradePct / 100, speedLimit);
+  const balE: Balance = balanceAt(prim.t, massEmpty, effGradePct / 100, speedLimit);
 
   const paths = useMemo(() => series.map(s => ({
     env: linePath(sample(s.t.rimpull), x, y),
@@ -148,7 +149,7 @@ export function RimpullChart({ series, effGradePct, onGrade, massLoaded, massEmp
                 <line x1={x(r.bal.kmh)} x2={x(r.bal.kmh)} y1={r.yy} y2={H - B} stroke={r.col} strokeWidth={1} strokeDasharray="3 3" opacity={0.6} />
                 <circle cx={x(r.bal.kmh)} cy={r.yy} r={5.5} fill={prim.color} stroke="var(--surface)" strokeWidth={2} />
                 <text x={x(r.bal.kmh) + 8} y={r.yy - 8} style={{ ...chartText, fill: 'var(--ink)', fontWeight: 700, fontSize: 12 }}>
-                  {num(r.bal.kmh, 1)} km/h{r.bal.gear ? ` · G${r.bal.gear}` : ''}
+                  {num(r.bal.kmh, 1)} km/h · {limitShort(r.bal)}
                 </text>
               </g>
             )}

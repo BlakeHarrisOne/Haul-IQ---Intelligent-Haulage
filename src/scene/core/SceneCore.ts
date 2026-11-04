@@ -104,6 +104,7 @@ export class SceneCore {
   private disposed = false;
   private centerHit = new THREE.Vector3();
   private centerOk = false;
+  private insetOverride: Partial<import('./labels').Insets> | null = null;
 
   constructor(container: HTMLDivElement, modules: SceneModule[]) {
     this.container = container;
@@ -143,6 +144,10 @@ export class SceneCore {
     this.layers.terrain.add(this.terrain.root);
     this.solids = new SolidsLayer(this.labelLayer);
     this.layers.solids.add(this.solids.root);
+    this.solids.setLabelHandlers(
+      id => useApp.getState().select({ kind: 'asset', id }),
+      id => { const st = useApp.getState(); if (id) st.setHover({ kind: 'asset', id }); else if (st.hover.kind === 'asset') st.setHover({ kind: 'none' }); },
+    );
     this.section = new SectionLayer(this.labelLayer);
     this.layers.fx.add(this.section.root);
 
@@ -152,6 +157,7 @@ export class SceneCore {
       follow: () => this.follow,
     });
     this.applyTheme();
+    this.rig.safe = { top: 70, right: 428, bottom: 78, left: 70 };
 
     // context
     this.ctx = this.makeContext();
@@ -160,6 +166,7 @@ export class SceneCore {
     this.ro = new ResizeObserver(() => this.resize());
     this.ro.observe(container);
     this.resize();
+    this.rig.safe = this.insets();
     this.bindEvents();
     this.unsubs.push(watchTheme(t => { this.theme = t; this.pal = palette(t); this.applyTheme(); this.requestRender(true); }));
 
@@ -273,6 +280,8 @@ export class SceneCore {
     if (s.layers !== p.layers) this.syncLayers(s);
     if (s.camera !== p.camera) this.setCameraMode(s.camera);
     if (s.selection !== p.selection) { this.solids.setSelected(s.selection.kind === 'asset' ? s.selection.id : null); this.requestRender(); }
+    if (s.hover !== p.hover || s.selection !== p.selection || s.timeline.playing !== p.timeline.playing || s.scenario !== p.scenario) this.syncLabelFocus(s);
+    if (s.panels !== p.panels) { this.rig.safe = this.insets(); this.requestRender(); }
     if (s.section !== p.section || s.scenario !== p.scenario) this.syncSection(s);
     if (s.timeline.tMin !== p.timeline.tMin || s.scenario !== p.scenario) this.syncDepletion();
   }
@@ -353,6 +362,19 @@ export class SceneCore {
     return b;
   }
 
+  private syncLabelFocus(s: AppState) {
+    const hov = s.hover.kind === 'asset' ? s.hover.id : null;
+    const playing: string[] = [];
+    if (s.timeline.playing) {
+      const cid = s.selection.kind === 'circuit' ? s.selection.id : s.selection.kind === 'truck' ? s.selection.circuitId : null;
+      const c = cid ? s.scenario.circuits.find(x => x.id === cid) : undefined;
+      if (c?.digId) playing.push(c.digId);
+      if (c?.dumpId) playing.push(c.dumpId);
+    }
+    this.solids.setLabelFocus(hov, playing);
+    this.requestRender();
+  }
+
   private syncLayers(s: AppState) {
     const L = s.layers;
     this.terrain.setContours(s.scenario.settings.contourIntervalM, L.contours !== false);
@@ -405,6 +427,21 @@ export class SceneCore {
     this.requestRender(true);
   }
 
+  /**
+   * Screen area not covered by app chrome (labels stay inside it; fit/focus frame into it). Defaults follow the shell:
+   * top/bottom chrome bands, the left tool rail, and the right inspector when panels.inspector is open.
+   */
+  insets(): import('./labels').Insets {
+    const st = useApp.getState();
+    const def = { top: 70, right: st.panels.inspector ? 428 : 16, bottom: 78, left: 70 };
+    const o = this.insetOverride ?? {};
+    const r = { top: o.top ?? def.top, right: o.right ?? def.right, bottom: o.bottom ?? def.bottom, left: o.left ?? def.left };
+    // never let insets eat more than ~60 % of a small viewport
+    const kx = Math.min(1, (this.w * 0.6) / Math.max(1, r.left + r.right)), ky = Math.min(1, (this.h * 0.6) / Math.max(1, r.top + r.bottom));
+    return { top: r.top * ky, bottom: r.bottom * ky, left: r.left * kx, right: r.right * kx };
+  }
+  setInsets(i: Partial<import('./labels').Insets> | null) { this.insetOverride = i; this.rig.safe = this.insets(); this.requestRender(); }
+
   setCameraMode(m: CameraMode) {
     this.rig.setMode(m);
     this.requestRender();
@@ -432,6 +469,7 @@ export class SceneCore {
     this.renderer.setSize(w, h, false);
     this.overlay.width = Math.round(w * this.dpr); this.overlay.height = Math.round(h * this.dpr);
     this.rig.resize(w, h);
+    this.rig.safe = this.insets();
     this.section.setResolution(w, h);
     this.requestRender();
   }
@@ -627,14 +665,16 @@ export class SceneCore {
     this.solids.syncPlanes();
     this.renderer.render(this.scene, cam);
     // labels
-    this.solids.updateLabels(cam, this.w, this.h, ve);
+    const follow = mode === 'pov' || mode === 'chase';
+    this.solids.updateLabels(cam, this.w, this.h, ve, this.insets(), Math.max(250, cam === this.rig.ortho ? this.rig.diag() : this.rig.P.dist), follow);
     this.section.update(cam, this.w, this.h, ve, mpp);
     // overlay
     const o = this.octx;
     o.setTransform(1, 0, 0, 1, 0, 0);
     o.clearRect(0, 0, this.overlay.width, this.overlay.height);
+    o.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    if (this.labelLayer.style.display !== 'none') this.solids.drawLeaders(o);
     if (this.overlayCbs.size) {
-      o.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
       for (const cb of this.overlayCbs) { try { o.save(); cb(o, this.w, this.h); o.restore(); } catch (e) { console.error('[scene] overlay', e); } }
     }
     // stats

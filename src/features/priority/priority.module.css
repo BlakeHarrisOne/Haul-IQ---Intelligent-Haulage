@@ -98,7 +98,7 @@
 .annotText b { color: var(--ink); font-weight: 650; }
 .alts { margin: 0 14px 12px 88px; border: 1px solid var(--hair-2); border-radius: 10px; overflow: hidden; }
 .altHead { display: flex; align-items: center; gap: 8px; padding: 7px 12px; background: var(--surface-2); font: 650 11.5px/16px var(--font); color: var(--ink-2); letter-spacing: .04em; text-transform: uppercase; }
-.alt { display: grid; grid-template-columns: minmax(0, 1fr) 76px 92px 110px 96px auto; align-items: center; column-gap: 10px; padding: 6px 8px 6px 12px; border-top: 1px solid var(--hair-2); font-size: 13px; }
+.alt { display: grid; grid-template-columns: minmax(0, 1fr) 70px 84px 92px 76px 124px; align-items: center; column-gap: 10px; padding: 6px 8px 6px 12px; border-top: 1px solid var(--hair-2); font-size: 13px; }
 .alt:first-of-type { border-top: 0; }
 .altName { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); }
 .altNum { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-2); white-space: nowrap; }

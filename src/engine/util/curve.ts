@@ -92,12 +92,12 @@ export function envelopeOf(curves: CurvePoint[][]): CurvePoint[] {
     vs.add(c[i][0]);
     if (i + 1 < c.length) vs.add((c[i][0] + c[i + 1][0]) / 2);
   }
-  const sorted = [...vs].sort((a, b) => a - b);
+  const sorted = [...new Set([...vs].map(round6))].sort((a, b) => a - b);
   const out: CurvePoint[] = [];
   for (const v of sorted) {
     let f = 0;
     for (const c of curves) f = Math.max(f, gearForce(c, v));
-    out.push([round6(v), round6(f)]);
+    out.push([v, round6(f)]);
   }
   return out;
 }

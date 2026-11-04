@@ -7,11 +7,15 @@
  *              Σ crew_c(n_c) + siteCrew(Σ n_c) ≤ crewAvailable
  *              0 ≤ n_c ≤ maxTrucks_c   (n_c fixed when the circuit is locked, e.g. deliberately over-trucked)
  *
+ * Prioritised site tasks (e.g. bulk push dozers, CrewRuleExt.priority) are sheddable: they take the crew left after
+ * fixed roles and circuits, filled by weighted bcm per person (tasks are linear in people, so this fill is optimal).
+ *
  * ≤ 8 circuits: exact depth-first branch-and-bound. The bound is a trucks-only knapsack DP (crew relaxed) over the
- * circuits not yet assigned - a valid upper bound, so the optimum is never pruned. More circuits (or a node budget
- * overrun): greedy by marginal weighted bcm per operator. Pure TS (optimise.test.ts).
+ * circuits not yet assigned plus every task fully crewed - a valid upper bound, so the optimum is never pruned.
+ * More circuits (or a node budget overrun): greedy by marginal weighted bcm per operator. Pure TS (optimise.test.ts).
  */
 import type { Circuit, CircuitResult, Id, ManningResult, Scenario } from '@/core/types';
+import type { CrewRuleExt } from '@/engine';
 import { bcmAt } from './engine';
 
 export type WeightMode = 'weighted' | 'volume';
@@ -30,11 +34,22 @@ export interface OptCircuit {
   locked?: boolean;
 }
 
+/** A sheddable site task: people 0..req[T], each worth valuePerPerson bcm/day. Uses crew, not trucks. */
+export interface OptTask {
+  id: Id;
+  name: string;
+  rank: number;
+  valuePerPerson: number;
+  /** People the task wants at T total trucks, index 0..trucksAvailable (e.g. push dozers fall as trucks rise above 12). */
+  req: number[];
+}
+
 export interface OptProblem {
   circuits: OptCircuit[];
+  tasks?: OptTask[];
   trucksAvailable: number;
   crewAvailable: number;
-  /** Site-level crew (fixed roles) at T total trucks, index 0..trucksAvailable (may depend on T, e.g. push-dozer substitution). */
+  /** Fixed site crew (non-task site roles) at T total trucks, index 0..trucksAvailable. */
   siteCrew: number[];
   mode: WeightMode;
   /** Geometric weight per rank for 'weighted' mode (P1 × 1, P2 × decay, P3 × decay² …). */
@@ -44,6 +59,10 @@ export interface OptProblem {
 
 export interface OptSolution {
   alloc: number[];
+  /** People per task (same order as problem.tasks). */
+  taskAlloc: number[];
+  /** Crew for fixed roles + circuits (tasks excluded). */
+  crewCore: number;
   objective: number;
   bcm: number;
   crew: number;
@@ -52,6 +71,7 @@ export interface OptSolution {
   method: 'branch-and-bound' | 'greedy';
   nodes: number;
   weights: number[];
+  taskWeights: number[];
 }
 
 const EPS_TRUCK = 0.01;
@@ -60,9 +80,30 @@ export function weightsFor(p: Pick<OptProblem, 'circuits' | 'mode' | 'decay'>): 
   const d = p.decay ?? 0.85;
   return p.circuits.map(c => (p.mode === 'volume' ? 1 : d ** (c.rank - 1)));
 }
+export function taskWeightsFor(p: Pick<OptProblem, 'tasks' | 'mode' | 'decay'>): number[] {
+  const d = p.decay ?? 0.85;
+  return (p.tasks ?? []).map(t => (p.mode === 'volume' ? 1 : d ** (t.rank - 1)));
+}
+
+const at = (arr: number[], i: number) => arr[Math.min(Math.max(0, i), arr.length - 1)] ?? 0;
+
+/** Fill sheddable tasks with the crew left, best weighted bcm per person first (optimal for linear tasks). */
+function fillTasks(p: OptProblem, T: number, left: number, wt: number[]) {
+  const tasks = p.tasks ?? [];
+  const alloc = new Array(tasks.length).fill(0);
+  let value = 0, bcm = 0, people = 0;
+  const order = tasks.map((_, i) => i).sort((a, b) => wt[b] * tasks[b].valuePerPerson - wt[a] * tasks[a].valuePerPerson || tasks[a].rank - tasks[b].rank);
+  for (const i of order) {
+    const n = Math.max(0, Math.min(at(tasks[i].req, T), left));
+    alloc[i] = n; left -= n; people += n;
+    value += wt[i] * tasks[i].valuePerPerson * n;
+    bcm += tasks[i].valuePerPerson * n;
+  }
+  return { alloc, value, bcm, people };
+}
 
 /** Evaluate any allocation against the problem (objective, totals, feasibility). */
-export function evaluate(p: OptProblem, alloc: number[], w = weightsFor(p)): Omit<OptSolution, 'method' | 'nodes' | 'weights'> {
+export function evaluate(p: OptProblem, alloc: number[], w = weightsFor(p), wt = taskWeightsFor(p)): Omit<OptSolution, 'method' | 'nodes' | 'weights' | 'taskWeights'> {
   let obj = 0, bcm = 0, crew = 0, trucks = 0;
   p.circuits.forEach((c, i) => {
     const n = alloc[i];
@@ -71,19 +112,20 @@ export function evaluate(p: OptProblem, alloc: number[], w = weightsFor(p)): Omi
     crew += c.crew[n] ?? 0;
     trucks += n;
   });
-  crew += p.siteCrew[Math.min(trucks, p.siteCrew.length - 1)] ?? 0;
+  crew += at(p.siteCrew, trucks);
   obj -= EPS_TRUCK * trucks;
   const feasible = trucks <= p.trucksAvailable && crew <= p.crewAvailable;
-  return { alloc, objective: obj, bcm, crew, trucks, feasible };
+  const f = fillTasks(p, trucks, Math.max(0, p.crewAvailable - crew), wt);
+  return { alloc, taskAlloc: f.alloc, objective: obj + f.value, bcm: bcm + f.bcm, crew: crew + f.people, crewCore: crew, trucks, feasible };
 }
 
 export function solveAllocation(p: OptProblem): OptSolution {
-  const w = weightsFor(p);
+  const w = weightsFor(p), wt = taskWeightsFor(p);
   if (p.circuits.length <= 8) {
-    const r = branchAndBound(p, w);
+    const r = branchAndBound(p, w, wt);
     if (r) return r;
   }
-  return greedy(p, w);
+  return greedy(p, w, wt);
 }
 
 function range(c: OptCircuit, T: number): number[] {
@@ -94,7 +136,7 @@ function range(c: OptCircuit, T: number): number[] {
   return out;
 }
 
-function branchAndBound(p: OptProblem, w: number[]): OptSolution | null {
+function branchAndBound(p: OptProblem, w: number[], wt: number[]): OptSolution | null {
   const k = p.circuits.length, T = p.trucksAvailable;
   const maxNodes = p.maxNodes ?? 2_000_000;
   // Explore circuits in descending weight order (strong incumbents early); map back at the end.
@@ -112,8 +154,10 @@ function branchAndBound(p: OptProblem, w: number[]): OptSolution | null {
       ub[i][t] = best;
     }
   }
+  // every task fully crewed at its largest request - added to the bound
+  const taskUB = (p.tasks ?? []).reduce((a, t, i) => a + wt[i] * t.valuePerPerson * Math.max(0, ...t.req), 0);
   // incumbent: greedy (gives an immediate strong bound)
-  const g = greedy(p, w);
+  const g = greedy(p, w, wt);
   let bestObj = g.feasible ? g.objective : -Infinity;
   let bestAlloc: number[] | null = g.feasible ? order.map(i => g.alloc[i]) : null;
   const cur = new Array(k).fill(0);
@@ -125,15 +169,17 @@ function branchAndBound(p: OptProblem, w: number[]): OptSolution | null {
     if (++nodes > maxNodes) { aborted = true; return; }
     if (i === k) {
       const used = T - tLeft;
-      const total = crew + (p.siteCrew[Math.min(used, p.siteCrew.length - 1)] ?? 0);
-      if (total <= p.crewAvailable && val > bestObj + 1e-9) { bestObj = val; bestAlloc = cur.slice(); }
+      const total = crew + at(p.siteCrew, used);
+      if (total > p.crewAvailable) return;
+      const v = val + fillTasks(p, used, p.crewAvailable - total, wt).value;
+      if (v > bestObj + 1e-9) { bestObj = v; bestAlloc = cur.slice(); }
       return;
     }
     for (const n of range(cs[i], tLeft)) {
       const c = cs[i].crew[n] ?? 0;
       if (crew + c + siteMin > p.crewAvailable) continue;
       const v = val + ws[i] * cs[i].bcm[n] - EPS_TRUCK * n;
-      if (v + ub[i + 1][tLeft - n] <= bestObj + 1e-9) continue;
+      if (v + ub[i + 1][tLeft - n] + taskUB <= bestObj + 1e-9) continue;
       cur[i] = n;
       dfs(i + 1, tLeft - n, v, crew + c);
     }
@@ -141,19 +187,19 @@ function branchAndBound(p: OptProblem, w: number[]): OptSolution | null {
   };
   dfs(0, T, 0, 0);
   if (aborted) return null;
-  if (!bestAlloc) return { ...evaluate(p, p.circuits.map(c => (c.locked ? c.current : 0)), w), method: 'branch-and-bound', nodes, weights: w };
+  if (!bestAlloc) return { ...evaluate(p, p.circuits.map(c => (c.locked ? c.current : 0)), w, wt), method: 'branch-and-bound', nodes, weights: w, taskWeights: wt };
   const ba: number[] = bestAlloc;
   const alloc = new Array(k).fill(0);
   order.forEach((orig, j) => { alloc[orig] = ba[j]; });
-  return { ...evaluate(p, alloc, w), method: 'branch-and-bound', nodes, weights: w };
+  return { ...evaluate(p, alloc, w, wt), method: 'branch-and-bound', nodes, weights: w, taskWeights: wt };
 }
 
 /** Greedy: repeatedly add the truck with the best weighted gain per extra operator (starting a loader costs its crew). */
-function greedy(p: OptProblem, w: number[]): OptSolution {
+function greedy(p: OptProblem, w: number[], wt: number[]): OptSolution {
   const k = p.circuits.length;
   const alloc = p.circuits.map(c => (c.locked ? c.current : 0));
   let nodes = 0;
-  const totals = () => evaluate(p, alloc, w);
+  const totals = () => evaluate(p, alloc, w, wt);
   for (;;) {
     const base = totals();
     let best: { i: number; n: number; score: number } | null = null;
@@ -164,11 +210,11 @@ function greedy(p: OptProblem, w: number[]): OptSolution {
       for (let step = 1; alloc[i] + step <= Math.min(c.maxTrucks, c.bcm.length - 1); step++) {
         nodes++;
         const trial = alloc.slice(); trial[i] += step;
-        const e = evaluate(p, trial, w);
+        const e = evaluate(p, trial, w, wt);
         if (!e.feasible) break;
         const gain = e.objective - base.objective;
         if (gain <= 1e-6) continue;
-        const dCrew = Math.max(1, e.crew - base.crew);
+        const dCrew = Math.max(1, e.crewCore - base.crewCore);
         const score = gain / dCrew;
         if (!best || score > best.score) best = { i, n: alloc[i] + step, score };
       }
@@ -176,7 +222,7 @@ function greedy(p: OptProblem, w: number[]): OptSolution {
     if (!best) break;
     alloc[best.i] = best.n;
   }
-  return { ...totals(), method: 'greedy', nodes, weights: w };
+  return { ...totals(), method: 'greedy', nodes, weights: w, taskWeights: wt };
 }
 
 // ─────────────────────────────────────────────────────────────── scenario adapter
@@ -186,6 +232,7 @@ export interface FleetOptimisation {
   solution: OptSolution;
   current: ReturnType<typeof evaluate>;
   rows: { circuit: Circuit; current: number; proposed: number; bcmNow: number; bcmNew: number; crewNow: number; crewNew: number; locked: boolean }[];
+  taskRows: { rule: CrewRuleExt; current: number; proposed: number; bcmNow: number; bcmNew: number }[];
   /** Crew from the full rule evaluator at the proposed allocation (checks the separable model). */
   crewExact?: number;
 }
@@ -197,6 +244,8 @@ export interface BuildOptions {
   decay?: number;
   /** Keep circuits tagged 'deliberate' at their current truck count. */
   keepDeliberate?: boolean;
+  /** Circuits pinned at their current truck count. */
+  lockedIds?: Id[];
   computeManning: (s: Scenario, r: Record<Id, CircuitResult>) => ManningResult;
   evalCircuit?: (c: Circuit, opts: { trucks?: number }) => CircuitResult;
 }
@@ -208,14 +257,23 @@ export function optimiseFleet(s: Scenario, results: Record<Id, CircuitResult>, b
   const T = Math.max(0, Math.floor(b.trucksAvailable ?? s.fleet.trucksAvailable));
   const act = s.circuits.filter(c => c.active && results[c.id]?.ok).sort((x, y) => x.priority - y.priority);
   const ids = new Set(act.map(c => c.id));
+  const taskRules = (s.crew.rules as CrewRuleExt[]).filter(r => r.enabled && r.scope === 'site' && r.priority != null);
+  const taskIds = new Set(taskRules.map(r => r.id));
+  // combined priority ranks (circuits and site tasks)
+  const ranked = [...act.map(c => ({ id: c.id, p: c.priority, k: 0 })), ...taskRules.map(r => ({ id: r.id, p: r.priority as number, k: 1 }))]
+    .sort((x, y) => x.p - y.p || x.k - y.k);
+  const rankOf = (id: Id) => ranked.findIndex(x => x.id === id) + 1;
   const zero = withTrucks(s, () => 0);
-  // site-level lines (no circuitId) as a function of total trucks: place T trucks on the first circuit.
+  // fixed site lines and task requests as functions of total trucks: place T trucks on the first circuit.
   const siteCrew: number[] = [];
+  const taskReq: number[][] = taskRules.map(() => []);
   for (let t = 0; t <= T; t++) {
     const m = b.computeManning(act.length ? withTrucks(s, c => (c.id === act[0].id ? t : 0)) : zero, results);
-    siteCrew.push(m.lines.filter(l => !l.circuitId || !ids.has(l.circuitId)).reduce((a, l) => a + l.count, 0));
+    const site = m.lines.filter(l => !l.circuitId || !ids.has(l.circuitId));
+    siteCrew.push(site.filter(l => !taskIds.has(l.ruleId)).reduce((a, l) => a + l.count, 0));
+    taskRules.forEach((r, i) => taskReq[i].push(Math.max(0, site.filter(l => l.ruleId === r.id).reduce((a, l) => a + l.count, 0))));
   }
-  const circuits: OptCircuit[] = act.map((c, i) => {
+  const circuits: OptCircuit[] = act.map(c => {
     const r = results[c.id];
     const maxT = Math.min(T, Math.max(r.options.length, c.trucks));
     const bcm: number[] = [], crew: number[] = [];
@@ -224,10 +282,11 @@ export function optimiseFleet(s: Scenario, results: Record<Id, CircuitResult>, b
       const m = b.computeManning(withTrucks(s, x => (x.id === c.id ? n : 0)), results);
       crew.push(m.lines.filter(l => l.circuitId === c.id).reduce((a, l) => a + l.count, 0));
     }
-    const locked = !!b.keepDeliberate && !!c.tags?.some(t => t === 'deliberate' || t.startsWith('deliberate:'));
-    return { id: c.id, name: c.name, rank: i + 1, current: c.trucks, maxTrucks: maxT, bcm, crew, locked };
+    const locked = (!!b.keepDeliberate && !!c.tags?.some(t => t === 'deliberate' || t.startsWith('deliberate:'))) || !!b.lockedIds?.includes(c.id);
+    return { id: c.id, name: c.name, rank: rankOf(c.id), current: c.trucks, maxTrucks: maxT, bcm, crew, locked };
   });
-  const problem: OptProblem = { circuits, trucksAvailable: T, crewAvailable: b.crewAvailable, siteCrew, mode: b.mode ?? 'weighted', decay: b.decay };
+  const tasks: OptTask[] = taskRules.map((r, i) => ({ id: r.id, name: r.name, rank: rankOf(r.id), valuePerPerson: r.bcmPerUnitDay ?? 0, req: taskReq[i] }));
+  const problem: OptProblem = { circuits, tasks, trucksAvailable: T, crewAvailable: b.crewAvailable, siteCrew, mode: b.mode ?? 'weighted', decay: b.decay };
   const solution = solveAllocation(problem);
   const current = evaluate(problem, circuits.map(c => Math.min(c.current, c.bcm.length - 1)));
   const rows = act.map((c, i) => ({
@@ -236,12 +295,18 @@ export function optimiseFleet(s: Scenario, results: Record<Id, CircuitResult>, b
     crewNow: circuits[i].crew[Math.min(c.trucks, circuits[i].crew.length - 1)] ?? 0, crewNew: circuits[i].crew[solution.alloc[i]] ?? 0,
     locked: !!circuits[i].locked,
   }));
+  const taskRows = taskRules.map((rule, i) => ({
+    rule, current: current.taskAlloc[i], proposed: solution.taskAlloc[i],
+    bcmNow: current.taskAlloc[i] * tasks[i].valuePerPerson, bcmNew: solution.taskAlloc[i] * tasks[i].valuePerPerson,
+  }));
   const proposedScenario = withTrucks(s, c => { const k = act.findIndex(x => x.id === c.id); return k >= 0 ? solution.alloc[k] : c.trucks; });
-  const crewExact = b.computeManning(proposedScenario, results).total;
-  return { problem, solution, current, rows, crewExact };
+  const ex = b.computeManning(proposedScenario, results);
+  // exact crew = rule evaluator at the proposed trucks, with the tasks at their proposed people
+  const crewExact = ex.total - taskRules.reduce((a, r, i) => a + ex.lines.filter(l => l.ruleId === r.id).reduce((x, l) => x + l.count, 0) - solution.taskAlloc[i], 0);
+  return { problem, solution, current, rows, taskRows, crewExact };
 }
 
-/** Scenario transform applying a proposed allocation. */
+/** Scenario transform applying a proposed truck allocation. */
 export const applyAllocation = (rows: FleetOptimisation['rows']) => (s: Scenario): Scenario => ({
   ...s,
   circuits: s.circuits.map(c => { const r = rows.find(x => x.circuit.id === c.id); return r ? { ...c, trucks: r.proposed } : c; }),

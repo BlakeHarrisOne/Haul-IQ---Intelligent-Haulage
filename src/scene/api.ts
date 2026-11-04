@@ -63,6 +63,11 @@ export const sceneApi = {
   /** Force every dig/dump solid to a depletion fraction (null = follow the timeline). For thumbnails/tests. */
   setDepletionOverride(f: number | null): void { core?.setDepletionOverride(f); },
   stats(): SceneStats | null { return core ? { ...core.stats } : null; },
+  /**
+   * Tell the scene which screen edges are covered by app chrome (CSS px). Labels stay out of them and fit/focus frame
+   * into the rest. Pass null to restore the defaults (top 70, bottom 78, left 70, right 428 when the inspector is open).
+   */
+  setSafeInsets(insets: Partial<{ top: number; right: number; bottom: number; left: number }> | null): void { core?.setInsets(insets); },
   /** Ask for a redraw (e.g. after external DOM changes). */
   requestRender(): void { core?.requestRender(true); },
 };
