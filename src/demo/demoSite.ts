@@ -99,20 +99,20 @@ export function buildDemoSite(): DemoSite {
     };
   };
   // EX09 has two options round either end of the pit: the shorter is the main route, the other the long haul
-  const west = makeString('demo_str_ex09_s51', 'EX09 OB → S51 West lift', DEMO_IDS.ex09, DEMO_IDS.s51, '#f2a33a', [[E0 + 330, N0 + 1000]]);
-  const east = makeString('demo_str_ex09_s51', 'EX09 OB → S51 West lift', DEMO_IDS.ex09, DEMO_IDS.s51, '#f2a33a', [[E0 + 2090, N0 + 1000]]);
+  const west = makeString('demo_str_ex09_s51', 'EX09 OB → S51 West lift', DEMO_IDS.ex09, DEMO_IDS.s51, '#2A78D6', [[E0 + 330, N0 + 1000]]);
+  const east = makeString('demo_str_ex09_s51', 'EX09 OB → S51 West lift', DEMO_IDS.ex09, DEMO_IDS.s51, '#2A78D6', [[E0 + 2090, N0 + 1000]]);
   const len = (s: HaulString) => s.points.reduce((acc, p, i) => (i ? acc + Math.hypot(p.e - s.points[i - 1].e, p.n - s.points[i - 1].n) : 0), 0);
   const [main, alt] = len(west) <= len(east) ? [west, east] : [east, west];
   const long: HaulString = {
-    ...alt, id: 'demo_str_ex09_s51_long', name: 'EX09 OB → S51 West lift (long haul)', color: '#c9822f',
+    ...alt, id: 'demo_str_ex09_s51_long', name: 'EX09 OB → S51 West lift (long haul)', color: '#7FA6DD',
     points: alt.points.map((p, i) => ({ ...p, id: `demo_str_ex09_s51_long_p${String(i).padStart(3, '0')}` })),
     notes: 'Long-haul alternative round the other end of the pit (≤ 10 % grade).',
   };
   const strings: HaulString[] = [
     main,
     long,
-    makeString('demo_str_ex04_s52', 'EX04 OB → S52 East lift', DEMO_IDS.ex04, DEMO_IDS.s52, '#e4572e'),
-    makeString('demo_str_ldr_rom', 'LDR coal → ROM stockpile', DEMO_IDS.ldr, DEMO_IDS.rom, '#5b8def'),
+    makeString('demo_str_ex04_s52', 'EX04 OB → S52 East lift', DEMO_IDS.ex04, DEMO_IDS.s52, '#EDA100'),
+    makeString('demo_str_ldr_rom', 'LDR coal → ROM stockpile', DEMO_IDS.ldr, DEMO_IDS.rom, '#6250D6'),
   ];
   const site: SiteInfo = { name: 'Brigalow Creek (demo)', origin: originFor(byId(DEMO_IDS.topo).stats.bbox.min), crs: 'GDA2020 / MGA zone 56' };
   return { site, assets, strings };

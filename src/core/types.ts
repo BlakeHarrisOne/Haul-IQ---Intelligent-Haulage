@@ -192,6 +192,8 @@ export interface FleetUnit {
   ownership: 'own' | 'hire';
   /** Mechanical availability 0..1. */
   availability: number;
+  /** False when the unit is parked / not planned this shift (default true). */
+  active?: boolean;
   notes?: string;
 }
 
@@ -391,6 +393,19 @@ export interface CrewRule {
   note?: string;
   /** Mirrors a spreadsheet cell / rule, for transparency. */
   sheetRef?: string;
+  /**
+   * People per firing as an expression, replacing `count` (workbook bulk-push rule). Tiny language: numbers, + − * /,
+   * comparisons, && || !, parentheses, max/min/ceil/floor/abs/if(c,a,b) and identifiers totals.trucks · totals.circuits ·
+   * totals.activeLoaders · fleet.trucksAvailable · params.<name> · roles.<role> · rules.<ruleId> · circuit.trucks · circuit.priority.
+   */
+  expr?: string;
+  /** Extra gate in the same language; the rule fires only when it evaluates truthy. */
+  whenExpr?: string;
+  params?: Record<string, number>;
+  /** Site-task priority (1 = highest): the priority planner sheds such a role like a circuit, lowest first. */
+  priority?: number;
+  /** Production per person on this rule, bcm/day (lost-production reporting when shed). */
+  bcmPerUnitDay?: number;
 }
 
 export interface ShiftCrew {
@@ -436,6 +451,16 @@ export interface PriorityAllocation {
   alternatives: { haulStringId: Id; name: string; trucksNeeded: number; bcmDay: number; deltaBcmDay: number }[];
 }
 
+/** A prioritised site task (a crew rule with a priority, e.g. bulk push dozers) planned like a circuit. */
+export interface PriorityTask {
+  ruleId: Id;
+  name: string;
+  priority: number;
+  requested: number;
+  allocated: number;
+  bcmDayLost: number;
+}
+
 export interface PriorityResult {
   crewAvailable: number;
   crewUsed: number;
@@ -444,6 +469,11 @@ export interface PriorityResult {
   allocations: PriorityAllocation[];
   narrative: string[];
   steps: CalcStep[];
+  tasks?: PriorityTask[];
+  crewRequired?: number;
+  bcmDayPlanned?: number;
+  bcmDayAchieved?: number;
+  warnings?: string[];
 }
 
 // ─────────────────────────────────────────────────────────────── Shift / time

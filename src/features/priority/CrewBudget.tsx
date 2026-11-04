@@ -34,7 +34,7 @@ function Track({ blocks, max, cut, cutLabel, thin, onHover }: {
           <div key={p.key} className={`${css.seg} ${p.cutPart ? css.segCut : ''} ${p.site ? css.segSite : ''}`}
             style={{ left: `${pct(p.a)}%`, width: `max(1px, calc(${w}% - 2px))`, background: p.site ? undefined : p.color }}
             onMouseEnter={e => onHover(p, pct((p.a + p.b) / 2), e.currentTarget.parentElement)} aria-label={typeof p.tip === 'string' ? p.tip : undefined}>
-            {!thin && p.label && w >= 6 ? p.label : null}
+            {!thin && p.label && w >= 6 && !p.cutPart ? p.label : null}
           </div>
         );
       })}

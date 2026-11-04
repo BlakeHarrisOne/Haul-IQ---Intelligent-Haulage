@@ -13,7 +13,7 @@ import type {
   Circuit, CircuitParams, CircuitResult, FleetOption, Id, Scenario, SegmentOverrides, SegmentResult,
   SegmentZone, StringPoint, TruckingStatus,
 } from '@/core/types';
-import { linear, type Scale } from '@/ui/chart';
+import { CAT_HEX, linear, type Scale } from '@/ui/chart';
 import { uid } from '@/core/ids';
 import { excelRound } from '@/engine';
 
@@ -338,7 +338,8 @@ export interface NewCircuitInput {
 }
 
 /** Circuit colours as literal hex (the scene needs hex), in the CAT order. */
-export const CIRCUIT_HEX = ['#0A6FE6', '#B8692E', '#3E8A5A', '#7B5EA7', '#1F8A8A', '#B5564C', '#A88A1E', '#5B6B7F'];
+/** Circuit colours: the validated categorical order from the UI kit (never cycled past the validated slots). */
+export const CIRCUIT_HEX = CAT_HEX;
 
 export function suggestCircuitName(s: Scenario, inp: NewCircuitInput): string {
   const dump = s.assets.find(a => a.id === inp.dumpId)?.name;

@@ -3,8 +3,7 @@
  * Rendered inside the shell's floating glass card (the shell supplies the title bar).
  */
 import { useMemo, useState } from 'react';
-
-import { num, signed } from '@/core/format';
+import { num } from '@/core/format';
 import { computeCircuit, computeManning, shiftStateAt } from '@/engine';
 import { sceneApi } from '@/scene';
 import { useManning, useResults, useScenario } from '@/state/derived';
@@ -59,9 +58,10 @@ export function InsightsPanel() {
   const opt = useMemo(() => {
     if (!optOn) return null;
     try {
-      return optimiseFleet(s, results, { crewAvailable, mode, keepDeliberate: keep, lockedIds: locks, computeManning, evalCircuit: (c, o) => computeCircuit(s, c, o) });
+      const baseline = Object.fromEntries(plan.allocations.map(a => [a.circuitId, a.allocatedTrucks]));
+      return optimiseFleet(s, results, { crewAvailable, mode, keepDeliberate: keep, lockedIds: locks, baseline, computeManning, evalCircuit: (c, o) => computeCircuit(s, c, o) });
     } catch (e) { console.error(e); return null; }
-  }, [optOn, s, results, crewAvailable, mode, keep, locks]);
+  }, [optOn, s, results, crewAvailable, mode, keep, locks, plan]);
 
   const counts = useMemo(() => {
     const c: Record<Severity, number> = { critical: 0, warning: 0, opportunity: 0, info: 0 };
@@ -120,7 +120,7 @@ export function InsightsPanel() {
         <div className={css.opt}>
           <div className={css.optHead}>
             <Icon name="sparkle" size={16} style={{ color: 'var(--accent)' }} />
-            <span className={css.optTitle}>Proposed truck allocation</span>
+            <span className={css.optTitle}>Proposed allocation <span style={{ fontWeight: 500, color: 'var(--ink-3)' }}>vs priority plan</span></span>
             <Badge tone={opt.solution.method === 'branch-and-bound' ? 'info' : 'na'} title={`${num(opt.solution.nodes, 0)} nodes`}>{opt.solution.method === 'branch-and-bound' ? 'Exact' : 'Greedy'}</Badge>
             <Ctl small icon="x" tip="Dismiss" onClick={() => setOptOn(false)} />
           </div>
@@ -158,7 +158,7 @@ export function InsightsPanel() {
             return (
               <div key={t.rule.id} className={css.optRow} title={`Site task (P${t.rule.priority}) - people`}>
                 <Dot color="var(--c7)" />
-                <span className={css.optName}>P{t.rule.priority} {t.rule.name} <span style={{ color: 'var(--ink-3)' }}>· people</span></span>
+                <span className={css.optName} title={`${t.rule.name}: people`}>P{t.rule.priority} {t.rule.name}</span>
                 <span className={css.optNum}>{t.current} → <b style={{ color: d > 0 ? 'var(--ok-ink)' : d < 0 ? 'var(--bad-ink)' : undefined }}>{t.proposed}</b></span>
                 <span className={css.optNum} style={{ color: db > 0.5 ? 'var(--ok-ink)' : db < -0.5 ? 'var(--bad-ink)' : 'var(--ink-3)' }}>{Math.abs(db) < 0.5 ? '–' : `${db > 0 ? '+' : '−'}${kb(Math.abs(db))}`}</span>
               </div>
@@ -176,7 +176,7 @@ export function InsightsPanel() {
           {!opt.current.feasible && <div className={css.optMeta} style={{ color: 'var(--bad-ink)', paddingTop: 8 }}>The current plan exceeds the trucks or crew available - the proposal brings it within limits.</div>}
           <div className={css.optFoot}>
             {optChanged
-              ? <span style={{ fontSize: 12.5, color: 'var(--ink-2)', flex: 1 }}>{optGain > 0.5 ? <>+{kb(optGain)} bcm/day vs the current plan</> : 'Same volume, better weighted by priority'}</span>
+              ? <span style={{ fontSize: 12.5, color: 'var(--ink-2)', flex: 1 }}>{optGain > 0.5 ? <>+{kb(optGain)} bcm/day vs the priority plan</> : 'Same volume, better weighted by priority'}</span>
               : <span style={{ fontSize: 12.5, color: 'var(--ok-ink)', flex: 1, display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="tick" size={16} />Current allocation is already optimal</span>}
             <Button size="sm" variant="primary" icon="tick" disabled={!optChanged} onClick={() => { commit('Apply optimised fleet', applyAllocation(gainRows)); toast('ok', `Optimised fleet applied${optGain > 0.5 ? ` (+${kb(optGain)} bcm/day)` : ''}`); }}>Apply</Button>
           </div>

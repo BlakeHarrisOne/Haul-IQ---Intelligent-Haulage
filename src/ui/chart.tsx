@@ -101,7 +101,9 @@ export function Legend({ items }: { items: { label: ReactNode; color: string; da
 /** Categorical colours for circuits, as CSS variables (theme-aware). */
 export const CAT = ['var(--c1)', 'var(--c2)', 'var(--c3)', 'var(--c4)', 'var(--c5)', 'var(--c6)', 'var(--c7)', 'var(--c8)'];
 /** Same, as literal light-theme hex for WebGL / canvas use. */
-export const CAT_HEX = ['#0A6FE6', '#B8692E', '#3E8A5A', '#7B5EA7', '#1F8A8A', '#B5564C', '#A88A1E', '#5B6B7F'];
+export const CAT_HEX = ['#2A78D6', '#EDA100', '#6250D6', '#1BAF7A', '#4A5FC1', '#E87BA4', '#5B6B7F', '#8C96A4'];
+/** Dark-theme steps of the same hues (for WebGL / canvas in dark mode). */
+export const CAT_HEX_DARK = ['#3987E5', '#9B8D14', '#9085E9', '#199E70', '#7385E0', '#D55181', '#6A7482', '#8C96A4'];
 
 /** Grade → colour (road / string colouring), thresholds match geom gradeClass. */
 export function gradeColor(g: number): string {

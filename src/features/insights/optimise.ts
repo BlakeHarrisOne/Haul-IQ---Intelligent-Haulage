@@ -246,6 +246,8 @@ export interface BuildOptions {
   keepDeliberate?: boolean;
   /** Circuits pinned at their current truck count. */
   lockedIds?: Id[];
+  /** Baseline trucks per circuit to compare against (default circuit.trucks) - e.g. the priority plan's allocation. */
+  baseline?: Record<Id, number>;
   computeManning: (s: Scenario, r: Record<Id, CircuitResult>) => ManningResult;
   evalCircuit?: (c: Circuit, opts: { trucks?: number }) => CircuitResult;
 }
@@ -288,11 +290,12 @@ export function optimiseFleet(s: Scenario, results: Record<Id, CircuitResult>, b
   const tasks: OptTask[] = taskRules.map((r, i) => ({ id: r.id, name: r.name, rank: rankOf(r.id), valuePerPerson: r.bcmPerUnitDay ?? 0, req: taskReq[i] }));
   const problem: OptProblem = { circuits, tasks, trucksAvailable: T, crewAvailable: b.crewAvailable, siteCrew, mode: b.mode ?? 'weighted', decay: b.decay };
   const solution = solveAllocation(problem);
-  const current = evaluate(problem, circuits.map(c => Math.min(c.current, c.bcm.length - 1)));
+  const base = act.map((c, i) => Math.min(b.baseline?.[c.id] ?? c.trucks, circuits[i].bcm.length - 1));
+  const current = evaluate(problem, base);
   const rows = act.map((c, i) => ({
-    circuit: c, current: c.trucks, proposed: solution.alloc[i],
-    bcmNow: circuits[i].bcm[Math.min(c.trucks, circuits[i].bcm.length - 1)] ?? 0, bcmNew: circuits[i].bcm[solution.alloc[i]] ?? 0,
-    crewNow: circuits[i].crew[Math.min(c.trucks, circuits[i].crew.length - 1)] ?? 0, crewNew: circuits[i].crew[solution.alloc[i]] ?? 0,
+    circuit: c, current: base[i], proposed: solution.alloc[i],
+    bcmNow: circuits[i].bcm[base[i]] ?? 0, bcmNew: circuits[i].bcm[solution.alloc[i]] ?? 0,
+    crewNow: circuits[i].crew[base[i]] ?? 0, crewNew: circuits[i].crew[solution.alloc[i]] ?? 0,
     locked: !!circuits[i].locked,
   }));
   const taskRows = taskRules.map((rule, i) => ({

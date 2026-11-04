@@ -47,7 +47,10 @@
   --na: #8E949C;      --na-50: #F1F2F4;
 
   /* data: categorical (circuits), materials, grade ramp */
-  --c1: #0A6FE6; --c2: #B8692E; --c3: #3E8A5A; --c4: #7B5EA7; --c5: #1F8A8A; --c6: #B5564C; --c7: #A88A1E; --c8: #5B6B7F;
+  /* circuits: validated categorical order (dataviz validate_palette.js, light vs #FFFFFF: worst adjacent CVD ΔE 17.4,
+     normal-vision 28.1). Deliberately avoids the status hues (sage/clay/rust) in its leading slots; c2/c4/c6 sit under 3:1 on
+     white, so charts always carry direct labels or a table view. c7/c8 are neutral overflow ("other") - never cycle hues. */
+  --c1: #2A78D6; --c2: #EDA100; --c3: #6250D6; --c4: #1BAF7A; --c5: #4A5FC1; --c6: #E87BA4; --c7: #5B6B7F; --c8: #8C96A4;
   --mat-ob: #C79A6B; --mat-coal: #2E3238; --mat-ib: #9C8C7A; --mat-dump: #7FA58E;
   --grade-flat: #3E8A5A; --grade-mod: #1F8A8A; --grade-steep: #B8692E; --grade-max: #B5564C;
 
@@ -116,7 +119,8 @@
   --warn: #D9914F; --warn-ink: #EDB27E; --warn-50: rgba(217, 145, 79, .14); --warn-100: rgba(217, 145, 79, .24);
   --na: #6A7482;   --na-50: rgba(140, 150, 164, .12);
 
-  --c1: #4C95FF; --c2: #D9914F; --c3: #5DB27E; --c4: #A58BD3; --c5: #3FB5B5; --c6: #E0796D; --c7: #D2B54A; --c8: #8C9BB0;
+  /* same hues stepped for the dark surface (validated vs #161A20: worst adjacent CVD ΔE 15.3, all ≥ 3:1, L 0.48–0.67) */
+  --c1: #3987E5; --c2: #9B8D14; --c3: #9085E9; --c4: #199E70; --c5: #7385E0; --c6: #D55181; --c7: #6A7482; --c8: #8C96A4;
 
   --hover: rgba(255, 255, 255, .06);
   --press: rgba(255, 255, 255, .10);

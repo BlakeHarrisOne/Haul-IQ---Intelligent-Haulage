@@ -33,9 +33,9 @@ export function defaultCircuitParams(la: LoaderAssumptions | undefined, truck: T
 interface DemoSpec { id: string; unit: string; aliases: string[]; truck: string; loaderModel: string; material: string; trucks: number; priority: number; dumpHints: string[]; color: string; tags?: string[] }
 
 const DEMO: DemoSpec[] = [
-  { id: 'c-ex09', unit: 'EX09', aliases: [], truck: 'CAT_789D', loaderModel: 'HIT_EX5600_7', material: 'OB', trucks: 5, priority: 1, dumpHints: ['S51', 'WEST'], color: '#2F7DE1', tags: ['prestrip'] },
-  { id: 'c-ex04', unit: 'EX04', aliases: [], truck: 'KOM_HD1500_7', loaderModel: 'KOM_PC4000_11', material: 'OB', trucks: 4, priority: 2, dumpHints: ['S52', 'EAST'], color: '#D9822B' },
-  { id: 'c-ldr1', unit: 'LDR1', aliases: ['LDR', 'LDR 1'], truck: 'CAT_789C', loaderModel: 'KOM_WA900_8', material: 'CL', trucks: 3, priority: 3, dumpHints: ['ROM', 'COAL'], color: '#3E9A5C', tags: ['coal'] },
+  { id: 'c-ex09', unit: 'EX09', aliases: [], truck: 'CAT_789D', loaderModel: 'HIT_EX5600_7', material: 'OB', trucks: 5, priority: 1, dumpHints: ['S51', 'WEST'], color: '#2A78D6', tags: ['prestrip'] },
+  { id: 'c-ex04', unit: 'EX04', aliases: [], truck: 'KOM_HD1500_7', loaderModel: 'KOM_PC4000_11', material: 'OB', trucks: 4, priority: 2, dumpHints: ['S52', 'EAST'], color: '#EDA100' },
+  { id: 'c-ldr1', unit: 'LDR1', aliases: ['LDR', 'LDR 1'], truck: 'CAT_789C', loaderModel: 'KOM_WA900_8', material: 'CL', trucks: 3, priority: 3, dumpHints: ['ROM', 'COAL'], color: '#6250D6', tags: ['coal'] },
 ];
 
 const token = (name: string) => (name.trim().toUpperCase().match(/^[A-Z]+\s?\d*/)?.[0] ?? '').replace(/\s+/g, '');
