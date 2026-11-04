@@ -139,6 +139,14 @@ Bright-only extras `@b~61,000`: `:root:not([data-theme="dark"]){--hi-blue:#1f5fd
 primary button; positive figures). Primary buttons in Bright: `background:var(--y); color:#fff`, hover `--hi-blue`.
 Selected list rows: `background:var(--sel); box-shadow:inset 3px 0 0 var(--y); color:#1f4fbf`.
 
+**Control height as shipped is not 40 px.** Two later style blocks in the screen-layout module override it
+(`@b4207635`, `@b4209593`): "Approved compact controls" `:root{--ctl:32px}` and then "Ben (21 Oct 2026, #18): every
+button at about half its area (sides x0.7: 32 -> 24 px, 36-42 -> 26-30 px); 24 px is the smallest, so each stays easy to
+hit; text stays readable (13 px)" → `:root{--ctl:24px}`, pills/rail/Layers/Plan-view buttons `height:24px!important;
+font-size:13px!important`, icons 12–14 px, the compass cluster 30 px. The DOM inventory of the running app confirms
+24 px (`#layersBtn` 113×24, bottom pills ×24; `rain_study/inventory1.json`). The screenshots therefore show a much
+smaller HUD than the 40 px rulebook — see §10 #17.
+
 ### 2.3 Tokens — dark ("Original dark") — verbatim `@b4082` (and repeated for `:root[data-theme="dark"]`)
 
 ```css
@@ -295,7 +303,8 @@ State machine (port as a `useHudRest()` hook writing classes on the app root):
   `:focus-visible` inside the HUD.
 - The wake transition uses `--motion-panel` (420 ms); the comment's "0.16 s" is stale.
 - **Later layout (bottom pills, `@b4145200`)**: the full time bar is folded away and "opens when the pointer reaches the
-  bottom edge, while playing or while the rain menu is open" (`.app.rm-bar-open #scrub`, 540 ms in / 360 ms out).
+  bottom edge, while playing or while the rain menu is open" (`.app.rm-bar-open #scrub`, 540 ms in / 360 ms out) — in
+  the shipped code it opens on a click of the ⌃ toggle or the hour button and on Play (§5.1); hovering does not open it.
 
 ### 2.9 Controls
 
@@ -534,6 +543,11 @@ at 40° altitude, so no face is ever black; `gray = (hs − 0.15)/0.85` stretche
 the height tint; the curvature term brightens crests by up to 10 % and darkens toes by 16 % only when a metre is
 > ~1.7 px on screen (it fades between 0.35 and 0.6 m/px so it never aliases). **Cut/fill** recolouring keeps the
 hillshade (`× (0.55 + 0.75·gray)`) — the exact trick we need for dig (blue-ish) / dump (sage/clay) solids.
+
+**Slope tinting**: none. RM never colours by slope (the only slope-driven terms are the 2D contour suppression below
+3 % and the running-water sheen past ~35°). hAIul SIM needs a **grade-class overlay** for roads and ramps (e.g. ≤ 8 %
+sage, 8–10 % clay, > 10 % rust) computed from the same gradient texture (`|∇z|` along the road tangent for strings,
+`|∇z|` for free terrain).
 
 `g1Ground` (`G1_GROUND` `@b~809300`) — the photo, baked light and the real sun:
 
@@ -880,7 +894,10 @@ orbit target** rather than moving panels. Perfect template for "fly to shovel �
 - Gradients on the GPU (no CPU pass over 11 M nodes); region updates (`setZ1Region` + `setGradRegion`) for local edits
   and deformation animation; uploads in bands; heights copied to the bake worker in 2 M slices; one persistent bake
   worker; 1 m grid dropped to 2 m when over `MAX_TEXTURE_SIZE`.
-- Weather tiers (high/medium/low) chosen by the governor; reduced motion disables time-varying effects.
+- Weather tiers (high/medium/low): a Quality pick `auto|high|medium|low` (localStorage `rm3d.quality`); in auto
+  (`g3Tier` `@b~2992300`) the tier drops to **low** when the governor's rest scale is below full, high → medium after
+  700 ms of moving frames over 18.5 ms median, medium → high after 6 s under 14 ms; "a still picture never changes
+  tier by itself". Reduced motion disables time-varying effects.
 - Perf HUD (Ctrl+Shift+F, `@b3249221`): fps + p50/p95/max interval with a 120-frame sparkline (green < 17 ms, amber
   < 33, red), CPU per frame, **GPU per frame via `EXT_disjoint_timer_query_webgl2`** (Shift+click: per-pass breakdown),
   render scale/governor/tier, tiles/tris/draw calls, long tasks, upload MB/s, GPU memory, "Software WebGL: the GPU is
@@ -1005,8 +1022,9 @@ invisible touch target, and a selected state as an accent-filled cut-corner tag.
 Anatomy (original v2 bar, `@b38802` CSS, `@b2225600` JS): one glass bar `48 px` high across the bottom:
 `[rain chip ▾] | [▶ 52 px] | [track: day columns + rain bars + head] | ["Not calibrated"]`, and over the head the
 **hour flag**. The newest layout folds it into **three pills** (rain · ▶ + hour "Thu 10:00 ⌃" · ⋯ + New case) and
-opens a 32 px, ≤ 640 px wide bar (`.app.rm-bar-open #scrub`) on the ⌃ toggle, on hovering the hour, while playing, or
-while the rain menu is open; it closes 2 s after the pointer leaves; Esc closes it.
+opens a 32 px, ≤ 640 px wide bar (`.app.rm-bar-open #scrub`) when the ⌃ toggle or the hour button is clicked or when
+playback starts (`ext.on('play', p => { if (p && p.on) setBar(true); })` `@b4157383`); it closes 2 s after the pointer
+leaves it (hover, a drag or keyboard focus inside keep it), on window blur, in compare mode, and on Esc.
 
 ```css
 .scrub{position:absolute;left:var(--gut);right:var(--gut);bottom:var(--gut);z-index:20;height:48px;display:flex;align-items:stretch}
@@ -1090,16 +1108,27 @@ outside `#play` and `[data-keeps-play]` (the 3D canvas) pauses. Playing never le
 
 ### 6.1 Tools, modes and keys (`@b3423550`, keys `@b3849600`)
 
-- Tool rail (left, vertically centred in the latest layout, 132 px wide; rows 42 px, icon 18 px + name, 2 px left accent
-  bar when pressed, hairlines between rows): **Drain D, Bund B, Note N** (Select is the neutral mode; Sump and Pump line
+- Tool rail (left, vertically centred in the latest layout, 132 px wide; rows 42 px — 24 px after the compact pass —,
+  icon + name, 2 px left accent bar when pressed, hairlines between rows; as shipped: Drain, Bund | Undo, Redo | Pump,
+  screenshot `26_segment_entered.png`): **Drain D, Bund B, Note N** (Select is the neutral mode; Sump and Pump line
   are legacy, still loadable). Tool names show on focus or always (Settings → "Tool names"). The rail only appears inside
   an entered segment (layout v2: Design is per-catchment).
 - **Two ways to draw a line**: *press–drag–release* (the raw path straightened by `RMPlan.cleanLine` at **3.2 screen px**
   tolerance, legs ≥ 5 m) or *click points* (double-click or **Enter** finishes, **Backspace** drops the last point,
   Shift+Enter keeps the tool). After an item is made the tool **lets go** back to Select unless Shift was held or the
-  tool was locked by a double-click on it ("P5").
+  tool was locked by a double-click on it ("P5"). **Right-click finishes** a click-points line with ≥ 2 points (else
+  cancels it) — a capture-phase `pointerdown` with `button === 2` (`@b~3833100`); the right button no longer turns
+  the camera while drawing.
+- While Drain or Bund is on (review 15, `@b~4188300`): a **custom crosshair cursor in the tool's colour** (SVG data URL:
+  a 4 px dark under-stroke `rgba(10,13,15,.8)` + 2 px coloured stroke, centre dot r 2.4; drain `#8cc6f2`, bund `#f0f3f4`)
+  and a **draw-hint bar** centred above the bottom bar (`.rm-drawhint.gl`, 40 px, 14 px `--t2` with 600-weight key
+  names): "**Left-click** add a point · **Right-click** finish · **Backspace** undo a point · **Esc** cancel"
+  (screenshot `27_drain_snap_ring.png`).
+- The live line (screenshot `28_drain_live_line.png`): numbered vertex dots (1, 2 …, white fill, ink ring), committed
+  legs solid in the drain blue, the leg to the pointer dashed with a pale halo band, and a readout chip at the pointer
+  "**Drain** · 530 m · falls 4.9 m · open ground → P2"; the start snapped to the pond's diamond marker.
 - **Esc**: closes the item detail layer → stops a play → cancels the drawing (and the tool) → clears the selection; a
-  **right-click without drag cancels** the item in progress. **Delete/Backspace** removes the selected item (with an
+  right-click without drag outside click-drawing cancels the tool. **Delete/Backspace** removes the selected item (with an
   "Undo" toast); **Ctrl/⌘+Z** undo, **Ctrl/⌘+Shift+Z** or **Ctrl+Y** redo; **A** flips Before/After; tool letters are
   ignored while typing; the rail and Before/After use a roving tabindex with arrow keys.
 - Touch: bigger thresholds (`MIN_DRAG` 8 px vs 4, `HIT` 20 px vs 10) and a "Done" chip to finish a click-points line.
@@ -1251,6 +1280,229 @@ A–B tool plus road width/berm/windrow template overlay and the dig/dump solids
 - Kinds are registered (`RMCard.register(kind, {render, key, label, attrs, close, bind, update, onPin, onClose})`) —
   a good pattern for trucks, loaders, dump points, road segments.
 - Info panel (selection): title "P104  SE · RL 303.7", Water now, Fullest (when), `Enter ›` into a focused segment
-  ("Runs for this segment only, so results come back fast."), `Exit ‹`.
+  ("Runs for this segment only, so results come back fast."), `Exit ‹`. As captured inside a segment
+  (`26_segment_entered.png`): an uppercase 11.5 px head "SEGMENT", "**P2** W · RL 262.5", key/value rows with hairline
+  rules ("Water now 15,686,481 L", "Fullest 30,618,424 L · Thu 16:00" — the flow-unit preference turns m³ into L), two
+  boxed buttons "Details" | "Exit ‹". It collapses to one line + buttons when an item card opens under it.
+- **Item card** (Design, `30_drain_done.png`): docked under the info panel at the right; a 2 px accent top edge (held),
+  a bold title "Drain 1" with ×; a "Depth" stepper (− 1.0 m +, boxed 30 px); a **mini long section** (ground solid
+  `#6b7785`, design invert dashed accent, RL ticks 267.6 / 263.8 / 260.0, chainage 0 m – 530.3 m, end handles);
+  the consequence sentence "No pond loses water by Thu 16:00, if built before the rain"; a red "🗑 Delete" action.
+  The item's **map label "Drain 1" hangs from a leader stem** to the line (leaders survive for Plan labels, not for
+  pinned cards).
+- **Segment focus in 3D** (`26_segment_entered.png`): the camera flies into the catchment; everything outside it is
+  veiled toward white (`uVeil`, cross-faded between lit areas over `VEIL_MS`), the selected water body is tinted solid
+  accent blue (`uSelTint`), its marker is an accent diamond with a "P2" chip, and the top centre gains
+  "Before | After | Compare" and a "Designs (1 of 1 on) ▾" chip after the first item (`29_drain_dig_animation.png`).
 
 ---
+## 9. Steal these (the best patterns, ranked by value to hAIul SIM)
+
+1. **One `state(clock)` → uniforms function** for all atmosphere (RMAtmos `state()`): sky zenith/horizon, sun amount
+   (× (1−cover)^1.3), exposure −0.15 EV and −12 % saturation in bad weather, haze from 4 mm/h capped at 25 % beyond 60 %
+   of the view, cloud-shadow strength `0.7·sin(π·cover)`. Drive ours from the **shift clock + weather + dust**.
+2. **4-light matplotlib hillshade + 22 % hypsometric tint + curvature crest/toe accent** with **separate shading
+   exaggeration (2.5) from display exaggeration (1.5)** — terrain that reads like an engineer's plot at any zoom.
+3. **Cut/fill recolour that keeps the hillshade** (`mix(rgb, col·(0.55+0.75·gray), a)`), blue for carved, sage for built;
+   and CRPlanGL's `fill`/`diverge` ramps with fade-in thresholds — ready-made depletion visuals.
+4. **Worker-baked horizon AO (8 dirs × 11 radii) + soft sun visibility (30-step march, smoothstep ±0.035)**, softened by
+   texture-LOD bias under cloud, rebaked when the real sun moves > 10°, cross-faded by angle.
+5. **Vertex-less 128 m tiles × 5 LODs + growing skirts**, CPU culling and a cached tile list; two programs so interior
+   tiles avoid `discard`.
+6. **Analytic contours with self-fading** (major 5 m / minor 1 m, fade < 4 px spacing, suppressed < 3 % slope) — port
+   into 3D (RM never did).
+7. **Screen-space-width ribbons with drifting chevrons and dashes** draped with an eye-ward lift — our haul strings,
+   travel direction and live traffic.
+8. **Camera**: orbit about the point under the pointer, zoom-to-cursor glide (τ 0.115 s), inertia (τ 0.32 s), log-scale
+   fly-to that preserves on-screen scale while FOV morphs 40° → 12°, velocity-inheriting retargets, rubber-band limits,
+   eye ≥ 3 m above ground, tilt ≥ 8°, auto-recover after 300 ms blank, framing inside the HUD-free rectangle.
+9. **Close-up choreography** (zoom-in 1.5 s → formation 3 s → zoom-out 1.5 s → hold 1 s) advanced by real landings, with
+   per-node delayed easing of the terrain — reuse for "watch this bench get dug this shift".
+10. **Playback split**: discrete UI updates on whole keyframes, continuous `smoothstep` in between via (from, to) texture
+    pairs; one rAF clock with dt clamp; pause on any non-camera input; a ribbon that survives HUD fade.
+11. **Time bar shows progress with the data** (played bars opaque, future at .38) + a head notch + a flag with icon,
+    time and running total; ARIA slider; cached layout (no per-frame reflow).
+12. **HUD discipline**: one material, one shape family, one accent, `tabular-nums` everywhere, z-layer table, a written
+    rulebook in code; auto-fade after 2.5 s with edge-aware wake (96 px), held while anything is open or focused, blur
+    switched off at rest; "solid panels" auto-enabled on slow GPUs; reduced-transparency honoured.
+13. **Even-odd `::after` edge with `w·0.41` diagonal offset** — crisp 1 px (or 2 px focus) outlines that follow any
+    clipped shape.
+14. **Semantic snapping** with a pulsing labelled ring shown *before* commit, radius in screen px; live readout computed
+    exactly as the commit will be; an aiming aid that highlights what the line would cross.
+15. **Undo burst coalescing (500 ms)**, 200-step history, cached recomputes keyed by state so undo/redo is instant,
+    "Deleted · Undo" toast.
+16. **View adapter** (`toWorld/toScreen/pxPerM/onFrame`) so one drawing tool works in 2D, 3D and print.
+17. **Long-section handle grammar**: 0.05 m grid, Shift = 0.5 m, arrow-key bursts commit after 500 ms, range frozen
+    during drag, only grows after, dashed "before" line, live region announcements, `onLive`/`onCommit` split.
+18. **Strict section sampling** (gaps are gaps, never invented) and the **1:1 vs Fit-depth** toggle with a labelled
+    "Vertical ×N".
+19. **Greedy label placement** (8 directions × 5 distances, leader-crossing test, `leadersFirst`) and halo text for
+    in-world labels.
+20. **Render-scale governor** (4.3 M px cap while moving, back to full DPR 1.2 s after rest, 30 fps ambient) + a built-in
+    perf HUD with GPU timer queries and a "software WebGL" warning.
+
+## 10. What to beat (concrete weaknesses and missed opportunities)
+
+1. **Water-only semantics** — no objects at all: no trucks, loaders, dozers, lights, signage, berms, windrows, power
+   lines. hAIul SIM must render animated equipment (instanced, LOD'd, with shadows) and an **equipment POV driving
+   camera** along routes (RM has none).
+2. **No dynamic shadows or object lighting** — only baked terrain AO/sun visibility. Use a cascaded directional shadow map
+   for equipment and dump/dig solids; keep RM's baked AO for terrain.
+3. **No contours, grid, scale bar or coordinates on the 3D terrain**; the compass is the only orientation aid. Add analytic
+   contours (§4.2), an optional 50/100 m MGA grid draped in-shader, a dynamic scale bar (HRL has one), and RL labels on
+   index contours.
+4. **Plan colour ramp hard-coded to RL 265–350** (`(z − 265)/85` in CRPlanGL) — wrong for most pits. Use the survey's
+   actual percentiles (RM's 3D tint uses `zmin..zmax`; do that everywhere, robustly at P2/P98).
+5. **Noisy surfaces look bad**: high-frequency survey noise becomes a diamond/argyle pattern under the 2.5× shading
+   exaggeration and the curvature accent (screenshots `03`–`06`); the white flow "crest" glyphs read as litter. Add a
+   display-only low-pass (bilateral on heights, preserving crests/toes) before gradients, and cap shading exaggeration
+   by local roughness.
+6. **No vertex editing** of drawn lines (redraw only); no insert/delete vertex, no drag handles on the map, no numeric
+   entry of a vertex, no grade-constrained drawing. Our haul-string digitiser must have all of these.
+7. **Leader lines disabled** in the current layout; pinned cards no longer point at their subject. Bring leaders back
+   (with RM's own crossing-avoidance) for multi-select truck/loader cards.
+8. **Design drift**: three generations of bottom bar (48 px bar → 32 px folded bar → pills), rounded cluster vs cut-corner
+   rule, dark inspector panels forced then patched for Bright, `!important` everywhere, legacy colour constants in
+   canvas modules (`#f3f2ef` paper vs `#eef1f4` map). We ship one token source (TS + CSS vars) consumed by DOM, canvas
+   and shaders.
+9. **Single 25 MB HTML** with the worker as a string and a PDF inside; slow first paint, no caching, no code splitting.
+   Vite chunks + workers + lazy Three modules + KTX2/meshopt assets.
+10. **One playback speed** (24 h/5 s) and coarse controls; no loop/range, no bookmarks, no keyframe stepping, no
+    J/K/L shuttle, no "real time" mode. Add speeds, loop range, markers (shift change, crib, blast).
+11. **No scenario compare in 3D beyond Before|After split/swipe** for one design; we need side-by-side or overlay of N
+    scenarios with synced cameras and a diff layer.
+12. **Charts are hand-drawn per module** (time bar, A–B chart, pump charts with SVG colours patched by CSS selectors on
+    attribute values). Use one charting layer themed by tokens.
+13. **Accessibility gaps**: canvas content is mostly `aria-hidden`; good ARIA on the slider and long section, but no
+    keyboard path to pick an object in 3D other than Tab through ponds. Provide an object list with roving focus.
+14. **No TAA/FXAA beyond MSAA**, no SSAO for objects, no bloom on lights at night, no tone mapping (simple `uGrade`
+    multiply). Use ACES/AgX tone mapping, SMAA/TAA, and a night mode with equipment lights.
+15. **Dark theme accent is grey** (`#b9c2c7`) — selection and focus become hard to see on dark terrain. Keep a saturated
+    accent in dark.
+16. **Sections clip the whole model by one plane only**; no ribbon section along a polyline (needed for haul profiles
+    that follow the road), no section box.
+17. **Controls shrunk to 24 px** (`--ctl:24px`, 13 px text, 12–14 px icons) in the final layout pass: at the WCAG 2.2
+    AA minimum target size, hard with gloves or on a site tablet, and visually timid against a full-screen 3D pit. HRL's
+    44 px chrome is the better baseline; offer a "Compact" density (32 px) as a setting, never below.
+18. **The HUD hides too much**: in the shipped layout the time bar is folded behind a 24 px toggle and only opens on
+    hover/play, and the top groups fade — the at-rest screenshots show a bare pit with three tiny pills. Keep the
+    shift bar's ribbon and KPIs visible at rest.
+
+## 11. Recommended combined visual direction for hAIul SIM (light + dark)
+
+Goal: family resemblance with **Haul Road Lab** (white 44 px chrome, cards radius 14, `#0A84FF`, sage/rust/clay) plus
+Rain Model's **discipline** (one material, tabular figures, strict layers, auto-fade, at-rest ribbon) and a renderer
+that exceeds both. Verified HRL tokens (`haulroad.html`, head `<style>` `@b~381` and v6 core `@b11937606`):
+`--blue:#0A84FF; --blue-t:rgba(10,132,255,.12); --green:#3E6E50; --green-t:rgba(90,143,110,.14); --red:#9A3B32;
+--red-t:rgba(181,86,76,.13); --orange:#9A5A26; --orange-t:rgba(196,122,62,.14); --r:14px;
+--ease:cubic-bezier(.23,1,.32,1); --shadow:0 10px 30px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04)`; v6:
+`--v6-r-card:14px; --v6-r-ctl:10px; --v6-r-cell:6px; --v6-clay:#B8692E; --v6-green:#3E8A5A; --v6-red:#B5564C;
+--v6-shadow:0 6px 20px rgba(20,30,50,.08)`.
+
+### 11.1 Shape and material
+
+- **Shape family (rounded, not cut)**: radius 14 cards/panels/menus, 10 controls, 6 cells/tags, 999 pills and the
+  compass. Rationale: matches HRL; RM's cut corners are distinctive but RM itself drifted to rounded pills. Keep RM's
+  *rule* ("one family, no exceptions") and its even-odd edge trick for focus rings that follow the radius
+  (`outline` with `outline-offset` is enough for rounded shapes).
+- **Material**: Light = HRL white glass `rgba(255,255,255,.90)` (controls) / `.94` (panels) with `backdrop-filter:
+  blur(16px) saturate(160%)` and HRL's soft two-layer shadow (the only shadow in the system). Dark = RM smoked glass
+  `rgba(17,21,24,.62)` / `rgba(20,25,28,.82)` with `saturate(140%)`, `inset 0 1px 0 rgba(255,255,255,.06)` sheen, 1 px
+  `rgba(255,255,255,.14)` hairline, **no** drop shadow. Solid fallback (`.solid`) auto-enabled by the frame governor.
+- **Control height 44 px** (HRL) on desktop, 48 px coarse; gutters 16 / 10 (phone); group separators = 1 px hairlines
+  inset 11 px (RM).
+
+### 11.2 Tokens (proposed; one TS source → CSS vars + shader uniforms)
+
+```css
+:root{                                   /* hAIul SIM — Light ("Bright + HRL") */
+  --bg:#EEF0F3; --surface:#FFFFFF; --surface-2:#F6F7F9; --glass:rgba(255,255,255,.90); --glass-hi:rgba(255,255,255,.94);
+  --hair:#E3E6EB; --hair-2:#EEF0F3; --ink:#1F2329; --ink-2:#4A5059; --ink-3:#646A73;
+  --accent:#0A84FF; --accent-ink:#0A5FC4; --accent-t:rgba(10,132,255,.12); --sel:#EEF4FD;
+  --sage:#3E8A5A; --sage-ink:#2E6B45; --sage-t:#EDF6F0;      /* producing / on plan / OK          */
+  --clay:#B8692E; --clay-ink:#8F5422; --clay-t:#F7EDE3;      /* queueing / waiting / caution      */
+  --rust:#B5564C; --rust-ink:#9A3B32; --rust-t:#FBEFED;      /* down / over grade / behind plan   */
+  --dig:#2F6FB0; --dump:#A0703C; --coal:#22262B; --haul-loaded:#0A84FF; --haul-empty:#8E949C;
+  --halo:0 0 2px rgba(255,255,255,.95),0 0 10px rgba(255,255,255,.8);
+  --r-card:14px; --r-ctl:10px; --r-cell:6px; --ctl:44px; --gut:16px;
+  --shadow:0 10px 30px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+  --blur:16px; --sat:160%; --e:cubic-bezier(.23,1,.32,1); --e-soft:cubic-bezier(.4,0,.2,1);
+  --t-hover:240ms; --t-panel:420ms; --t-fade:600ms;
+  font-variant-numeric:tabular-nums;
+}
+:root[data-theme="dark"]{               /* hAIul SIM — Dark ("RM smoked glass + saturated accent") */
+  --bg:#15191B; --surface:#1C2124; --surface-2:#22282B; --glass:rgba(17,21,24,.62); --glass-hi:rgba(20,25,28,.82);
+  --hair:rgba(255,255,255,.14); --hair-2:rgba(255,255,255,.08); --ink:#EEF1F2; --ink-2:#B3BCC1; --ink-3:#939DA3;
+  --accent:#409CFF; --accent-ink:#7DB8FF; --accent-t:rgba(64,156,255,.18); --sel:rgba(64,156,255,.16);
+  --sage:#5FBF86; --clay:#E0A060; --rust:#EF6B5C;
+  --dig:#6AA6E0; --dump:#D2A26A; --haul-loaded:#409CFF; --haul-empty:#7A828B;
+  --halo:0 1px 2px rgba(8,11,13,.85),0 0 10px rgba(8,11,13,.55);
+  --shadow:none; --sat:140%;
+}
+```
+
+Status scheme usage (HRL's sage/rust/clay, RM's "one accent for selection"): blue = selected/held/focused only; sage /
+clay / rust = equipment and plan states; dig and dump get their own *data* hues (blue-ish carved, warm built — RM's
+review-approved pairing `vec3(0.29,0.51,0.75)` / `vec3(0.53,0.69,0.53)` shifted so built ≠ sage status). Every status
+colour has an `-ink` variant ≥ 4.5:1 on its surface (RM's R68 rule: orange fails as small text).
+
+### 11.3 Terrain look (both themes)
+
+- Light: RM's 4-light hillshade, `gray` stretch, a **true-percentile hypsometric tint** at 18–22 % (cool grey-green low
+  → warm sand high), contours ink `(0.06,0.07,0.08)` at 12 %/40 %, background `--bg` fading into an RMAtmos sky.
+- Dark: the same hillshade ×0.72 with a cooler tint, contours `rgba(255,255,255,.18/.45)`, sky ×0.55 (RM's dark rule),
+  **saturated accent kept**.
+- Dig solids: translucent `--dig` volume, top face hillshaded, shrinking per keyframe; dump solids: `--dump` lifts
+  rising; mined-so-far = CRPlanGL `diverge` blue, dumped-so-far = `fill` ramp; both keep the hillshade.
+- Haul strings: RM ribbons, 3 px core + 1 px halo, chevrons drifting at scaled truck speed (loaded `--haul-loaded`,
+  return `--haul-empty`), grade violations rust, segments under construction dashed.
+- Night shifts: sky to RM's night palette, terrain ×0.35, equipment lights with bloom, tone mapping AgX.
+- **Vertical exaggeration**: RM displays at 1.5× (and shades at 2.5×). Keep 1.5× for overview/plan, but the **POV
+  driving camera must run at 1.0×** (grades and sight lines must be true); animate `vex` 1.5 → 1.0 during the fly-in to
+  POV with RM's log-scale flight (§3.12) so the transition is seamless, and keep shading exaggeration separate.
+
+### 11.4 HUD layout for hAIul SIM (desktop)
+
+- Top-left: compass (44 px circle) · View ▾ (layers) · Plan/3D/POV segmented. Top-centre: scenario name + compare
+  toggle. Top-right: ⋯ (Save ▸ fly-out, Settings, About), user.
+- Left rail (132 px, RM's): Digitise road · Edit points · Section · Measure · Dig/Dump solids · Fleet.
+- Bottom: the **shift bar** (RM time bar grammar, 48 px): scenario chip ▾ | ▶ | shift track (production bars, shift
+  columns, crib/blast bands, head + flag "D 10:30 · 12,400 bcm so far") | speed ▾ (0.5×/1×/4×/16×) | KPI pill
+  (trucks required, TPH). At rest: a 20 px ribbon + time above the head.
+- Right: inspector panel (RM info panel) for the selection; hover cards with RM placement; pinned cards **with leaders**.
+- Docked above the shift bar: haul profile (RM long section, 262 px) or cross-section (RM A–B, 200 px side + chart).
+- Auto-fade 2.5 s, edge-aware wake, held while editing; "Keep controls visible" setting.
+
+### 11.5 Acceptance bar — "exceeds Rain Model" checklist for the builders
+
+| Area | Rain Model (measured in source) | hAIul SIM must ship |
+|---|---|---|
+| Terrain shading | 4-light hillshade, curvature accent, baked AO + sun visibility | same + analytic contours in 3D + grade-class overlay + display low-pass for noisy surveys + object shadow maps |
+| Model edge | 9 m uniform brown skirt, 5 m lines | cut to a datum with strata/seam bands from the solids, RL tick labels on the skirt |
+| Atmosphere | weather `state()`, sky, clouds, cloud shadows, haze, rain | same driven by shift clock + dust + rain; night with equipment lights, bloom, AgX tone mapping, SMAA/TAA |
+| Objects | none | instanced trucks/loaders/dozers with LOD, shadows, wheel/bed animation, POV camera at vex 1.0 |
+| Camera | orbit-at-pointer, zoom glide τ .115 s, inertia τ .32 s, log-scale FOV flights, no-void limits, compass drag | all of RM's + follow-cam, POV drive, keyframed tours, multi-view compare with synced cameras |
+| Playback | 24 h/5 s, smoothstep between hours, Space/←/→/Home/End | 0.5×–16× + real-time, loop range, markers (shift change, crib, blast), J/K/L, keyframe stepping, at-rest ribbon with KPIs |
+| Digitiser | click/drag lines, `cleanLine` 3.2 px, semantic snap ring 25/12 px, undo 200 + 500 ms coalescing, no vertex editing | all of RM's + vertex drag/insert/delete, numeric vertex entry, grade-constrained drawing, snap to road ends/ramps/contours/dig faces |
+| Profiles | long section with 0.05 m pins, A–B section 1:1/fit, offset bar | haul profile along the string (chainage, grade/leg, speed band), section boxes and polyline sections, solids at shift time |
+| HUD | glass, one shape, 24 px controls (shipped), folded time bar, leaders disabled | glass + HRL shape, 44 px controls (32 px compact option), visible shift bar + KPIs, pinned cards with leaders |
+| Perf | governor (4.3 M px moving, full DPR at rest), 30 fps ambient, perf HUD | same targets: ≥ 50 fps moving at 1080p on an integrated GPU, ≤ 2 s first frame on a 10 M-node survey, perf HUD with GPU timers |
+
+## 12. Three.js / React port map (summary)
+
+| Concern | Implementation |
+|---|---|
+| Tokens | `tokens.ts` → CSS vars on `:root`, a `useTokens()` hook for canvas, a `Uniforms` object for shaders; re-read on `data-theme` change (RM's MutationObserver pattern) |
+| Glass/shape | `<Glass variant>` with `::before` fill + blur, `::after` edge; `.solid` class; `@supports (transition-behavior: allow-discrete)` + `@starting-style` popups or Framer Motion with 540/360 ms |
+| HUD rest | `useHudRest({restMs: 2500, edgePx: 96})` setting `awake/awake-top/awake-bottom/rested` on the app root; `held` computed from a Zustand store of open surfaces |
+| Terrain | §3.14; `RawShaderMaterial` GLSL3 ports of `VS_TERRAIN`/`FS_TERRAIN` + contour block; worker AO bake; morph by keyframe pairs |
+| Atmosphere | `atmos.ts` = RMAtmos `state()` + `skyColours()` + `texture()` verbatim; postprocessing `Effect`s for sky, haze/cloud-shadow, flow streaks |
+| Ribbons | `HaulRibbon` (instanced segments, `VS_LINE`/`FS_LINE`), chainage attribute, chevron speed uniform |
+| Camera | `RigController` porting `basis/flyTo/stepZoom/stepInertia/limits/frame()`; React state only for mode; the controller owns the per-frame pose |
+| Playback | `useShiftClock()` (rAF, dt clamp 0.1 s, speeds, pause-on-input except `[data-keeps-play]`), emits `{T, k, t, eased}`; discrete store updates on whole keyframes |
+| Time bar | Canvas2D track (DPR-aware), cached layout, ARIA slider, ribbon at rest |
+| Drawing | view-adapter interface; `cleanLine` (Douglas–Peucker at 3.2 px), snap providers (road ends, ramps, dig faces, dump points, contour crossings) with RM's ring; history with 500 ms coalescing |
+| Sections | `RMPlanLS`-style `frame/metrics/chainTicks/rlTicks/exagLabel` helpers verbatim; handles with the same key grammar |
+| Cards | `place()`/`dock()` verbatim; registry of card kinds; leaders on an SVG overlay re-projected each frame |
+| Perf | governor (pixel ratio levels, 4.3 M cap, 1.2 s rest), ambient 30 fps, perf HUD with `EXT_disjoint_timer_query_webgl2` |
+

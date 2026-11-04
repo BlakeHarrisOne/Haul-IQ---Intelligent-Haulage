@@ -1,0 +1,801 @@
+{
+ "_source": "Haul Road Lab haulroad.html (v6 core sprite + legacy sets), extracted 2026-11-04",
+ "icons": {
+  "i-eye": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<path d=\"M1.8 10s3.2-5.6 8.2-5.6 8.2 5.6 8.2 5.6-3.2 5.6-8.2 5.6S1.8 10 1.8 10z\"/><circle cx=\"10\" cy=\"10\" r=\"2.6\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11949884"
+  },
+  "i-give": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<path d=\"M3 4.5h14L10 16.5z\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11950150"
+  },
+  "i-angle": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<path d=\"M3 16.5h14M3 16.5L13.5 4\"/><path d=\"M8.3 16.5a5.3 5.3 0 0 0-1.6-3.8\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11950332"
+  },
+  "i-near": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<path d=\"M7 2.5v15M13 2.5v15M2.5 7h15M2.5 13h15\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11950564"
+  },
+  "i-level": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<path d=\"M2.5 14.5h15\"/><path d=\"M4.5 10.5h11\"/><path d=\"M4.5 8v5M15.5 8v5\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11950766"
+  },
+  "i-bund": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<path d=\"M1.8 15.5c3.4 0 4.4-7 8.2-7s4.8 7 8.2 7\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11950996"
+  },
+  "i-hump": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<path d=\"M1.8 15h4.6c1.6 0 2.2-4.2 3.6-4.2s2 4.2 3.6 4.2h4.6\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11951199"
+  },
+  "i-cab": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<circle cx=\"10\" cy=\"10\" r=\"7.2\"/><circle cx=\"10\" cy=\"10\" r=\"1.8\"/><path d=\"M2.8 10h5.4M11.8 10h5.4M10 11.8v5.4\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11951414"
+  },
+  "i-rings": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<circle cx=\"10\" cy=\"10\" r=\"7.2\"/><circle cx=\"10\" cy=\"10\" r=\"3.4\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11951678"
+  },
+  "i-dig": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<path d=\"M4 16l7-7\"/><path d=\"M11 3.5l5.5 5.5-2.6 2.6L8.4 6.1z\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11951897"
+  },
+  "i-down": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<path d=\"M5.5 8l4.5 4.5L14.5 8\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11952113"
+  },
+  "i-up": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<path d=\"M5.5 12l4.5-4.5 4.5 4.5\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11952298"
+  },
+  "i-left": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<path d=\"M12 5.5L7.5 10l4.5 4.5\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11952483"
+  },
+  "i-right": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<path d=\"M8 5.5l4.5 4.5L8 14.5\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11952669"
+  },
+  "i-x": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<path d=\"M5.5 5.5l9 9M14.5 5.5l-9 9\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11952855"
+  },
+  "i-tick": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<path d=\"M4.8 10.4l3.3 3.3 7.1-7.4\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11953042"
+  },
+  "i-spin": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<circle cx=\"10\" cy=\"10\" r=\"7.2\" stroke-opacity=\".22\"/><path d=\"M10 2.8a7.2 7.2 0 0 1 7.2 7.2\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11953231"
+  },
+  "i-plus": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<path d=\"M10 4v12M4 10h12\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11953478"
+  },
+  "i-undo": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<path d=\"M6.5 6.5H12a4.5 4.5 0 0 1 0 9H7\"/><path d=\"M8.8 3.8L6 6.5l2.8 2.8\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11953658"
+  },
+  "i-reset": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<path d=\"M4.2 10a5.8 5.8 0 1 0 1.9-4.3\"/><path d=\"M4 3.2v3.6h3.6\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11953887"
+  },
+  "i-info": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<circle cx=\"10\" cy=\"10\" r=\"7.2\"/><path d=\"M10 9v5M10 6.2v.1\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11954107"
+  },
+  "i-edit": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<path d=\"M4 16l1-3.6 7.6-7.6 2.6 2.6L7.6 15z\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11954321"
+  },
+  "i-road": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<path d=\"M6.5 17.5L8.6 2.5M13.5 17.5L11.4 2.5M10 5v1.8M10 9.4v1.8M10 13.8v1.8\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11954520"
+  },
+  "i-ix": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<path d=\"M8 2.5v6.3H2.5M12 2.5v6.3h5.5M2.5 12.2H17.5\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11954752"
+  },
+  "i-width": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<path d=\"M2.5 10h15\"/><path d=\"M5.5 7l-3 3 3 3M14.5 7l3 3-3 3\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11954957"
+  },
+  "i-grade": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<path d=\"M2.5 15.5h15L17.5 6z\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11955174"
+  },
+  "i-report": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<rect x=\"3.5\" y=\"3\" width=\"13\" height=\"14\" rx=\"2\"/><path d=\"M7 7.5h6M7 10.5h6M7 13.5h3.5\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11955359"
+  },
+  "i-gear": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<path d=\"M8.28 4.36L8.51 2.34A7.80 7.80 0 0 1 11.49 2.34L11.72 4.36A5.90 5.90 0 0 1 14.02 5.69L15.89 4.88A7.80 7.80 0 0 1 17.38 7.46L15.75 8.67A5.90 5.90 0 0 1 15.75 11.33L17.38 12.54A7.80 7.80 0 0 1 15.89 15.12L14.02 14.31A5.90 5.90 0 0 1 11.72 15.64L11.49 17.66A7.80 7.80 0 0 1 8.51 17.66L8.28 15.64A5.90 5.90 0 0 1 5.98 14.31L4.11 15.12A7.80 7.80 0 0 1 2.62 12.54L4.25 11.33A5.90 5.90 0 0 1 4.25 8.67L2.62 7.46A7.80 7.80 0 0 1 4.11 4.88L5.98 5.69A5.90 5.90 0 0 1 8.28 4.36Z\"/><circle cx=\"10\" cy=\"10\" r=\"2.4\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11955604"
+  },
+  "i-camera": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<path d=\"M3 6.5h3l1.4-2h5.2l1.4 2h3v9H3z\"/><circle cx=\"10\" cy=\"11\" r=\"2.8\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11956268"
+  },
+  "i-pin": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<path d=\"M10 17.5s5.5-5.2 5.5-9.4a5.5 5.5 0 0 0-11 0c0 4.2 5.5 9.4 5.5 9.4z\"/><circle cx=\"10\" cy=\"8\" r=\"2\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11956498"
+  },
+  "i-drag": {
+   "viewBox": "0 0 20 20",
+   "svgInner": "<path d=\"M7 5.5h.01M13 5.5h.01M7 10h.01M13 10h.01M7 14.5h.01M13 14.5h.01\" stroke-width=\"2.6\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "v6 core SPRITE, char offset 11956757"
+  },
+  "st-fail": {
+   "viewBox": "0 0 18 18",
+   "svgInner": "<circle cx=\"9\" cy=\"9\" r=\"8\" fill=\"#B5564C\"/><path d=\"M6.2 6.2l5.6 5.6M11.8 6.2l-5.6 5.6\" stroke=\"#fff\" stroke-width=\"1.8\" stroke-linecap=\"round\"/>",
+   "strokeWidth": null,
+   "attrs": {},
+   "source": "v6 core SPRITE, char offset 11957003"
+  },
+  "st-ok": {
+   "viewBox": "0 0 18 18",
+   "svgInner": "<circle cx=\"9\" cy=\"9\" r=\"8\" fill=\"#3E8A5A\"/><path d=\"M5.4 9.3l2.4 2.4 4.8-5\" fill=\"none\" stroke=\"#fff\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+   "strokeWidth": null,
+   "attrs": {},
+   "source": "v6 core SPRITE, char offset 11957202"
+  },
+  "st-na": {
+   "viewBox": "0 0 18 18",
+   "svgInner": "<circle cx=\"9\" cy=\"9\" r=\"7.2\" fill=\"none\" stroke=\"#8E949C\" stroke-width=\"1.6\"/><path d=\"M6 9h6\" stroke=\"#8E949C\" stroke-width=\"1.8\" stroke-linecap=\"round\"/>",
+   "strokeWidth": null,
+   "attrs": {},
+   "source": "v6 core SPRITE, char offset 11957423"
+  },
+  "legacy-rail-eye": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M1.5 8s2.5-4.5 6.5-4.5S14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z M8 6a2 2 0 1 0 0 4a2 2 0 1 0 0-4z\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "main app RPATH (railSvg), char offset 11747857"
+  },
+  "legacy-rail-eyeoff": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M1.5 8s2.5-4.5 6.5-4.5S14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z M8 6a2 2 0 1 0 0 4a2 2 0 1 0 0-4z M2.5 2.5l11 11\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "main app RPATH (railSvg), char offset 11747857"
+  },
+  "legacy-rail-dig": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M14.2 1.8 9.4 6.6 M12.6 1.2l2.2 2.2 M9.4 6.6 8 5.2 3.2 10a2.4 2.4 0 0 0 3.4 3.4L11.4 8.6z\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "main app RPATH (railSvg), char offset 11747857"
+  },
+  "legacy-rail-rings": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M8 8m-6.3 0a6.3 6.3 0 1 0 12.6 0a6.3 6.3 0 1 0-12.6 0 M8 8m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "main app RPATH (railSvg), char offset 11747857"
+  },
+  "legacy-rail-give": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M1.8 2.8h12.4L8 13.6z\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "main app RPATH (railSvg), char offset 11747857"
+  },
+  "legacy-rail-pairs": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M2 5.2h10.5 M10 2.7l2.5 2.5L10 7.7 M14 10.8H3.5 M6 8.3l-2.5 2.5L6 13.3\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "main app RPATH (railSvg), char offset 11747857"
+  },
+  "legacy-rail-sop": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M5.5 2h5v2.2h-5z M4.3 3H2.8v11.2h10.4V3h-1.5 M5.6 9.2l1.7 1.7 3.2-3.4\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "main app RPATH (railSvg), char offset 11747857"
+  },
+  "legacy-rail-cab": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M8 8m-6.2 0a6.2 6.2 0 1 0 12.4 0a6.2 6.2 0 1 0-12.4 0 M2.1 7.2h3.4l1.4 1.5h2.2l1.4-1.5h3.4 M8 8.7v5.4\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "main app RPATH (railSvg), char offset 11747857"
+  },
+  "legacy-rail-width": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M1.5 8h13 M4 5.5 1.5 8 4 10.5 M12 5.5 14.5 8 12 10.5\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "main app RPATH (railSvg), char offset 11747857"
+  },
+  "legacy-rail-flat": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M1.8 12.5h12.4V6.2z\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "main app RPATH (railSvg), char offset 11747857"
+  },
+  "legacy-rail-hump": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M1.2 12h3.6c1.1-4.6 5.3-4.6 6.4 0h3.6\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "main app RPATH (railSvg), char offset 11747857"
+  },
+  "legacy-rail-median": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M1.5 13h13 M4.6 13c.9-5.2 5.9-5.2 6.8 0\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "main app RPATH (railSvg), char offset 11747857"
+  },
+  "legacy-rail-bund": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M1.5 13h6.5 M8 13l6-6.5 M2.6 13c.6-3.2 3.6-3.2 4.2 0\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "main app RPATH (railSvg), char offset 11747857"
+  },
+  "legacy-rail-reverse": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M4.5 14.5c0-4.5 7-3 7-7.6 0-2.2-1.6-3.7-1.6-3.7\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "main app RPATH (railSvg), char offset 11747857"
+  },
+  "legacy-rail-curve": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M2.5 14c0-6.5 4.5-11 11-11\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "main app RPATH (railSvg), char offset 11747857"
+  },
+  "legacy-rail-xfall": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M1.5 11l13-3 M1.5 14h13\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "main app RPATH (railSvg), char offset 11747857"
+  },
+  "legacy-rail-lane1": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M5 1.8v12.4 M11 1.8v12.4\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "main app RPATH (railSvg), char offset 11747857"
+  },
+  "legacy-rail-angle": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M2 13.5h12 M2 13.5 11 3 M6.5 13.5a4.5 4.5 0 0 0-1.3-3.2\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "main app RPATH (railSvg), char offset 11747857"
+  },
+  "legacy-rail-near": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M1.5 5h13 M1.5 11h13 M5 2v12 M11 2v12\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "main app RPATH (railSvg), char offset 11747857"
+  },
+  "legacy-rail-level": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M1.5 10.5h13 M1.5 8v5 M14.5 8v5\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "main app RPATH (railSvg), char offset 11747857"
+  },
+  "legacy-rail-plus": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M8 1.8v12.4 M1.8 8h12.4\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {
+    "fill": "none",
+    "stroke": "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round"
+   },
+   "source": "main app RPATH (railSvg), char offset 11747857"
+  },
+  "legacy-bPit": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M10 3 5 8l5 5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+   "strokeWidth": 1.6,
+   "attrs": {},
+   "source": "body markup #bPit, char offset 108365"
+  },
+  "legacy-bAdd": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M8 3v10M3 8h10\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {},
+   "source": "body markup #bAdd, char offset 108673"
+  },
+  "legacy-bRoad": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M4 14 7 2M12 14 9 2M8 5v1.5M8 9v1.5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\"/>",
+   "strokeWidth": 1.6,
+   "attrs": {},
+   "source": "body markup #bRoad, char offset 108931"
+  },
+  "legacy-bSet": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M6.9 1.5h2.2l.4 1.8 1.2.5 1.6-1 1.5 1.5-1 1.6.5 1.2 1.8.4v2.2l-1.8.4-.5 1.2 1 1.6-1.5 1.5-1.6-1-1.2.5-.4 1.8H6.9l-.4-1.8-1.2-.5-1.6 1-1.5-1.5 1-1.6-.5-1.2-1.8-.4V6.9l1.8-.4.5-1.2-1-1.6 1.5-1.5 1.6 1 1.2-.5z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linejoin=\"round\"/><circle cx=\"8\" cy=\"8\" r=\"2.2\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.3\"/>",
+   "strokeWidth": 1.3,
+   "attrs": {},
+   "source": "body markup #bSet, char offset 109236"
+  },
+  "legacy-bLines": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<circle cx=\"2.8\" cy=\"12.5\" r=\"1.6\" fill=\"currentColor\"/><path d=\"M4.2 11.6 13.5 4M4.4 12.6l9.3-1.6\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linecap=\"round\"/>",
+   "strokeWidth": 1.4,
+   "attrs": {},
+   "source": "body markup #bLines, char offset 109757"
+  },
+  "legacy-bDraw": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M2.5 13.5 4 9.5l7-7 2.5 2.5-7 7z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linejoin=\"round\"/><circle cx=\"2.5\" cy=\"13.5\" r=\".9\" fill=\"currentColor\"/>",
+   "strokeWidth": 1.4,
+   "attrs": {},
+   "source": "body markup #bDraw, char offset 110079"
+  },
+  "legacy-bSnap": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<rect x=\"2\" y=\"4.5\" width=\"12\" height=\"8.5\" rx=\"1.5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\"/><circle cx=\"8\" cy=\"8.7\" r=\"2.4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\"/><path d=\"M5.5 4.5l1-2h3l1 2\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\"/>",
+   "strokeWidth": 1.4,
+   "attrs": {},
+   "source": "body markup #bSnap, char offset 111272"
+  },
+  "legacy-sclN": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M8 1.5 12 13 8 10.5 4 13z\" fill=\"currentColor\"/>",
+   "strokeWidth": null,
+   "attrs": {},
+   "source": "body markup #sclN, char offset 112417"
+  },
+  "legacy-dBino": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<circle cx=\"4.5\" cy=\"10.5\" r=\"3\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"/><circle cx=\"11.5\" cy=\"10.5\" r=\"3\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"/><path d=\"M4.5 7.5 6 3h4l1.5 4.5M7.5 10h1\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\"/>",
+   "strokeWidth": 1.5,
+   "attrs": {},
+   "source": "body markup #dBino, char offset 113550"
+  },
+  "legacy-dSnd": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M2.5 6h2.5l3.5-3v10L5 10H2.5z\" fill=\"currentColor\"/><path d=\"M11 5.5a3.5 3.5 0 0 1 0 5M12.8 3.8a6 6 0 0 1 0 8.4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.3\" stroke-linecap=\"round\"/>",
+   "strokeWidth": 1.3,
+   "attrs": {},
+   "source": "body markup #dSnd, char offset 114062"
+  },
+  "legacy-dReplay": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M3 8a5 5 0 1 0 1.6-3.7M3 2.8v2.6h2.6\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\"/>",
+   "strokeWidth": 1.5,
+   "attrs": {},
+   "source": "body markup #dReplay, char offset 114343"
+  },
+  "legacy-dBack": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M9.5 3.5 5 8l4.5 4.5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {},
+   "source": "body markup #dBack, char offset 115737"
+  },
+  "legacy-dPlay": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M5 3.5v9l7.5-4.5z\" fill=\"currentColor\"/>",
+   "strokeWidth": null,
+   "attrs": {},
+   "source": "body markup #dPlayI, char offset 115958"
+  },
+  "legacy-dSlow": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M8 2.5a5.5 5.5 0 1 1-5.5 5.5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M8 5v3l2 1.5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linecap=\"round\"/>",
+   "strokeWidth": 1.5,
+   "attrs": {},
+   "source": "body markup #dSlow, char offset 116134"
+  },
+  "legacy-dFan": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M2.5 12.5 13.5 3.5v9z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linejoin=\"round\"/>",
+   "strokeWidth": 1.4,
+   "attrs": {},
+   "source": "body markup #dFan, char offset 116517"
+  },
+  "legacy-dOther": {
+   "viewBox": "0 0 16 16",
+   "svgInner": "<path d=\"M4 6h9l-2.5-2.5M12 10H3l2.5 2.5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+   "strokeWidth": 1.5,
+   "attrs": {},
+   "source": "body markup #dOther, char offset 116696"
+  },
+  "legacy-gClose": {
+   "viewBox": "0 0 14 14",
+   "svgInner": "<path d=\"M2 2l10 10M12 2 2 12\" stroke=\"currentColor\" stroke-width=\"1.7\"/>",
+   "strokeWidth": 1.7,
+   "attrs": {},
+   "source": "body markup #gClose, char offset 117658"
+  },
+  "legacy-drop-shell": {
+   "viewBox": "0 0 40 40",
+   "svgInner": "<path d=\"M3 32 L14 14 L21 24 L27 17 L37 32 Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linejoin=\"round\"/>",
+   "strokeWidth": 2.2,
+   "attrs": {},
+   "source": "body markup #fShell, char offset 118257"
+  },
+  "legacy-drop-dxf": {
+   "viewBox": "0 0 40 40",
+   "svgInner": "<path d=\"M20 6v28M6 20h28\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\"/><circle cx=\"20\" cy=\"20\" r=\"3.5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\"/>",
+   "strokeWidth": 2.2,
+   "attrs": {},
+   "source": "body markup #fDxf, char offset 118646"
+  },
+  "legacy-veh-car": {
+   "viewBox": "0 0 26 13",
+   "svgInner": "<path d=\"M2 9V6.5L5 3.5h7l3 3h7.5L24 8v1z\" fill=\"currentColor\"/><circle cx=\"6.5\" cy=\"10\" r=\"2.2\" fill=\"currentColor\" stroke=\"#fff\" stroke-width=\"1\"/><circle cx=\"19.5\" cy=\"10\" r=\"2.2\" fill=\"currentColor\" stroke=\"#fff\" stroke-width=\"1\"/>",
+   "strokeWidth": 1,
+   "attrs": {
+    "fill": "currentColor"
+   },
+   "source": "main app ICON (vIcon), char offset 2052879"
+  },
+  "legacy-veh-truck": {
+   "viewBox": "0 0 30 15",
+   "svgInner": "<path d=\"M1 3h17l3 7H1zM19 5h4l4 3v3h-7z\" fill=\"currentColor\"/><circle cx=\"6\" cy=\"11.5\" r=\"3\" fill=\"currentColor\" stroke=\"#fff\" stroke-width=\"1\"/><circle cx=\"23\" cy=\"11.5\" r=\"3\" fill=\"currentColor\" stroke=\"#fff\" stroke-width=\"1\"/>",
+   "strokeWidth": 1,
+   "attrs": {
+    "fill": "currentColor"
+   },
+   "source": "main app ICON (vIcon), char offset 2052879"
+  }
+ }
+}

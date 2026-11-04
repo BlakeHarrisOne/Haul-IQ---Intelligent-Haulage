@@ -1,0 +1,246 @@
+/* In-canvas DOM for the actors / strings / tools / cockpit scene modules (label layer, z 10 inside the viewport).
+   Haul Road Lab chrome (white surfaces, hairline, one blue accent, tabular figures) + Rain Model halo text. */
+
+.root {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  font-family: var(--font, system-ui, sans-serif);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink, #1F2329);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── pins: "EX09 · Dig" with a leader to a ground dot ─────────────────────────────── */
+.pin {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  will-change: transform;
+  transition: opacity var(--t-med, .22s) var(--ease, ease);
+}
+.pinChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 10px 0 8px;
+  border-radius: 999px;
+  background: var(--chrome-strong, rgba(255, 255, 255, .95));
+  box-shadow: 0 0 0 1px var(--hair, #E3E6EB), 0 4px 14px rgba(20, 30, 50, .14);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: -.005em;
+}
+.pinChip b { font-weight: 650; }
+.pinChip i { font-style: normal; font-weight: 500; color: var(--ink-3, #646A73); }
+.pinSwatch { width: 9px; height: 9px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .12); flex: none; }
+.pinLeader { width: 1.5px; height: 16px; background: linear-gradient(var(--ink-3, #646A73), rgba(100, 106, 115, .3)); }
+.pinDot {
+  width: 9px; height: 9px; border-radius: 50%; margin-top: -1px;
+  background: var(--ink, #1F2329);
+  box-shadow: 0 0 0 2px #fff, 0 1px 4px rgba(0, 0, 0, .35);
+}
+.pinDump .pinDot { background: #fff; box-shadow: 0 0 0 2.5px var(--ink, #1F2329), 0 1px 4px rgba(0, 0, 0, .35); }
+
+/* ── small halo labels (grade chips along strings, measure legs) ─────────────────── */
+.tag {
+  position: absolute;
+  left: 0; top: 0;
+  transform: translate(-50%, -50%);
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 650;
+  white-space: nowrap;
+  color: #fff;
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .9), 0 2px 6px rgba(0, 0, 0, .18);
+  will-change: transform;
+}
+
+/* ── cursor readout tooltip ──────────────────────────────────────────────────────── */
+.tip {
+  position: absolute;
+  left: 0; top: 0;
+  padding: 7px 10px 8px;
+  border-radius: 10px;
+  background: var(--chrome-strong, rgba(255, 255, 255, .96));
+  box-shadow: 0 0 0 1px var(--hair, #E3E6EB), 0 8px 24px rgba(20, 30, 50, .16);
+  font-size: 12.5px;
+  line-height: 1.35;
+  white-space: nowrap;
+  will-change: transform;
+}
+.tipHead { font-weight: 650; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+.tipRow { display: flex; gap: 10px; color: var(--ink-2, #4A5059); }
+.tipRow b { color: var(--ink, #1F2329); font-weight: 600; }
+.tipSub { color: var(--ink-3, #646A73); font-size: 11.5px; }
+.gradeDot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+
+/* ── hint chip (bottom centre, above the timeline area) - HRL toast style ────────── */
+.hint {
+  position: absolute;
+  left: 50%;
+  bottom: 96px;
+  transform: translate(-50%, 0);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px;
+  padding: 0 6px 0 14px;
+  border-radius: 12px;
+  background: var(--chrome-strong, rgba(255, 255, 255, .95));
+  -webkit-backdrop-filter: var(--chrome-blur, blur(18px));
+  backdrop-filter: var(--chrome-blur, blur(18px));
+  box-shadow: 0 0 0 1px var(--hair, #E3E6EB), 0 10px 30px rgba(20, 30, 50, .14);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-2, #4A5059);
+  white-space: nowrap;
+  pointer-events: auto;
+  transition: opacity var(--t-med, .22s) var(--ease, ease), translate var(--t-med, .22s) var(--ease, ease);
+}
+.hint[data-hidden='true'] { opacity: 0; translate: 0 6px; pointer-events: none; }
+.hintTool { font-weight: 650; color: var(--ink, #1F2329); }
+.hint kbd {
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: var(--surface-3, #F1F3F6);
+  box-shadow: inset 0 0 0 1px var(--hair, #E3E6EB);
+  color: var(--ink, #1F2329);
+}
+.hintSep { width: 1px; align-self: stretch; margin: 9px 0; background: var(--hair, #E3E6EB); }
+.hintOpt {
+  all: unset;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 550;
+  color: var(--ink-2, #4A5059);
+}
+.hintOpt:hover { background: var(--hover, #F1F3F6); }
+.hintOpt:focus-visible { box-shadow: inset 0 0 0 2px var(--accent, #0A6FE6); }
+.switch {
+  width: 26px; height: 15px; border-radius: 999px; position: relative; flex: none;
+  background: var(--ink-4, #8E949C);
+  transition: background var(--t-fast, .12s);
+}
+.switch::after {
+  content: ''; position: absolute; top: 2px; left: 2px; width: 11px; height: 11px; border-radius: 50%; background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .25);
+  transition: transform var(--t-fast, .12s) var(--ease, ease);
+}
+.switch[data-on='true'] { background: var(--accent, #0A6FE6); }
+.switch[data-on='true']::after { transform: translateX(11px); }
+.hintBtn {
+  all: unset;
+  cursor: pointer;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 650;
+  color: #fff;
+  background: var(--accent, #0A6FE6);
+}
+.hintBtn:hover { background: var(--accent-press, #0A4FA6); }
+.hintBtn[disabled] { opacity: .45; cursor: default; }
+.spinner {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid var(--accent-100, #DCE9FB);
+  border-top-color: var(--accent, #0A6FE6);
+  animation: spin .8s linear infinite;
+  flex: none;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── truck card (floating above the selected truck) ─────────────────────────────── */
+.card {
+  position: absolute;
+  left: 0; top: 0;
+  width: 212px;
+  padding: 10px 12px 11px;
+  border-radius: 14px;
+  background: var(--chrome-strong, rgba(255, 255, 255, .96));
+  -webkit-backdrop-filter: var(--chrome-blur, blur(18px));
+  backdrop-filter: var(--chrome-blur, blur(18px));
+  box-shadow: 0 0 0 1px var(--hair, #E3E6EB), 0 12px 32px rgba(20, 30, 50, .18);
+  font-size: 12.5px;
+  will-change: transform;
+}
+.card::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 12px; height: 12px;
+  transform: translateX(-50%) rotate(45deg);
+  background: var(--chrome-strong, #fff);
+  box-shadow: 1px 1px 0 0 var(--hair, #E3E6EB);
+}
+.cardHead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.cardTitle { font-family: var(--font-display, inherit); font-size: 18px; font-weight: 650; letter-spacing: -.01em; }
+.cardModel { color: var(--ink-3, #646A73); font-size: 11.5px; font-weight: 500; }
+.phase {
+  display: inline-flex; align-items: center; gap: 6px; margin: 6px 0 8px;
+  height: 22px; padding: 0 9px; border-radius: 999px;
+  font-size: 12px; font-weight: 650;
+  background: var(--accent-50, #EEF4FD); color: var(--accent-ink, #0A5FC4);
+}
+.phase i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.cardGrid { display: grid; grid-template-columns: 1fr auto; gap: 3px 10px; color: var(--ink-2, #4A5059); }
+.cardGrid b { color: var(--ink, #1F2329); font-weight: 600; text-align: right; }
+.bar { height: 4px; border-radius: 2px; background: var(--hair, #E3E6EB); margin-top: 8px; overflow: hidden; }
+.bar > span { display: block; height: 100%; background: var(--accent, #0A6FE6); border-radius: 2px; }
+
+/* ── cockpit HUD (glass) ─────────────────────────────────────────────────────────── */
+.hud {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 10px 6px;
+  border-radius: 16px;
+  background: rgba(16, 22, 30, .46);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  backdrop-filter: blur(14px) saturate(150%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16), 0 10px 30px rgba(0, 0, 0, .25);
+  color: #F4F7FA;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .35);
+}
+.hudCell { display: flex; flex-direction: column; justify-content: center; padding: 0 16px; min-width: 64px; }
+.hudCell + .hudCell { box-shadow: inset 1px 0 0 rgba(255, 255, 255, .14); }
+.hudBig { font-family: var(--font-display, inherit); font-size: 40px; font-weight: 600; line-height: 1; letter-spacing: -.02em; }
+.hudVal { font-size: 19px; font-weight: 600; line-height: 1.1; }
+.hudLbl { font-size: 10.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: rgba(236, 242, 248, .66); margin-top: 3px; }
+.hudUnit { font-size: 13px; font-weight: 600; color: rgba(236, 242, 248, .72); margin-left: 3px; }
+.hudPhase { display: inline-flex; align-items: center; gap: 7px; font-size: 15px; font-weight: 650; }
+.hudPhase i { width: 8px; height: 8px; border-radius: 50%; }
+.hudStop { display: inline-flex; align-items: center; gap: 6px; }
+.hudTop {
+  position: absolute; left: 50%; top: 18px; transform: translateX(-50%);
+  display: inline-flex; align-items: center; gap: 10px;
+  height: 30px; padding: 0 14px; border-radius: 999px;
+  background: rgba(16, 22, 30, .42);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16);
+  color: #F4F7FA; font-size: 12.5px; font-weight: 600;
+}
+.hudTop span { color: rgba(236, 242, 248, .7); font-weight: 500; }

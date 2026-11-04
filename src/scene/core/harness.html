@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en-AU" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>hAIul SIM · scene harness</title>
+  </head>
+  <body style="margin:0">
+    <div id="root"></div>
+    <script type="module">
+      import '/src/styles/tokens.css';
+      import '/src/styles/base.css';
+      import { mountStandalone } from '/src/scene/core/harness.tsx';
+      mountStandalone(document.getElementById('root'));
+    </script>
+  </body>
+</html>

@@ -1,0 +1,46 @@
+/* Scene core: viewport layers, floating labels (HRL v6 chrome language), compass + scale bar. */
+
+.viewport { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--bg-app); outline: none; touch-action: none; user-select: none; -webkit-user-select: none; }
+.canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: var(--z-labels, 10); contain: strict; }
+.labels > * { position: absolute; left: 0; top: 0; will-change: transform; }
+
+.portal { position: fixed; inset: 0; z-index: 9000; background: var(--bg-app); }
+
+/* ── solid volume label ─────────────────────────────────────────────────── */
+.solidLabel {
+  --sl-c: #C79A6B;
+  min-width: 132px; padding: 7px 10px 8px 12px;
+  background: var(--chrome-strong); -webkit-backdrop-filter: var(--chrome-blur); backdrop-filter: var(--chrome-blur);
+  border: 1px solid var(--hair); border-radius: 10px; box-shadow: var(--shadow);
+  color: var(--ink); font: 500 12px/16px var(--font); font-variant-numeric: tabular-nums; white-space: nowrap;
+  transition: opacity .18s ease-out, box-shadow .18s ease-out;
+}
+.solidLabel::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; border-radius: 0 3px 3px 0; background: var(--sl-c); }
+.solidLabel::after {
+  content: ""; position: absolute; left: 50%; bottom: -6px; width: 10px; height: 10px; margin-left: -5px;
+  background: var(--chrome-strong); border-right: 1px solid var(--hair); border-bottom: 1px solid var(--hair); transform: rotate(45deg);
+}
+.slTitle { font-weight: 600; color: var(--ink-2); font-size: 11.5px; letter-spacing: .01em; }
+.slValue { font: 650 16px/20px var(--font-display); color: var(--ink); margin-top: 1px; }
+.slSub { color: var(--ink-3); font-size: 11.5px; }
+.slBar { position: relative; height: 3px; margin: 5px 0 4px; border-radius: 3px; background: var(--ov2); overflow: hidden; }
+.slBar i { position: absolute; inset: 0; transform-origin: 0 50%; background: var(--sl-c); border-radius: 3px; transform: scaleX(0); transition: transform .25s var(--ease); }
+.slSel { box-shadow: 0 0 0 2px var(--accent), var(--shadow); }
+
+/* ── section A/B chips ───────────────────────────────────────────────────── */
+.secChip {
+  display: grid; place-items: center; width: 24px; height: 24px; border-radius: 999px;
+  background: var(--accent); color: #fff; font: 700 12px/1 var(--font); box-shadow: 0 0 0 2px var(--surface), var(--shadow);
+}
+
+/* ── chrome: compass + scale bar (bottom-right, HRL white 44 px surface) ─── */
+.chromeDock { position: absolute; right: var(--gutter, 14px); bottom: var(--gutter, 14px); display: flex; gap: 8px; align-items: flex-end; pointer-events: none; z-index: var(--z-chrome, 20); }
+.compass { width: 36px; height: 36px; padding: 0; display: grid; place-items: center; }
+.compass svg { transition: none; color: var(--ink-2); }
+.needle { transform-origin: 50% 50%; will-change: transform; }
+.scale { display: flex; align-items: center; gap: 10px; padding: 0 12px 0 14px; height: 36px; font: 600 13px/1 var(--font); color: var(--ink); font-variant-numeric: tabular-nums; }
+.scaleBar { position: relative; height: 8px; border: 1.5px solid var(--ink-2); border-top: 0; transition: width .12s ease-out; }
+.scaleBar::after { content: ""; position: absolute; left: 50%; bottom: 0; height: 4px; border-left: 1.5px solid var(--ink-3); }
+.hint { position: absolute; left: 50%; top: 18px; transform: translateX(-50%); padding: 8px 14px; border-radius: 10px; background: var(--chrome-strong); border: 1px solid var(--hair); box-shadow: var(--shadow); font: 500 13px/18px var(--font); color: var(--ink-2); pointer-events: none; z-index: var(--z-chrome, 20); }

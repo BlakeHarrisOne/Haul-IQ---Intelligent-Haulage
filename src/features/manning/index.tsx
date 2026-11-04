@@ -1,3 +1,4 @@
-/** OWNER: manning agent. Provisional stub - replaced by the owning agent. */
-import type { ReactElement } from 'react';
-export function ManningView(): ReactElement | null { return null; }
+/** OWNER: manning agent. Manning & crews sheet (rendered inside the shell's full-page sheet). */
+export { ManningView } from './ManningView';
+export { workbookRules, describeRule } from './rules';
+export { ROLE_META, ROLE_ORDER } from './roles';

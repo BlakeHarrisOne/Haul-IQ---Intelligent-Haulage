@@ -1,0 +1,233 @@
+/* hAIul SIM shell: a full-bleed 3D stage with floating chrome in the corners (HRL v6 anatomy, Rain Model HUD rest). */
+.app {
+  --g: var(--gutter);
+  --top: calc(var(--g) + var(--chrome-h) + 8px);
+  --rail: var(--chrome-h);
+  --insp-w: 400px;
+  --dock-h: 92px;
+  --dock-panel-h: 252px;
+  /* the scene's own bottom-right dock (fit · compass · scale bar) lives under the right column */
+  --scene-dock: calc(var(--g) + var(--chrome-h) + 8px);
+  --scene-dock-w: 292px;
+  /* the timeline spans the stage column; the right column keeps the inspector above the scene dock */
+  --tl-right: calc(var(--g) + var(--insp-w) + 8px);
+  --below: calc(var(--g) + var(--dock-h) + 8px);
+  position: fixed; inset: 0; overflow: hidden; background: var(--bg-app); color: var(--ink);
+}
+.app.noTimeline { --below: var(--scene-dock); }
+.app.noInspector { --insp-w: 0px; --tl-right: calc(var(--g) + var(--scene-dock-w)); }
+
+.stage { position: absolute; inset: 0; z-index: var(--z-scene); }
+/* a quiet ground behind the canvas while the scene module is still loading / absent */
+.stage::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(1200px 700px at 50% 38%, color-mix(in srgb, var(--surface) 70%, transparent), transparent 70%),
+    linear-gradient(180deg, var(--bg-app), color-mix(in srgb, var(--bg-app) 88%, var(--ink-4)));
+}
+
+.hud { position: absolute; inset: 0; pointer-events: none; } /* no z-index: children stack with the sheet */
+.hud > * { pointer-events: auto; }
+
+/* ── HUD at rest (Rain Model §2.8) ─────────────────────────────────────────── */
+.fadeT, .fadeB { transition: opacity .6s var(--ease), translate .6s var(--ease), visibility 0s; }
+.rested .fadeT { opacity: 0; translate: 0 -6px; pointer-events: none; }
+.rested .fadeB { opacity: 0; translate: 0 8px; pointer-events: none; }
+.restPill {
+  position: absolute; left: calc((100% - var(--tl-right) + var(--g)) / 2); bottom: calc(var(--g) + 6px); translate: -50% 8px; z-index: var(--z-chrome);
+  display: inline-flex; align-items: center; gap: 10px; height: 32px; padding: 0 14px; border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 72%, transparent); color: var(--ink); font: 650 13px/1 var(--font);
+  font-variant-numeric: tabular-nums; box-shadow: var(--shadow-sm); opacity: 0; pointer-events: none;
+  transition: opacity .6s var(--ease) .1s, translate .6s var(--ease) .1s;
+}
+.restPill span { color: var(--ink-3); font-weight: 600; }
+.rested .restPill { opacity: 1; translate: -50% 0; }
+
+/* ── top row ───────────────────────────────────────────────────────────────── */
+.topLeft { position: absolute; top: var(--g); left: var(--g); width: 400px; z-index: calc(var(--z-sheet) + 2); }
+.switcher { position: absolute; top: var(--g); left: 50%; translate: -50% 0; z-index: calc(var(--z-sheet) + 2); }
+.topRight { position: absolute; top: var(--g); right: var(--g); display: flex; gap: 8px; z-index: calc(var(--z-sheet) + 2); }
+.rested .switcher.fadeT { translate: -50% -6px; }
+
+.brandBox { display: flex; align-items: center; padding: 0 6px 0 7px; height: 100%; flex: none; }
+.doc {
+  flex: 1; min-width: 0; height: var(--ctl-h); display: flex; flex-direction: column; justify-content: center; gap: 1px;
+  padding: 0 6px; border: 0; border-radius: var(--r-ctl); background: transparent; text-align: left; cursor: text;
+  transition: background-color var(--t-fast) ease-out;
+}
+.doc:hover { background: var(--hover); }
+.docName { font: 600 13px/18px var(--font); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.docState { display: flex; align-items: center; gap: 6px; font: 500 11.5px/14px var(--font); color: var(--ink-3); white-space: nowrap; overflow: hidden; }
+.docInput {
+  width: 100%; height: 26px; border: 1px solid var(--accent); border-radius: 7px; padding: 0 7px; outline: 0;
+  box-shadow: 0 0 0 3px var(--accent-glow); background: var(--surface); font: 600 13.5px/18px var(--font); color: var(--ink);
+}
+.stateDot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+
+.navLabel { display: inline; }
+@media (max-width: 1679px) {
+  .switcher .navItem:not([aria-pressed="true"]) { width: var(--ctl-h); padding: 0; }
+  .switcher .navItem:not([aria-pressed="true"]) .navLabel { display: none; }
+}
+.showLabel { display: none; }
+@media (min-width: 1880px) {
+  .showLabel { display: inline; }
+}
+@media (max-width: 1180px) {
+  .switcher { left: auto; right: var(--g); top: calc(var(--top)); translate: none; }
+}
+
+/* ── left tool rail ────────────────────────────────────────────────────────── */
+.rail { position: absolute; left: var(--g); top: var(--top); z-index: var(--z-chrome); }
+.railHint {
+  position: absolute; left: calc(var(--g) + var(--rail) + 8px); top: var(--top); z-index: var(--z-chrome);
+  display: flex; align-items: center; gap: 10px; height: var(--chrome-h); padding: 0 8px 0 14px;
+  background: var(--chrome); backdrop-filter: var(--chrome-blur); -webkit-backdrop-filter: var(--chrome-blur);
+  border: 1px solid var(--hair); border-radius: var(--r-card); box-shadow: var(--shadow); font-size: 13.5px; color: var(--ink-2);
+  animation: hintIn var(--t-slow) var(--ease);
+}
+.railHint b { color: var(--ink); font-weight: 600; }
+@keyframes hintIn { from { opacity: 0; translate: -4px 0; } }
+
+/* ── right inspector column ────────────────────────────────────────────────── */
+.inspector {
+  position: absolute; right: var(--g); top: var(--top); width: var(--insp-w); z-index: var(--z-panel);
+  max-height: calc(100% - var(--top) - var(--scene-dock)); display: flex; flex-direction: column;
+  background: var(--chrome-strong); backdrop-filter: var(--chrome-blur); -webkit-backdrop-filter: var(--chrome-blur);
+  border: 1px solid var(--hair); border-radius: var(--r-card); box-shadow: var(--shadow); overflow: hidden;
+  animation: slideL var(--t-slow) var(--ease);
+}
+.inspector:has(> .host:empty) { display: none; }
+.host { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; }
+@keyframes slideL { from { opacity: 0; translate: 8px 0; } }
+
+.insights {
+  position: absolute; right: var(--g); top: var(--top); width: 400px; bottom: var(--scene-dock); z-index: calc(var(--z-sheet) + 3);
+  display: flex; flex-direction: column;
+  background: var(--chrome-strong); backdrop-filter: var(--chrome-blur); -webkit-backdrop-filter: var(--chrome-blur);
+  border: 1px solid var(--hair); border-radius: var(--r-card); box-shadow: var(--shadow-lg); overflow: hidden;
+  animation: slideL var(--t-slow) var(--ease);
+}
+.insightsSheet { bottom: var(--g); }
+.insightsHead { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 8px 0 16px; border-bottom: 1px solid var(--hair-2); flex: none; }
+.insightsTitle { font: 600 16px/22px var(--font); display: flex; align-items: center; gap: 8px; }
+.insightsTitle svg { color: var(--accent); }
+.aiTag {
+  font: 700 10.5px/1 var(--font); letter-spacing: .08em; padding: 4px 6px; border-radius: 6px;
+  color: var(--accent-ink); background: var(--accent-50);
+}
+.hostPlaceholder:empty::before {
+  content: attr(data-empty); display: block; padding: 28px 24px; color: var(--ink-3); font-size: 13.5px; line-height: 20px; text-align: center;
+}
+
+/* ── bottom: profile / section panel above the timeline ────────────────────── */
+.dockPanel {
+  position: absolute; z-index: var(--z-panel);
+  left: calc(var(--g) + var(--rail) + 8px);
+  right: var(--g);
+  bottom: var(--below); height: var(--dock-panel-h);
+  display: flex; flex-direction: column;
+  background: var(--chrome-strong); backdrop-filter: var(--chrome-blur); -webkit-backdrop-filter: var(--chrome-blur);
+  border: 1px solid var(--hair); border-radius: var(--r-card); box-shadow: var(--shadow); overflow: hidden;
+  animation: slideU var(--t-slow) var(--ease);
+}
+.app:not(.noInspector) .dockPanel { right: calc(var(--g) + var(--insp-w) + 8px); }
+.app.noInspector .dockPanel { right: var(--g); }
+.app.noTimeline:not(.noInspector) .dockPanel { bottom: var(--g); }
+.dockHead { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 6px 0 8px; border-bottom: 1px solid var(--hair-2); flex: none; }
+.dockTitle { font: 600 13.5px/18px var(--font); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 8px; }
+.dockBody { flex: 1; min-height: 0; overflow: auto; position: relative; }
+@keyframes slideU { from { opacity: 0; translate: 0 8px; } }
+
+.timelineSlot { position: absolute; left: var(--g); right: var(--tl-right); bottom: var(--g); height: var(--dock-h); z-index: var(--z-chrome); }
+
+/* ── hide site-only chrome while a sheet is up ─────────────────────────────── */
+.siteOnly { transition: opacity var(--t-med) var(--ease), translate var(--t-med) var(--ease), visibility 0s linear 0s; }
+.sheetUp .siteOnly { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity var(--t-med) var(--ease), visibility 0s linear var(--t-med); }
+
+/* ── sheets (other views over the still-mounted viewport) ──────────────────── */
+.sheet {
+  position: absolute; inset: 0; z-index: var(--z-sheet); overflow: auto; overscroll-behavior: contain;
+  padding-top: var(--top);
+  background: color-mix(in srgb, var(--bg-app) 86%, transparent);
+  backdrop-filter: blur(22px) saturate(125%); -webkit-backdrop-filter: blur(22px) saturate(125%);
+  animation: sheetIn var(--t-slow) var(--ease);
+}
+.sheet.closing { animation: sheetOut .22s var(--ease) forwards; pointer-events: none; }
+@keyframes sheetIn { from { opacity: 0; } }
+@keyframes sheetOut { to { opacity: 0; } }
+.page { max-width: 1480px; margin: 0 auto; padding: 10px 24px 64px; animation: pageIn .48s var(--ease); }
+.sheet.closing .page { animation: pageOut .22s var(--ease) forwards; }
+@keyframes pageIn { from { opacity: 0; translate: 0 10px; } }
+@keyframes pageOut { to { opacity: 0; translate: 0 6px; } }
+.pageHead { display: flex; align-items: flex-end; gap: 24px; padding: 6px 0 20px; }
+.pageTitle { display: flex; align-items: center; gap: 12px; font: 650 28px/34px var(--font-display); letter-spacing: -.015em; color: var(--ink); }
+.pageIcon {
+  width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex: none;
+  background: var(--surface); border: 1px solid var(--hair); color: var(--accent); box-shadow: var(--shadow-sm);
+}
+.pageDesc { margin-top: 6px; max-width: 760px; color: var(--ink-2); font-size: 14.5px; line-height: 21px; }
+.pageActions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.viewHost:empty {
+  min-height: 360px; border: 1px dashed var(--hair); border-radius: var(--r-card); background: var(--surface);
+  display: flex; align-items: center; justify-content: center;
+}
+.viewHost:empty::before { content: attr(data-empty); color: var(--ink-3); font-size: 14px; }
+
+/* ── popover (settings) ────────────────────────────────────────────────────── */
+.popAnchor { position: relative; display: inline-flex; }
+.popover {
+  position: absolute; top: calc(100% + 11px); right: -4px; z-index: var(--z-menu); width: 340px;
+  background: var(--surface); border: 1px solid var(--hair); border-radius: var(--r-card); box-shadow: var(--shadow-lg);
+  animation: popDrop var(--t-slow) var(--ease); overflow: hidden;
+}
+@keyframes popDrop { from { opacity: 0; translate: 0 -4px; } }
+.popHead { display: flex; align-items: center; height: 52px; padding: 0 8px 0 16px; border-bottom: 1px solid var(--hair-2); font: 600 16px/22px var(--font); }
+.popBody { padding: 4px 0 8px; max-height: min(70vh, 620px); overflow: auto; }
+.setRow { display: flex; flex-direction: column; gap: 8px; padding: 10px 16px; }
+.setRowInline { display: flex; align-items: center; gap: 12px; padding: 8px 16px; min-height: 40px; }
+.setLabel { font-size: 13.5px; font-weight: 600; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+.setHint { font-size: 12px; color: var(--ink-3); line-height: 16px; }
+.popFoot { padding: 10px 16px 14px; font-size: 12px; color: var(--ink-3); border-top: 1px solid var(--hair-2); }
+
+/* ── toasts (HRL v6) ───────────────────────────────────────────────────────── */
+.toasts {
+  position: fixed; left: calc((100% - var(--tl-right) + var(--g)) / 2); translate: -50% 0; bottom: calc(var(--below) + 6px); z-index: var(--z-toast);
+  display: flex; flex-direction: column-reverse; align-items: center; gap: 8px; pointer-events: none;
+}
+.sheetUp .toasts { bottom: 24px; left: 50%; }
+.toast {
+  pointer-events: auto; display: flex; align-items: center; gap: 10px; min-height: 44px; max-width: min(620px, calc(100vw - 32px));
+  padding: 4px 4px 4px 14px; border-radius: var(--r-card);
+  background: var(--chrome-strong); backdrop-filter: var(--chrome-blur); -webkit-backdrop-filter: var(--chrome-blur);
+  border: 1px solid var(--hair); box-shadow: var(--shadow-lg); font: 500 14px/20px var(--font); color: var(--ink);
+  animation: toastIn var(--t-slow) var(--ease);
+}
+.toast > span { flex: 1; min-width: 0; padding: 8px 0; }
+@keyframes toastIn { from { opacity: 0; translate: 0 8px; scale: .98; } }
+
+/* ── drop overlay ──────────────────────────────────────────────────────────── */
+.drop {
+  position: fixed; inset: 0; z-index: var(--z-modal); display: flex; align-items: center; justify-content: center; padding: 24px;
+  background: color-mix(in srgb, var(--bg-app) 60%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  animation: sheetIn var(--t-med) var(--ease); pointer-events: none;
+}
+.dropBox {
+  width: min(720px, 100%); padding: 44px 32px; border-radius: 22px; border: 2px dashed var(--accent);
+  background: color-mix(in srgb, var(--surface) 88%, transparent); box-shadow: var(--shadow-lg);
+  display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;
+}
+.dropIco { width: 64px; height: 64px; border-radius: 18px; background: var(--accent-50); color: var(--accent); display: flex; align-items: center; justify-content: center; }
+.dropTitle { font: 650 22px/28px var(--font-display); }
+.dropTypes { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
+
+/* ── reduced motion via the app's own setting ──────────────────────────────── */
+:global(:root[data-motion="reduced"]) .app *, :global(:root[data-motion="reduced"]) .app *::before { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+@media (prefers-reduced-motion: reduce) {
+  .rested .fadeT, .rested .fadeB { translate: none; }
+}
+
+/* ── laptop heights ────────────────────────────────────────────────────────── */
+@media (max-height: 820px) {
+  .app { --dock-panel-h: 212px; }
+}

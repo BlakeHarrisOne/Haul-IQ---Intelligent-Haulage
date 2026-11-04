@@ -1,0 +1,147 @@
+/* Assumptions & calculations tab. */
+
+/* ── typeset formula ───────────────────────────────────────────────────────── */
+.math {
+  font-family: "Cambria Math", Cambria, "STIX Two Math", "STIX Two Text", "Latin Modern Math", "Times New Roman", "Liberation Serif", Georgia, serif;
+  font-size: 16px; line-height: 24px; color: var(--ink); overflow-wrap: anywhere;
+}
+.m-var { font-style: italic; }
+.m-word { font-family: var(--font); font-size: 14px; font-style: normal; color: var(--ink-2); }
+.m-fn { font-style: normal; }
+.m-num { font-variant-numeric: lining-nums tabular-nums; }
+.m-op { color: var(--ink-2); padding: 0 .28em; }
+.m-opTight { color: var(--ink-2); }
+.m-punc { color: var(--ink-2); }
+.m-text { font-family: var(--font); font-size: 13.5px; color: var(--ink-2); }
+.m-ref {
+  font: 500 11.5px/18px var(--font-mono); font-style: normal; color: var(--accent-ink); background: var(--accent-50);
+  border-radius: 5px; padding: 1px 5px; margin: 0 1px; white-space: nowrap; vertical-align: 1px;
+}
+.math sub { font-size: .68em; vertical-align: -.32em; line-height: 0; font-style: italic; letter-spacing: .01em; }
+.math sup { font-size: .68em; vertical-align: .55em; line-height: 0; }
+.subst { font-family: var(--font); font-size: 14px; line-height: 21px; color: var(--ink-3); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.subst .eq { color: var(--ink-4); padding-right: .4em; }
+
+/* ── ledger ────────────────────────────────────────────────────────────────── */
+.ledgerTools { display: flex; align-items: center; gap: 8px; }
+.group { border-top: 1px solid var(--hair); }
+.group:first-of-type { border-top: 0; }
+.groupHead {
+  display: flex; align-items: center; gap: 10px; padding: 14px 20px 6px; position: sticky; top: 0; z-index: 1;
+  background: var(--surface);
+}
+.groupIco { width: 26px; height: 26px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; background: var(--surface-3); color: var(--ink-2); }
+.groupTitle { font-size: 12px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
+.groupCount { font-size: 12px; color: var(--ink-3); }
+.groupRule { flex: 1; height: 1px; background: var(--hair-2); }
+
+.step {
+  display: grid; grid-template-columns: minmax(180px, 250px) minmax(0, 1fr) minmax(118px, auto) 30px; column-gap: 20px;
+  align-items: start; padding: 10px 14px 10px 20px; position: relative;
+}
+.step + .step { border-top: 1px dashed var(--hair-2); }
+.step:hover { background: var(--surface-2); }
+.stepLabel { font-size: 14px; line-height: 21px; font-weight: 600; color: var(--ink); display: flex; flex-direction: column; gap: 4px; align-items: flex-start; padding-top: 2px; }
+.stepNote { font-size: 12.5px; line-height: 17px; color: var(--ink-3); font-weight: 400; }
+.stepBody { min-width: 0; display: flex; flex-direction: column; gap: 1px; padding-top: 1px; }
+.stepVal { text-align: right; white-space: nowrap; padding-top: 1px; }
+.stepNum { font: 650 17px/24px var(--font); font-variant-numeric: tabular-nums; color: var(--ink); }
+.stepUnit { font-size: 12.5px; font-weight: 500; color: var(--ink-3); margin-left: 4px; }
+.expBtn {
+  width: 28px; height: 28px; border: 0; border-radius: 8px; background: transparent; color: var(--ink-3);
+  display: inline-flex; align-items: center; justify-content: center; transition: transform var(--t-med) var(--ease), background-color var(--t-fast);
+}
+.expBtn:hover { background: var(--hover); color: var(--ink); }
+.expBtn[aria-expanded="true"] { transform: rotate(90deg); color: var(--accent); }
+.key .stepNum { color: var(--accent-ink); }
+.key { box-shadow: inset 3px 0 0 var(--accent); }
+
+.inputs { grid-column: 2 / -1; margin: 8px 0 4px; border: 1px solid var(--hair); border-radius: 10px; overflow: hidden; background: var(--surface); }
+.inputs table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.inputs th { text-align: left; font-size: 11.5px; font-weight: 650; color: var(--ink-3); padding: 6px 10px; background: var(--surface-2); border-bottom: 1px solid var(--hair); }
+.inputs td { padding: 6px 10px; border-bottom: 1px solid var(--hair-2); vertical-align: top; }
+.inputs tr:last-child td { border-bottom: 0; }
+.inputs .r { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.srcCell { color: var(--ink-2); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+
+.refChip {
+  display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 7px 0 5px; border-radius: 6px;
+  background: var(--ok-50); color: var(--ok-ink); font: 500 11.5px/18px var(--font-mono); white-space: nowrap; cursor: help;
+}
+.refChip svg { color: var(--ok); }
+.reconBadge { margin-left: 4px; }
+
+.emptyGroup { padding: 4px 20px 12px; font-size: 13px; color: var(--ink-3); }
+
+/* ── segment table ─────────────────────────────────────────────────────────── */
+.tableScroll { max-height: 560px; overflow: auto; border-top: 1px solid var(--hair-2); }
+.segTable { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; font-variant-numeric: tabular-nums; }
+.segTable thead th {
+  position: sticky; top: 0; z-index: 2; background: var(--surface); text-align: right; font-size: 11.5px; font-weight: 650; color: var(--ink-3);
+  padding: 8px 10px; border-bottom: 1px solid var(--hair); white-space: nowrap; user-select: none;
+}
+.segTable th.l, .segTable td.l { text-align: left; }
+.segTable th button { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; }
+.segTable th button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.segTable th[aria-sort="ascending"], .segTable th[aria-sort="descending"] { color: var(--accent-ink); }
+.segTable td { padding: 5px 10px; border-bottom: 1px solid var(--hair-2); text-align: right; white-space: nowrap; color: var(--ink); }
+.segTable tbody tr:hover td { background: var(--surface-2); }
+.segTable tbody tr.dropped td { background: var(--bad-50); }
+.segTable tfoot td { position: sticky; bottom: 0; background: var(--surface-2); font-weight: 700; border-top: 1px solid var(--hair); border-bottom: 0; }
+.segTable .sepL { border-left: 1px solid var(--hair); }
+.gradeChip { display: inline-flex; align-items: center; gap: 5px; justify-content: flex-end; min-width: 66px; }
+.gradeBar { width: 4px; height: 14px; border-radius: 2px; flex: none; }
+.reason { font-size: 11.5px; color: var(--ink-3); margin-left: 6px; }
+.reasonBad { color: var(--bad-ink); font-weight: 600; }
+
+/* ── editable tables ───────────────────────────────────────────────────────── */
+.editTable { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; }
+.editTable th { text-align: right; font-size: 11.5px; font-weight: 650; color: var(--ink-3); padding: 8px 8px; border-bottom: 1px solid var(--hair); white-space: nowrap; background: var(--surface); }
+.editTable th.l, .editTable td.l { text-align: left; }
+.editTable td { padding: 4px 8px; border-bottom: 1px solid var(--hair-2); text-align: right; white-space: nowrap; }
+.editTable tr:last-child td { border-bottom: 0; }
+.cell { display: inline-flex; align-items: center; gap: 2px; justify-content: flex-end; }
+.resetBtn {
+  width: 22px; height: 22px; border: 0; border-radius: 6px; background: transparent; color: var(--accent); display: inline-flex; align-items: center; justify-content: center; padding: 0;
+}
+.resetBtn:hover { background: var(--accent-100); }
+.resetGhost { width: 22px; display: inline-block; }
+.unitName { font-weight: 600; }
+.subtle { color: var(--ink-3); font-size: 12.5px; }
+.cardNote { padding: 8px 16px 2px; font-size: 12.5px; color: var(--ink-3); line-height: 18px; }
+.legendInline { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-3); }
+.changedSwatch { width: 14px; height: 14px; border-radius: 4px; background: var(--accent-50); border: 1px solid var(--accent-200); }
+
+.speedWrap { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 18px; padding: 8px 16px 12px; align-items: start; }
+@media (max-width: 760px) { .speedWrap { grid-template-columns: 1fr; } }
+.speedScroll { max-height: 420px; overflow: auto; border: 1px solid var(--hair); border-radius: 10px; }
+.speedScroll .editTable th { position: sticky; top: 0; z-index: 1; }
+
+/* ── shift timeline ────────────────────────────────────────────────────────── */
+.timeline { padding: 6px 16px 4px; }
+.tlTrack { position: relative; height: 34px; border-radius: 8px; background: var(--ok-50); overflow: hidden; }
+.tlEvent { position: absolute; top: 0; bottom: 0; border-left: 2px solid var(--surface); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--ink-inv); overflow: hidden; white-space: nowrap; }
+.tlTicks { position: relative; height: 18px; font-size: 11px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.tlTicks span { position: absolute; transform: translateX(-50%); top: 3px; }
+.tlTicks span:first-child { transform: none; }
+.tlTicks span:last-child { transform: translateX(-100%); }
+
+/* ── spreadsheet vs rimpull ────────────────────────────────────────────────── */
+.cmpTable { width: 100%; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.cmpTable th { font-size: 11.5px; font-weight: 650; color: var(--ink-3); text-align: right; padding: 8px 10px; border-bottom: 1px solid var(--hair); white-space: nowrap; }
+.cmpTable th.l, .cmpTable td.l { text-align: left; }
+.cmpTable td { padding: 7px 10px; border-bottom: 1px solid var(--hair-2); text-align: right; white-space: nowrap; }
+.cmpTable tr.hi td { font-weight: 700; }
+.whyList { list-style: none; margin: 0; padding: 4px 16px 6px; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; line-height: 19px; color: var(--ink-2); }
+.whyList li { display: flex; gap: 8px; }
+.whyList li svg { flex: none; margin-top: 2px; color: var(--ink-3); }
+.bandRow { display: grid; grid-template-columns: 120px 1fr 64px; align-items: center; gap: 8px; font-size: 12.5px; padding: 3px 16px; }
+.bandLabel { color: var(--ink-2); white-space: nowrap; }
+.bandVal { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 600; }
+
+@media print {
+  .tableScroll, .speedScroll { max-height: none; overflow: visible; }
+  .step { break-inside: avoid; }
+  .groupHead { position: static; }
+  .expBtn { display: none; }
+}

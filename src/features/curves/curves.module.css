@@ -1,0 +1,88 @@
+/* Truck curves tab. */
+.chartWrap { position: relative; padding: 4px 12px 8px; outline: none; }
+.chartWrap:focus-visible { box-shadow: inset 0 0 0 2px var(--accent); border-radius: 10px; }
+.svg { display: block; overflow: visible; touch-action: none; }
+.dragHandle { cursor: ns-resize; }
+
+.tip {
+  position: absolute; z-index: 5; pointer-events: none; min-width: 190px; max-width: 280px;
+  background: var(--surface); border: 1px solid var(--hair); border-radius: 10px; box-shadow: var(--shadow); padding: 9px 11px;
+  font-size: 12.5px; line-height: 17px; color: var(--ink-2);
+}
+.tipHead { font-weight: 650; color: var(--ink); margin-bottom: 4px; font-size: 13px; }
+.tipRow { display: grid; grid-template-columns: 14px 1fr auto; align-items: center; gap: 6px; }
+.tipRow b { color: var(--ink); font-weight: 650; font-variant-numeric: tabular-nums; text-align: right; }
+.tipKey { width: 14px; height: 2px; border-radius: 2px; }
+.tipNote { margin-top: 4px; color: var(--ink-3); font-size: 11.5px; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 4px 6px; padding: 2px 16px 12px; }
+.legItem {
+  display: inline-flex; align-items: center; gap: 7px; height: 28px; padding: 0 9px; border-radius: 8px; border: 1px solid transparent;
+  background: transparent; color: var(--ink-2); font-size: 12.5px; font-weight: 500; cursor: pointer;
+}
+.legItem:hover { background: var(--hover); color: var(--ink); }
+.legItem[aria-pressed="false"] { color: var(--ink-4); }
+.legItem[aria-pressed="false"] svg { opacity: .35; }
+.legItem:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; padding: 10px 16px 4px; }
+.ctrlLabel { font-size: 12px; font-weight: 650; color: var(--ink-3); white-space: nowrap; }
+.chips { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.chip {
+  height: 26px; min-width: 40px; padding: 0 8px; border-radius: 999px; border: 1px solid var(--hair); background: var(--surface); color: var(--ink-2);
+  font: 600 12px/24px var(--font); font-variant-numeric: tabular-nums; cursor: pointer;
+}
+.chip:hover { background: var(--hover); }
+.chip[aria-pressed="true"] { background: var(--accent-50); border-color: var(--accent-200); color: var(--accent-ink); }
+.sliderBox { display: inline-flex; align-items: center; gap: 10px; min-width: 220px; }
+.sliderVal { font: 650 13px/18px var(--font); font-variant-numeric: tabular-nums; min-width: 64px; text-align: right; color: var(--ink); white-space: nowrap; }
+
+.truckChips { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.truckChip {
+  display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 10px 0 8px; border-radius: 999px; border: 1px solid var(--hair);
+  background: var(--surface); color: var(--ink-2); font: 600 12.5px/1 var(--font); cursor: pointer;
+}
+.truckChip:hover { background: var(--hover); }
+.truckChip[aria-pressed="true"] { color: var(--ink); border-color: var(--ink-4); }
+.truckChip:disabled { opacity: .45; cursor: default; }
+.swatchLine { width: 16px; height: 3px; border-radius: 2px; }
+
+.provenance { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+.panels { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; padding: 8px 16px 4px; }
+@media (max-width: 900px) { .panels { grid-template-columns: 1fr; } }
+.panelTitle { font-size: 12px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); display: flex; align-items: center; gap: 8px; padding: 4px 0 2px; }
+.verdict { font-size: 12.5px; line-height: 18px; color: var(--ink-2); padding: 2px 0 6px; }
+.verdict b { color: var(--ink); }
+.optim { color: var(--bad-ink); font-weight: 650; }
+.pessim { color: var(--warn-ink); font-weight: 650; }
+
+.specTable { width: 100%; border-collapse: collapse; font-size: 13px; }
+.specTable td { padding: 7px 16px 7px 0; border-bottom: 1px solid var(--hair-2); vertical-align: top; }
+.specTable td:first-child { padding-left: 16px; color: var(--ink-3); white-space: nowrap; width: 1%; }
+.specTable td:last-child { text-align: right; padding-right: 16px; white-space: nowrap; width: 1%; }
+.specVal { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.specNote { color: var(--ink-3); font-size: 11.5px; line-height: 16px; font-weight: 400; margin-top: 2px; white-space: normal;
+  display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; cursor: help; }
+.sources { list-style: none; margin: 0; padding: 4px 16px 12px; display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; }
+.sources li { display: flex; gap: 8px; align-items: baseline; }
+.sources a { color: var(--accent-ink); text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+.sources a:hover { text-decoration: underline; }
+.srcField { color: var(--ink-3); display: inline-block; min-width: 92px; flex: none; }
+.method { margin: 0 16px 12px; padding: 10px 12px; background: var(--surface-2); border-radius: 10px; font-size: 12px; line-height: 17px; color: var(--ink-2); }
+.method summary { cursor: pointer; font-weight: 650; color: var(--ink); }
+
+.balTable { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; font-variant-numeric: tabular-nums; }
+.balTable th { position: sticky; top: 0; background: var(--surface); font-size: 11.5px; font-weight: 650; color: var(--ink-3); text-align: right; padding: 7px 10px; border-bottom: 1px solid var(--hair); white-space: nowrap; }
+.balTable th.l, .balTable td.l { text-align: left; }
+.balTable td { padding: 5px 10px; border-bottom: 1px solid var(--hair-2); text-align: right; white-space: nowrap; }
+.balTable tr.sel td { background: var(--accent-50); }
+.balTable tbody tr { cursor: pointer; }
+.balTable tbody tr:hover td { background: var(--surface-2); }
+.lim { font-size: 11px; color: var(--ink-3); margin-left: 5px; }
+.sepL { border-left: 1px solid var(--hair); }
+
+@media print {
+  .legend button[aria-pressed="false"] { display: none; }
+  .controls { display: none; }
+}

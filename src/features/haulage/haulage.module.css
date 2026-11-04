@@ -1,0 +1,264 @@
+/* hAIul SIM - haulage feature (inspector, long section, cross-section). Tokens only; anatomy from the UI kit. */
+
+/* ── generic ──────────────────────────────────────────────────────────────── */
+.pad { padding: 0 var(--s4); }
+.stack { display: grid; gap: var(--s2); }
+.muted { color: var(--ink-3); }
+.num { font-variant-numeric: tabular-nums; }
+.tBad { color: var(--bad-ink); } .tWarn { color: var(--warn-ink); } .tOk { color: var(--ok-ink); } .tNa { color: var(--ink-3); font-weight: 500; }
+.headTitle { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.headTitle > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.back {
+  flex: none; width: 28px; height: 28px; margin-left: -8px; border: 0; border-radius: 8px; background: transparent; color: var(--ink-2);
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.back:hover { background: var(--hover); color: var(--ink); }
+.sub { display: flex; align-items: center; gap: 6px; padding: 2px var(--s4) 0; color: var(--ink-3); font-size: 12.5px; min-height: 20px; flex-wrap: wrap; }
+.sub b { color: var(--ink-2); font-weight: 600; }
+.dotSep::before { content: '·'; margin: 0 6px 0 0; color: var(--ink-4); }
+.link {
+  border: 0; background: transparent; padding: 0; color: var(--accent-ink); font: 600 13px/18px var(--font); cursor: pointer;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.actions { display: flex; flex-wrap: wrap; gap: 6px; padding: var(--s2) var(--s4) 0; }
+.foot { display: flex; align-items: center; gap: var(--s2); padding: var(--s3) var(--s4) 0; }
+.gap { flex: 1; }
+.colorInput {
+  width: 34px; height: 34px; padding: 0; border: 1px solid var(--hair); border-radius: 8px; background: var(--surface); cursor: pointer; flex: none;
+}
+.colorInput::-webkit-color-swatch-wrapper { padding: 5px; }
+.colorInput::-webkit-color-swatch { border: 0; border-radius: 4px; }
+.colorInput::-moz-color-swatch { border: 0; border-radius: 4px; }
+
+/* ── figures ──────────────────────────────────────────────────────────────── */
+.kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 12px; padding: var(--s3) var(--s4) var(--s1); }
+.kpis2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.fig { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.figLab { font-size: 11.5px; line-height: 16px; font-weight: 600; color: var(--ink-3); letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.figVal { display: flex; align-items: baseline; gap: 6px; font-size: 14px; line-height: 20px; font-weight: 650; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.figUnit { font-size: 12px; font-weight: 500; color: var(--ink-3); margin-left: -3px; }
+.figVal.tBad { color: var(--bad-ink); } .figVal.tWarn { color: var(--warn-ink); } .figVal.tOk { color: var(--ok-ink); } .figVal.tNa { color: var(--ink-3); font-weight: 500; }
+
+/* ── totals strip (overview) ─────────────────────────────────────────────── */
+.totals { display: grid; grid-template-columns: 1.15fr 1fr 1fr; gap: 12px; padding: var(--s3) var(--s4) var(--s2); }
+.meter { position: relative; height: 6px; border-radius: 3px; background: var(--accent-100); overflow: hidden; margin-top: 6px; }
+.meterFill { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: var(--accent); }
+.meterOver { background: var(--bad); }
+
+/* ── circuit rows (overview) ─────────────────────────────────────────────── */
+.cList { display: grid; padding: 2px 0 0; }
+.cRow {
+  display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; column-gap: 10px; align-items: center;
+  padding: 10px var(--s4) 12px; border: 0; background: transparent; width: 100%; text-align: left; cursor: pointer; color: inherit;
+  transition: background-color var(--t-fast) ease-out;
+}
+.cRow + .cRow { box-shadow: inset 0 1px 0 var(--hair-2); }
+.cRow:hover { background: var(--hover); }
+.cRow:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.cDot { width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--hair); }
+.cName { font: 600 14px/20px var(--font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cMeta { grid-column: 2 / 4; font-size: 12.5px; line-height: 18px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cFigs { grid-column: 2 / 4; display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 8px; margin-top: 8px; }
+.cInactive { opacity: .55; }
+
+.pips { position: relative; display: inline-flex; gap: 2px; align-items: center; height: 14px; margin-left: 2px; }
+.pip { width: 6px; height: 12px; border-radius: 2px; background: var(--hair); }
+.pipOn { background: var(--ink-2); }
+.pipOver { background: var(--warn); }
+.pipExact { position: absolute; top: -1px; bottom: -1px; width: 2px; border-radius: 1px; background: var(--accent); box-shadow: 0 0 0 1.5px var(--surface); }
+
+/* ── plain list rows (strings / assets) ──────────────────────────────────── */
+.lRow {
+  display: grid; grid-template-columns: 20px minmax(0, 1fr) auto auto; column-gap: 10px; align-items: center;
+  min-height: 38px; padding: 0 8px 0 var(--s4); border: 0; background: transparent; width: 100%; text-align: left; color: inherit; cursor: pointer;
+}
+.lRow:hover { background: var(--hover); }
+.lRowWide { padding-right: var(--s4); }
+.lName { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lHint { color: var(--ink-3); font-size: 12.5px; margin-left: 6px; }
+.lVal { font-size: 13px; font-weight: 600; color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lineKey { width: 16px; height: 4px; border-radius: 2px; justify-self: center; }
+.iconBtn {
+  width: 28px; height: 28px; border: 0; border-radius: 8px; background: transparent; color: var(--ink-3);
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex: none; padding: 0;
+}
+.iconBtn:hover { background: var(--ov2); color: var(--ink); }
+.iconBtn:disabled { opacity: .35; cursor: default; background: transparent; }
+.iconBtnOn { color: var(--accent); }
+.iconBtnDanger:hover { color: var(--bad-ink); background: var(--bad-50); }
+
+/* ── fleet chooser ───────────────────────────────────────────────────────── */
+.fleet { padding: 6px 8px 0; }
+.fHead, .fRow {
+  display: grid; grid-template-columns: 28px minmax(0, 1fr) 50px 40px 40px 34px; column-gap: 8px; align-items: center; padding: 0 8px;
+}
+.fHead { height: 24px; font-size: 11.5px; font-weight: 600; color: var(--ink-3); letter-spacing: .02em; }
+.fHead > span { text-align: right; white-space: nowrap; }
+.fHead > span:nth-child(1), .fHead > span:nth-child(2) { text-align: left; }
+.fRow {
+  height: 34px; width: 100%; border: 0; border-radius: 9px; background: transparent; color: var(--ink); cursor: pointer;
+  font: 500 13px/18px var(--font); font-variant-numeric: tabular-nums; text-align: right;
+  transition: background-color var(--t-fast) ease-out;
+}
+.fRow:hover { background: var(--hover); }
+.fRow:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.fRow > span { white-space: nowrap; }
+.fRow.fAssigned { background: var(--accent-50); box-shadow: inset 0 0 0 1px var(--accent-200); }
+.fN {
+  justify-self: start; width: 26px; height: 24px; border-radius: 7px; display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 13px; color: var(--ink-2); background: var(--surface-3);
+}
+.fRec .fN { color: var(--ok-ink); background: var(--ok-50); box-shadow: inset 0 0 0 1.5px var(--ok); }
+.fAssigned .fN { color: #fff; background: var(--accent); box-shadow: none; }
+.fBar { position: relative; height: 8px; border-radius: 4px; background: var(--surface-3); }
+.fShort { position: absolute; top: 0; bottom: 0; border-radius: 0 4px 4px 0; background: repeating-linear-gradient(135deg, var(--bad) 0 1.5px, transparent 1.5px 4px); opacity: .55; }
+.fIdle { position: absolute; top: 0; bottom: 0; border-radius: 0 4px 4px 0; background: repeating-linear-gradient(135deg, var(--warn) 0 1.5px, transparent 1.5px 4px); opacity: .6; }
+.fFill { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 4px; background: var(--c1); }
+.fRow:not(.fAssigned) .fFill { background: color-mix(in srgb, var(--c1) 72%, var(--surface)); }
+.fTarget { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; border-radius: 1px; background: var(--ink-2); }
+.fZero { color: var(--ink-4); }
+.fLegend { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 8px var(--s4) 0; font-size: 12px; color: var(--ink-3); }
+.fLegend > span { display: inline-flex; align-items: center; gap: 6px; }
+.lgSw { width: 14px; height: 8px; border-radius: 2px; flex: none; }
+.lgRec { width: 14px; height: 14px; border-radius: 4px; background: var(--ok-50); box-shadow: inset 0 0 0 1.5px var(--ok); }
+.lgTarget { width: 2px; height: 14px; border-radius: 1px; background: var(--ink-2); margin: 0 6px; }
+
+/* ── callout ─────────────────────────────────────────────────────────────── */
+.callout { display: grid; grid-template-columns: 18px 1fr; gap: 10px; margin: var(--s3) var(--s4) 0; padding: 10px 12px; border-radius: 10px; font-size: 13px; line-height: 18px; }
+.callout > svg { margin-top: 1px; }
+.co-info { background: var(--accent-50); color: var(--accent-ink); }
+.co-ok { background: var(--ok-50); color: var(--ok-ink); }
+.co-bad { background: var(--bad-50); color: var(--bad-ink); }
+.co-warn { background: var(--warn-50); color: var(--warn-ink); }
+.coBody { min-width: 0; }
+.coTitle { font-weight: 650; }
+.coText { color: var(--ink-2); margin-top: 2px; }
+.coAct { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+
+/* ── parameter rows ──────────────────────────────────────────────────────── */
+.pRow { display: grid; grid-template-columns: minmax(0, 1fr) 132px; align-items: center; column-gap: 12px; min-height: 44px; padding: 4px var(--s4); }
+.pRow + .pRow { box-shadow: inset 0 1px 0 var(--hair-2); }
+.pLab { font-size: 14px; line-height: 18px; color: var(--ink); display: flex; flex-direction: column; min-width: 0; }
+.pHint { font-size: 12px; line-height: 16px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pChanged { color: var(--accent-ink); }
+.pChanged::after { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-left: 6px; vertical-align: 2px; }
+.pGroup { padding: 10px var(--s4) 2px; font-size: 11.5px; font-weight: 650; color: var(--ink-3); letter-spacing: .02em; }
+
+.setup { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: var(--s2) var(--s4) 0; }
+.setup .full { grid-column: 1 / -1; }
+.setup select { width: 100%; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 4px 0 10px; border-radius: 8px; background: var(--surface-3);
+  font-size: 12.5px; font-weight: 600; color: var(--ink-2); max-width: 100%;
+}
+.chip > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip .chipFig { color: var(--ink-3); font-weight: 500; font-variant-numeric: tabular-nums; }
+.chipX { width: 22px; height: 22px; border: 0; border-radius: 6px; background: transparent; color: var(--ink-3); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+.chipX:hover { background: var(--ov2); color: var(--ink); }
+
+/* ── grade chip ──────────────────────────────────────────────────────────── */
+.gradeChip {
+  display: inline-flex; align-items: center; justify-content: center; gap: 3px; height: 20px; min-width: 52px; padding: 0 6px; border-radius: 6px;
+  font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; color: var(--ink);
+  background: color-mix(in srgb, var(--g, var(--ink-4)) 16%, transparent);
+  box-shadow: inset 3px 0 0 var(--g, var(--ink-4));
+}
+.gradeDrop { background: var(--bad); color: #fff; box-shadow: none; }
+
+/* ── point table ─────────────────────────────────────────────────────────── */
+.tBar { display: flex; align-items: center; gap: 8px; padding: var(--s2) var(--s4) 0; }
+.tBox { margin: var(--s2) 12px 0; border: 1px solid var(--hair); border-radius: 10px; overflow: hidden; background: var(--surface); }
+.tScroll { position: relative; overflow: auto; overscroll-behavior: contain; }
+.tHead, .tRow { display: grid; align-items: center; column-gap: 2px; padding-right: 4px; }
+.tHead {
+  position: sticky; top: 0; z-index: 2; height: 30px; background: var(--surface-2); border-bottom: 1px solid var(--hair);
+  font-size: 11.5px; font-weight: 650; color: var(--ink-3); letter-spacing: .02em;
+}
+.tHead > span { padding: 0 7px; white-space: nowrap; }
+.tHead .r, .tRow .r { text-align: right; }
+.tHead .c, .tRow .c { text-align: center; justify-self: center; }
+.tRow { height: 30px; font-size: 13px; color: var(--ink); box-shadow: inset 0 -1px 0 var(--hair-2); cursor: default; }
+.tRow:hover, .tRow.tHov { background: var(--surface-2); }
+.tRow.tSel { background: var(--accent-50); box-shadow: inset 3px 0 0 var(--accent), inset 0 -1px 0 var(--accent-100); }
+.tRow.tDrop .tIdx { color: var(--bad-ink); }
+.tIdx { text-align: right; padding-right: 8px; font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; cursor: pointer; user-select: none; }
+.tCell { padding: 0 7px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tEnd { color: var(--ink-4); font-size: 12px; padding: 0 7px; }
+.cell {
+  width: 100%; min-width: 0; height: 26px; padding: 0 6px; border: 1px solid transparent; border-radius: 6px; background: transparent;
+  font: 500 13px/20px var(--font); font-variant-numeric: tabular-nums; color: var(--ink); text-align: right; outline: 0;
+  transition: border-color var(--t-fast), background-color var(--t-fast), box-shadow var(--t-fast);
+}
+.cell::placeholder { color: var(--ink-4); }
+.cell:hover:not(:disabled) { border-color: var(--hair); background: var(--surface); }
+.cell:focus { border-color: var(--accent); background: var(--surface); box-shadow: 0 0 0 3px var(--accent-glow); }
+.cell:disabled { color: var(--ink-3); }
+.cellChanged { background: var(--accent-50); color: var(--accent-ink); font-weight: 600; }
+.cellBad, .cellBad:focus { border-color: var(--bad); box-shadow: 0 0 0 3px var(--bad-50); }
+.tRow select { height: 24px; font-size: 12.5px; padding: 0 22px 0 6px; border-color: transparent; background-color: transparent; background-position: right 4px center; width: 100%; }
+.tRow select:hover { border-color: var(--hair); background-color: var(--surface); }
+.tRow .rowActs { display: flex; justify-content: flex-end; gap: 0; opacity: 0; transition: opacity var(--t-fast); }
+.tRow:hover .rowActs, .tRow.tSel .rowActs { opacity: 1; }
+.tRow .iconBtn { width: 24px; height: 24px; border-radius: 6px; }
+.snapDot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 2px var(--ok-50); }
+.snapOff { background: transparent; box-shadow: inset 0 0 0 1.5px var(--ink-4); }
+.stopBtn { width: 24px; height: 24px; border: 0; border-radius: 6px; background: transparent; color: var(--ink-4); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+.stopBtn:hover { background: var(--ov2); color: var(--ink-2); }
+.stopOn { color: var(--bad); }
+.stopOn:hover { color: var(--bad-ink); }
+.tFoot { display: flex; align-items: center; gap: 10px; height: 30px; padding: 0 10px; background: var(--surface-2); border-top: 1px solid var(--hair); font-size: 12px; color: var(--ink-3); white-space: nowrap; overflow: hidden; }
+.tFoot > span { overflow: hidden; text-overflow: ellipsis; }
+
+.paste { width: 100%; min-height: 200px; resize: vertical; border: 1px solid var(--hair); border-radius: 10px; padding: 10px 12px; font: 500 12.5px/18px var(--font-mono); color: var(--ink); background: var(--surface); }
+.paste:focus { outline: 0; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+.pasteInfo { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; font-size: 13px; color: var(--ink-2); }
+
+/* ── asset card ──────────────────────────────────────────────────────────── */
+.dialRow { display: grid; grid-template-columns: 64px 1fr; gap: 14px; align-items: center; padding: var(--s2) var(--s4) 0; }
+.dial { width: 64px; height: 64px; cursor: grab; touch-action: none; }
+.dial:active { cursor: grabbing; }
+.statGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 12px; padding: var(--s3) var(--s4) var(--s1); }
+.swatchBig { width: 14px; height: 14px; border-radius: 4px; flex: none; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .1); }
+
+/* ── long section strip ──────────────────────────────────────────────────── */
+.strip { position: relative; display: flex; flex-direction: column; width: 100%; height: 100%; min-height: 0; color: var(--ink); }
+.stripHead { display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 10px 0 16px; flex: none; min-width: 0; }
+.stripTitle { display: inline-flex; align-items: center; gap: 8px; font: 600 14px/20px var(--font); white-space: nowrap; min-width: 0; flex: 0 1 auto; max-width: 340px; }
+.stripTitle > span:last-child { overflow: hidden; text-overflow: ellipsis; }
+.stripMeta { color: var(--ink-3); font-size: 12.5px; white-space: nowrap; font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 0 1 auto; }
+.stripMetaFixed { color: var(--ink-3); font-size: 12.5px; white-space: nowrap; font-variant-numeric: tabular-nums; flex: none; }
+.stripLegend { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--ink-2); white-space: nowrap; flex: none; }
+.stripLegend > span { display: inline-flex; align-items: center; gap: 5px; }
+.lgGrade { display: inline-flex; gap: 1px; }
+.lgGrade > i { width: 7px; height: 8px; display: block; }
+.lgGrade > i:first-child { border-radius: 2px 0 0 2px; }
+.lgGrade > i:last-child { border-radius: 0 2px 2px 0; }
+.lgTerrain { width: 14px; height: 8px; border-radius: 2px; background: color-mix(in srgb, var(--ink-4) 22%, transparent); box-shadow: inset 0 1px 0 var(--ink-4); }
+.stripChart { position: relative; flex: 1; min-height: 0; }
+.stripChart svg { position: absolute; inset: 0; display: block; }
+.stripEmpty { flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--ink-3); font-size: 13px; }
+.readout {
+  position: absolute; z-index: 3; pointer-events: none; min-width: 168px; padding: 8px 10px; border-radius: 10px;
+  background: var(--surface); border: 1px solid var(--hair); box-shadow: var(--shadow); font-size: 12.5px; line-height: 18px;
+}
+.roHead { font-weight: 650; color: var(--ink); margin-bottom: 2px; display: flex; gap: 8px; align-items: center; }
+.roRow { display: flex; justify-content: space-between; gap: 14px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.roRow b { color: var(--ink); font-weight: 600; }
+.roKey { display: inline-flex; align-items: center; gap: 6px; }
+.vertex { cursor: ns-resize; }
+.chartHit { cursor: crosshair; }
+
+/* ── cross-section ───────────────────────────────────────────────────────── */
+.secLegend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--ink-2); }
+.secLegend > span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* ── truck card ──────────────────────────────────────────────────────────── */
+.phaseBar { display: flex; height: 10px; gap: 2px; margin: var(--s3) var(--s4) 0; }
+.phaseSeg { border-radius: 3px; background: var(--surface-3); position: relative; }
+.phaseNow { background: var(--accent-100); }
+.phaseHead { position: absolute; top: -3px; bottom: -3px; width: 3px; margin-left: -1.5px; border-radius: 2px; background: var(--accent); box-shadow: 0 0 0 2px var(--surface); }
+.phaseRowOn { background: var(--accent-50); box-shadow: inset 3px 0 0 var(--accent); }
+.phaseLabels { display: flex; gap: 2px; margin: 4px var(--s4) 0; font-size: 11px; color: var(--ink-3); }
+.phaseLabels > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

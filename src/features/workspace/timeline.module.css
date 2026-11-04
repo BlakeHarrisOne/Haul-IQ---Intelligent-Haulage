@@ -1,0 +1,89 @@
+.bar {
+  height: 100%; display: grid; grid-template-rows: 44px 1fr; padding: 4px 10px 6px 4px;
+  background: var(--chrome-strong); backdrop-filter: var(--chrome-blur); -webkit-backdrop-filter: var(--chrome-blur);
+  border: 1px solid var(--hair); border-radius: var(--r-card); box-shadow: var(--shadow);
+}
+.controls { display: flex; align-items: center; gap: 2px; min-width: 0; }
+
+.play {
+  width: 36px; height: 36px; border-radius: 50%; border: 0; flex: none; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--accent); color: #fff; cursor: pointer; margin: 0 2px; box-shadow: 0 2px 8px var(--accent-glow);
+  transition: background-color var(--t-fast), transform .1s;
+}
+.play:hover { background: var(--accent-ink); }
+.play:active { transform: scale(.94); background: var(--accent-press); }
+.play svg { color: #fff; }
+.playing { background: var(--ink); box-shadow: none; }
+.playing:hover { background: var(--ink-2); }
+:global(:root[data-theme="dark"]) .playing { background: var(--surface-3); box-shadow: inset 0 0 0 1px var(--hair); }
+
+.clock { display: flex; flex-direction: column; justify-content: center; min-width: 148px; padding: 0 10px 0 8px; line-height: 1; }
+.time { font: 700 20px/24px var(--font); font-variant-numeric: tabular-nums; letter-spacing: -.01em; color: var(--ink); }
+.time small { font-size: 12px; font-weight: 600; color: var(--ink-3); margin-left: 6px; letter-spacing: 0; }
+.sub { display: flex; align-items: center; gap: 5px; font: 500 11.5px/14px var(--font); color: var(--ink-3); white-space: nowrap; }
+.subEvent { color: var(--warn-ink); font-weight: 600; }
+
+.speed { font-variant-numeric: tabular-nums; min-width: 72px; }
+
+.pt { display: flex; align-items: center; gap: 8px; padding: 0 10px 0 6px; white-space: nowrap; }
+.ptVal { font: 700 14px/18px var(--font); font-variant-numeric: tabular-nums; }
+.ptLab { font: 500 11.5px/14px var(--font); color: var(--ink-3); }
+
+.chips { flex: 1; min-width: 0; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px; mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent); }
+.chips::-webkit-scrollbar { display: none; }
+.chip {
+  position: relative; flex: none; display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 10px 0 9px;
+  border: 1px solid var(--hair); border-radius: 9px; background: var(--surface); cursor: pointer; overflow: hidden;
+  font: 500 12.5px/16px var(--font); color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap;
+  transition: background-color var(--t-fast), border-color var(--t-fast);
+}
+.chip:hover { background: var(--hover); }
+.chipOn { border-color: var(--accent); background: var(--accent-50); }
+.chip b { color: var(--ink); font-weight: 650; }
+.metric { display: inline-flex; align-items: center; gap: 3px; color: var(--ink-2); font-weight: 600; }
+.metric svg { color: var(--ink-3); }
+.chip i { font-style: normal; color: var(--ink-3); }
+.chipBar { position: absolute; left: 0; bottom: 0; height: 2px; border-radius: 0 2px 2px 0; transition: width .3s linear; }
+
+/* ── scrubber ──────────────────────────────────────────────────────────────── */
+.scrub { position: relative; margin: 0 4px 0 10px; touch-action: none; cursor: pointer; user-select: none; }
+.track { position: absolute; left: 0; right: 0; top: 3px; height: 20px; border-radius: 6px; background: var(--surface-3); box-shadow: inset 0 0 0 1px var(--hair-2); overflow: hidden; }
+.elapsed { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, var(--accent-50), var(--accent-100)); }
+.hourLine { position: absolute; top: 5px; bottom: 5px; width: 1px; background: var(--hair); }
+.ev {
+  position: absolute; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center; gap: 4px; overflow: hidden;
+  font: 600 11px/1 var(--font); white-space: nowrap; border-left: 1px solid; border-right: 1px solid;
+}
+.ev svg { flex: none; }
+.ev-prestart, .ev-changeover {
+  color: var(--ink-2); border-color: color-mix(in srgb, var(--ink-4) 50%, transparent);
+  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--ink-4) 22%, transparent) 0 4px, color-mix(in srgb, var(--ink-4) 10%, transparent) 4px 8px);
+}
+.ev-crib { color: var(--warn-ink); background: var(--warn-100); border-color: color-mix(in srgb, var(--warn) 45%, transparent); }
+.ev-fuel { color: var(--accent-ink); background: var(--accent-100); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+.ev-blast { color: var(--bad-ink); background: var(--bad-100); border-color: color-mix(in srgb, var(--bad) 45%, transparent); }
+.ev-other { color: var(--ink-2); background: var(--na-50); border-color: var(--hair); }
+.evActive { box-shadow: inset 0 0 0 1.5px currentColor; }
+
+.ticks { position: absolute; left: 0; right: 0; top: 25px; height: 12px; }
+.tick { position: absolute; top: 0; translate: -50% 0; font: 500 10.5px/12px var(--font); color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tick:first-child { translate: 0 0; }
+.tick:last-child { translate: -100% 0; }
+
+.head { position: absolute; top: 0; height: 26px; width: 0; pointer-events: none; }
+.head::before { content: ''; position: absolute; left: -1px; top: 0; bottom: 0; width: 2px; border-radius: 2px; background: var(--accent); }
+.head::after {
+  content: ''; position: absolute; left: -6px; top: 7px; width: 12px; height: 12px; border-radius: 50%;
+  background: var(--surface); box-shadow: 0 0 0 2px var(--accent), var(--shadow-sm);
+}
+.ghost { position: absolute; top: 3px; height: 20px; width: 1px; background: var(--ink-3); opacity: .5; pointer-events: none; }
+.flag {
+  position: absolute; bottom: calc(100% + 6px); translate: -50% 0; padding: 4px 8px; border-radius: 7px; pointer-events: none;
+  background: #1F2329; color: #fff; font: 600 12px/16px var(--font); font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: var(--shadow);
+}
+.flag span { color: rgba(255, 255, 255, .7); font-weight: 500; margin-left: 6px; }
+
+@media (max-width: 1440px) {
+  .ptLab { display: none; }
+  .clock { min-width: 132px; }
+}

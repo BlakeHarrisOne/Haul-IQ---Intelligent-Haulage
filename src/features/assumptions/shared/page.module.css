@@ -1,0 +1,49 @@
+/* Shared page layout for the analytics sheets (Assumptions / Truck curves / Compare). The shell provides the
+   scrolling sheet (max-width ~1480 px); this is the content inside it. */
+.page { padding: 28px 28px 64px; display: flex; flex-direction: column; gap: 18px; color: var(--ink); min-width: 0; }
+.head { display: flex; align-items: flex-end; gap: 16px 24px; flex-wrap: wrap; }
+.headText { min-width: 0; flex: 1 1 520px; }
+.eyebrow { font-size: 12px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-ink); display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.title { font: 650 28px/34px var(--font-display); letter-spacing: -.018em; color: var(--ink); }
+.desc { margin-top: 6px; color: var(--ink-2); font-size: 14.5px; line-height: 21px; max-width: 860px; }
+.actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+.toolbar { display: flex; gap: 10px 16px; align-items: center; flex-wrap: wrap; }
+.toolLabel { font-size: 12px; font-weight: 650; color: var(--ink-3); letter-spacing: .02em; }
+.toolGroup { display: inline-flex; align-items: center; gap: 8px; }
+
+.grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.s12 { grid-column: span 12; } .s8 { grid-column: span 8; } .s7 { grid-column: span 7; } .s6 { grid-column: span 6; }
+.s5 { grid-column: span 5; } .s4 { grid-column: span 4; } .s3 { grid-column: span 3; }
+.stack { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.sticky { position: sticky; top: 16px; }
+@media (max-width: 1180px) { .sticky { position: static; } }
+@media (max-width: 1180px) {
+  .s8, .s7, .s6, .s5, .s4 { grid-column: span 12; }
+  .s3 { grid-column: span 6; }
+}
+
+.kpis { display: flex; flex-wrap: wrap; gap: 18px 36px; padding: 16px 20px; }
+.callout { display: flex; gap: 10px; align-items: flex-start; margin: 10px 16px 4px; padding: 10px 12px; border-radius: 10px; font-size: 13.5px; line-height: 19px; }
+.callout svg { flex: none; margin-top: 1px; }
+.calloutWarn { background: var(--warn-50); color: var(--warn-ink); }
+.calloutInfo { background: var(--accent-50); color: var(--accent-ink); }
+.calloutBad { background: var(--bad-50); color: var(--bad-ink); }
+.calloutList { margin: 0; padding-left: 18px; }
+
+.muted { color: var(--ink-3); }
+.mono { font-family: var(--font-mono); font-size: 12px; }
+.num { font-variant-numeric: tabular-nums; }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 6px; border-radius: 6px; white-space: nowrap;
+  background: var(--surface-3); border: 1px solid var(--hair); color: var(--ink-2); font: 500 11.5px/18px var(--font-mono);
+}
+.chip svg { color: var(--ink-3); }
+
+@media print {
+  .noPrint { display: none !important; }
+  .page { padding: 0; gap: 12px; }
+  .grid { display: block; }
+  .grid > * { margin-bottom: 12px; break-inside: avoid; }
+}
