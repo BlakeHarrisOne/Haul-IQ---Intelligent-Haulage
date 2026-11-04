@@ -100,7 +100,12 @@ module.exports = {
     await page.keyboard.press('Enter');
     await page.mouse.move(mp[2][0] + 3, mp[2][1] + 3);
     await L.sleep(800);
-    const tip = await page.evaluate(() => { const el = [...document.querySelectorAll('div')].find(d => /Max leg grade/.test(d.innerText || '') && d.childElementCount <= 6 && d.style.display !== 'none'); return el ? el.innerText : null; });
+    // the smallest visible element holding the readout (the tool tip next to the cursor)
+    const tip = await page.evaluate(() => {
+      const els = [...document.querySelectorAll('div')].filter(d => /Max leg grade/.test(d.innerText || '') && d.offsetParent !== null);
+      els.sort((a, b) => a.innerText.length - b.innerText.length);
+      return els[0] ? els[0].innerText : null;
+    });
     t.check(!!tip, 'measure readout shown', tip && tip.replace(/\n/g, ' · '));
     let plan = 0, d3 = 0;
     for (let i = 1; i < picked.length; i++) { const [a, b] = [picked[i - 1], picked[i]]; plan += Math.hypot(b[0] - a[0], b[1] - a[1]); d3 += Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]); }

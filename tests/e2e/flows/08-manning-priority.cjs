@@ -102,12 +102,14 @@ module.exports = {
     // ── Apply → Manning total = plan crew used
     const applyBtn = region.getByRole('button', { name: 'Apply allocation' });
     t.check(await applyBtn.isEnabled(), 'Apply allocation enabled once the plan differs');
+    // toasts auto-dismiss after ~4 s: watch for it while clicking
+    const toastSeen = page.locator('[role="status"]').filter({ hasText: /applied/ }).first().waitFor({ timeout: 20_000 }).then(() => true, () => false);
     await applyBtn.click();
     await L.sleep(600);
     const after = await L.circuitResults(page);
     const lowAfter = after.find(r => r.id === lowest.id);
     t.check(lowAfter.trucks < lowest.trucks || !lowAfter.active, `apply cuts ${lowest.name} trucks (${lowest.trucks} → ${lowAfter.trucks})`);
-    t.check(await page.locator('[role="status"]').filter({ hasText: /applied/ }).count() > 0, 'toast confirms the allocation');
+    t.check(await toastSeen, 'toast confirms the allocation');
     await L.key(page, '5');
     region = page.getByRole('region', { name: 'Manning' });
     await region.waitFor();

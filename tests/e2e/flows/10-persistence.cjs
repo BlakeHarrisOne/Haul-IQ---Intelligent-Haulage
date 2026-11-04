@@ -45,9 +45,10 @@ module.exports = {
     t.note(`document: ${d0.circuits} circuits, ${d0.strings} strings (${d0.points} pts), ${d0.assets} assets (${d0.tris} tris), ${Math.round(d0.bcmDay)} bcm/d`);
 
     // ── save
+    const savedToast = page.locator('[role="status"]').filter({ hasText: /Saved “/ }).first().waitFor({ timeout: 60_000 }).then(() => true, () => false);
     await L.key(page, 'Control+s');
     await L.waitStore(page, st => !st.dirty && !!st.lastSavedAt, undefined, 120_000);
-    await page.getByRole('status').getByText(/Saved “/).first().waitFor({ timeout: 60_000 });
+    t.check(await savedToast, 'Ctrl+S confirms with a toast');
     const docState = await page.getByRole('button', { name: /click to rename/ }).innerText();
     t.check(/Saved/.test(docState), `title bar reads saved (${docState.replace(/\n/g, ' · ')})`);
     await t.shot('saved');
@@ -66,7 +67,7 @@ module.exports = {
     const ctext = await card.innerText();
     t.check(ctext.includes(Math.round(d0.bcmDay).toLocaleString('en-AU')), `library card KPI ${Math.round(d0.bcmDay).toLocaleString('en-AU')} bcm/d`, ctext.replace(/\n/g, ' · ').slice(0, 160));
     await t.shot('library');
-    await card.getByRole('button', { name: 'Open' }).click();
+    await card.getByRole('button', { name: 'Open', exact: true }).click();
     await L.waitStore(page, st => st.scenario.circuits.length > 0 && st.view === 'site', undefined, 120_000);
     await L.waitScene(page);
     const d1 = await digest(L, page);
@@ -88,12 +89,12 @@ module.exports = {
     await L.key(page, '7');
     await lib.waitFor();
     const [chooser] = await Promise.all([page.waitForEvent('filechooser'), lib.getByRole('button', { name: 'Import file' }).click()]);
+    const copyToast = page.locator('[role="status"]').filter({ hasText: /as a copy/ }).first().waitFor({ timeout: 60_000 }).then(() => true, () => false);
     await chooser.setFiles(file);
     await L.waitStore(page, (st, id) => st.scenario.id !== id && st.scenario.circuits.length > 0 && st.view === 'site', d0.id, 120_000);
     await L.waitScene(page);
     const d2 = await digest(L, page);
-    const toast = await page.getByRole('status').innerText();
-    t.check(/as a copy/.test(toast), 'import of an existing scenario opens as a copy', toast.replace(/\n/g, ' · ').slice(0, 120));
+    t.check(await copyToast, 'import of an existing scenario opens as a copy (toast)');
     t.check(same(d0, d2, KEYS), 'export → import: identical document and KPIs', KEYS.filter(k => !same(d0, d2, [k])).map(k => `${k}: ${d0[k]} vs ${d2[k]}`));
     await L.sleep(1500);
     await t.shot('imported');
