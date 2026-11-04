@@ -515,7 +515,7 @@ harness.
   - When there is no placer (harness), the module places the labels itself as before.
   - The leg hover card and the selected-truck card now sit on the HUD layer at `--z-card`, above every scene label.
 - **#8 (modules part) Fixed.** In POV and chase the ribbons give way to a real 3D haul road (`strings/road3d.ts`).
-  Grade colour stays on the map ribbon and the HUD profile only (`b3_pov_day_light.png`, `b3_chase_day_light.png`,
+  Grade colour stays on the map ribbon and the HUD profile only (`b3_pov_day_light.png`, `b4_chase_canvas_dark_theme.png`,
   `h_pov4.png`).
   - The carriageway is compacted gravel at `roadWidthM` with a 1 % crown. It has darker, smoother wheel tracks along
     both keep-left lanes and loose spill at the windrow toes. A faint dashed centreline is drawn only on two-way roads
@@ -555,9 +555,14 @@ harness.
   - Each truck's own pause start is found from the engine once (by bisection) and then cached.
   - This is unit-tested in `sim.test.ts`.
 - **Dark-theme POV.** The modules take day and night only from the core's clock-driven `environment()`, with a fallback
-  to the same shift-clock sun. Road, post and lamp colours do not depend on the theme.
-- **Still open (scene core).** The core's new near-field terrain gravel aliases to salt-and-pepper noise under
-  SwiftShader. It is the one thing in the cab view that still reads worse than HRL's ground.
+  to the same shift-clock sun. Road, post and lamp colours do not depend on the theme. At 07:35 in the dark theme the
+  cab view is daylit (`b4_pov_day_dark_theme.png`).
+- **Seen while checking (scene core).**
+  - The near-field terrain gravel aliased to salt-and-pepper noise under SwiftShader (`b3_pov_day_light.png`). The core
+    has since fixed this (see the scene-core section below).
+  - In `b3_pov_night.png` the overlay canvas still held the map view's contour labels, label stems and string handles
+    after the switch to POV. The modules draw none of these in ride views: the same steps in the actors harness show a
+    clean cab (`h_pov_sel.png`). It looks like a stale overlay frame in the app under heavy load.
 
 ### Fixed: scene core: #2 (core part), #3, #5, #6 (core part), #7, #8 (core part), #16, #17, #24, #35
 

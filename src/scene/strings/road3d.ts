@@ -455,7 +455,7 @@ float hkTrack(float x, float c) { float t = (x - c) / 0.85; return exp(-t * t); 
   float cl = uTwoWay * (1.0 - smoothstep(0.09, 0.17, lat)) * step(fract(rp.y / 12.0), 0.38) * (0.35 + 0.65 * nN.b) * (1.0 - bund);
   road = mix(road, uLineCol, cl * 0.6);
   // windrow rubble: coarser, browner, more varied
-  vec3 rub = uBundCol * (0.72 + 0.42 * nF.r + 0.18 * (nN.g - 0.5)) * (0.88 + 0.2 * macro);
+  vec3 rub = uBundCol * (0.8 + 0.3 * nF.r + 0.1 * (nN.g - 0.5) * near) * (0.88 + 0.2 * macro);
   rub *= mix(vec3(1.0), vec3(1.07, 1.0, 0.92), nF.b - 0.5);
   // windrow modelling: darker at the toes, the crest catches the light
   float crest = smoothstep(0.55 * uRun, uRun, eD) * (1.0 - smoothstep(uRun + uCrest, 1.45 * uRun + uCrest, eD));

@@ -345,7 +345,8 @@ export const stringsModule: SceneModule = (ctx: SceneContext) => {
       const mat = makeRoadMaterial(b.dims);
       const mesh = new THREE.Mesh(b.geometry, mat);
       mesh.name = `road3d:${e.hs.name}`;
-      mesh.castShadow = true;
+      // receives the trucks' shadows; the windrows model themselves from their normals (no extra shadow-map pass)
+      mesh.castShadow = false;
       mesh.receiveShadow = true;
       mesh.userData.stringId = e.id;
       ctx.layers.strings.add(mesh);
