@@ -5,6 +5,7 @@ import { Badge, Button, Card, CardHead, Icon, Tip, TextField, type IconName } fr
 import { FormulaText, Substituted } from './FormulaText';
 import { smart } from './shared/delta';
 import { Callout } from './shared/PageHeader';
+import p from './shared/page.module.css';
 import s from './assumptions.module.css';
 
 export const GROUP_ORDER: CalcGroup[] = ['route', 'travel', 'cycle', 'productivity', 'fleet', 'loader', 'manning', 'priority', 'shift'];
@@ -137,7 +138,7 @@ export function Ledger({ steps, reconstructed, warnings, title, sub, onExport }:
   }, [steps, q]);
   const isOpen = (id: string) => open[id] ?? allOpen;
   return (
-    <Card>
+    <Card className={p.headSafe}>
       <CardHead
         title={title}
         sub={sub}

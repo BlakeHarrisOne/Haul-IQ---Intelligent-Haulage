@@ -5,18 +5,24 @@
 import type { Vec3 } from '@/core/types';
 import { useApp, type CameraMode } from '@/state/store';
 import type { SceneContext } from './context';
-import type { SceneCore, SceneStats } from './core/SceneCore';
+import type { SceneCore, SceneStats, SceneEnv } from './core/SceneCore';
+
+export type { SceneEnv } from './core/SceneCore';
 
 let core: SceneCore | null = null;
 const waiters: ((c: SceneCore) => void)[] = [];
+const envListeners = new Set<(env: SceneEnv) => void>();
+let envUnsub: (() => void) | null = null;
 
 /** @internal Viewport registers its core here. */
 export function _attachCore(c: SceneCore) {
   core = c;
+  envUnsub?.();
+  envUnsub = c.onEnvironment(env => { for (const l of envListeners) l(env); });
   c.readyPromise.then(() => { if (core === c) for (const w of waiters.splice(0)) w(c); });
 }
 /** @internal */
-export function _detachCore(c: SceneCore) { if (core === c) core = null; }
+export function _detachCore(c: SceneCore) { if (core === c) { core = null; envUnsub?.(); envUnsub = null; } }
 
 function bboxOfPoints(pts: { e: number; n: number; z: number }[]): { min: Vec3; max: Vec3 } | null {
   if (!pts.length) return null;
@@ -86,6 +92,18 @@ export const sceneApi = {
   setSafeInsets(insets: Partial<{ top: number; right: number; bottom: number; left: number }> | null): void { core?.setInsets(insets); },
   /** Ask for a redraw (e.g. after external DOM changes). */
   requestRender(): void { core?.requestRender(true); },
+  /**
+   * Sun / night state for the clock time on screen (scenario.shift.startHour + timeline.tMin), independent of the UI
+   * theme: `night` (0..1), `headlights` (true at night), sun elevation / azimuth, key-light direction. Null before a
+   * viewport mounts. Also on the module context as `ctx.environment()` (CoreSceneContext).
+   */
+  environment(): SceneEnv | null { return core ? core.environment() : null; },
+  /** Listen for clock / theme lighting changes (survives viewport remounts). Returns an unsubscribe. */
+  onEnvironment(cb: (env: SceneEnv) => void): () => void {
+    envListeners.add(cb);
+    if (core) cb(core.environment());
+    return () => { envListeners.delete(cb); };
+  },
 };
 
 export type SceneApi = typeof sceneApi;

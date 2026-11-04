@@ -1,5 +1,6 @@
 /** Pure helpers for the Compare tab (unit-tested): circuit rows, totals, scenario KPIs and cross-scenario matching. */
 import type { Circuit, CircuitResult, FleetOption, Id, Scenario } from '@/core/types';
+import { circuitColor } from '@/ui/chart';
 
 /** The user's rule: every loader must achieve at least this many PT hours per day. */
 export const MIN_PT_HRS_DAY = 18;
@@ -40,7 +41,7 @@ export function circuitRow(sc: Scenario, c: Circuit, r: CircuitResult | undefine
   const a = opt ?? r?.assigned;
   const ok = !!r?.ok;
   return {
-    id: c.id, name: c.name, color: c.color, active: c.active, loader: c.loaderUnitId, truck: truck?.name ?? c.truckModelId, material: mat?.name ?? c.materialId,
+    id: c.id, name: c.name, color: circuitColor(c.color), active: c.active, loader: c.loaderUnitId, truck: truck?.name ?? c.truckModelId, material: mat?.name ?? c.materialId,
     route: hs?.name,
     haulKm: ok ? r!.lengthM / 1000 : NaN, riseM: ok ? r!.riseM : NaN, fallM: ok ? r!.fallM : NaN, cycleMin: ok ? r!.cycleMin : NaN,
     assigned: opt?.trucks ?? c.trucks, exact: ok ? r!.trucksExact : NaN, recommended: ok ? r!.trucksRecommended : NaN,
@@ -116,7 +117,7 @@ export function alignCircuits(list: Scenario[]): { key: string; name: string; co
       else {
         const per: (Circuit | undefined)[] = list.map(() => undefined);
         per[j] = c;
-        out.push({ key: `${c.loaderUnitId}|${c.materialId}|${c.id}`, name: c.name, color: c.color, per });
+        out.push({ key: `${c.loaderUnitId}|${c.materialId}|${c.id}`, name: c.name, color: circuitColor(c.color), per });
       }
     }
   });

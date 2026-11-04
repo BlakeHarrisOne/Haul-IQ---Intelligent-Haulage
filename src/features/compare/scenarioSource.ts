@@ -1,6 +1,6 @@
 /**
  * Saved-scenario access for "Scenario vs scenario", through the shell's public entry '@/features/scenarios'
- * (listScenarios / loadScenario / useScenarioPicks — the Scenarios library ticks the same picks).
+ * (listScenarios / loadScenario / useScenarioPicks – the Scenarios library ticks the same picks).
  * The dev harness can register extra in-memory scenarios.
  */
 import { listScenarios, loadScenario, useScenarioPicks } from '@/features/scenarios';

@@ -2,18 +2,38 @@
 /**
  * hAIul SIM end-to-end suite runner (plain Node + Playwright; deliberately not vitest - vitest only picks up *.test.ts).
  *
- *   node tests/e2e/run.cjs            run every flow in tests/e2e/flows (NN-name.cjs, in order)
- *   node tests/e2e/run.cjs 3 5        run flows 3 and 5 only
+ *   node tests/e2e/run.cjs              run every flow in tests/e2e/flows (NN-name.cjs, in order)
+ *   node tests/e2e/run.cjs 3 5          run flows 3 and 5 only
+ *   node tests/e2e/run.cjs --isolated   start a private dev server (HMR off, tests/e2e/vite.e2e.config.mjs) on :5174
+ *                                       for the run - use it while others are editing src/ (saves would reload the page)
  *
- * Needs the dev server (npm run dev → http://127.0.0.1:5173, override with E2E_URL). Each flow gets a fresh browser
+ * Without --isolated it needs the dev server (npm run dev → http://127.0.0.1:5173, override with E2E_URL). A flow
+ * that loses its page to a dev-server reload or a boot crash is retried (up to twice). Each flow gets a fresh browser
  * context (clean IndexedDB / localStorage). Screenshots, results.json and a console log go to E2E_OUT (see lib.cjs).
  * Exit code 1 when any flow fails.
  */
 const fs = require('fs');
 const path = require('path');
-const L = require('./lib.cjs');
+const http = require('http');
+const { spawn } = require('child_process');
 
-const only = process.argv.slice(2).map(Number).filter(Number.isFinite);
+const args = process.argv.slice(2);
+const isolated = args.includes('--isolated');
+const net = require('net');
+/** First port ≥ start nobody listens on (another agent / dev server may own the usual ones). */
+function freePort(start) {
+  return new Promise(res => {
+    const tryPort = p => {
+      const srv = net.createServer().once('error', () => tryPort(p + 1)).once('listening', () => srv.close(() => res(p)));
+      srv.listen(p, '127.0.0.1');
+    };
+    tryPort(start);
+  });
+}
+let L;
+
+const only = args.map(Number).filter(Number.isFinite);
+let ISO_PORT = 0;
 const flowDir = path.join(__dirname, 'flows');
 const files = fs.readdirSync(flowDir).filter(f => /^\d\d-.*\.cjs$/.test(f)).sort();
 
@@ -64,7 +84,32 @@ async function runFlow(browser, flow, attempt) {
   };
 }
 
+function startIsolatedServer() {
+  const vite = path.join(L.ROOT, 'node_modules/vite/bin/vite.js');
+  const child = spawn(process.execPath, [vite, '--config', path.join(__dirname, 'vite.e2e.config.mjs'), '--port', String(ISO_PORT), '--strictPort', '--host', '127.0.0.1'],
+    { cwd: L.ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
+  child.stdout.on('data', d => process.env.E2E_VERBOSE && process.stdout.write(`[vite] ${d}`));
+  child.stderr.on('data', d => process.stdout.write(`[vite] ${d}`));
+  const up = () => new Promise(res => http.get(`${L.URL}/`, r => { r.resume(); res(r.statusCode === 200); }).on('error', () => res(false)));
+  return new Promise((res, rej) => {
+    const t0 = Date.now();
+    const poll = async () => {
+      if (await up()) return res(child);
+      if (child.exitCode != null) return rej(new Error(`isolated vite exited (${child.exitCode})`));
+      if (Date.now() - t0 > 120_000) return rej(new Error('isolated vite did not start'));
+      setTimeout(poll, 500);
+    };
+    poll();
+  });
+}
+
 (async () => {
+  if (isolated) { ISO_PORT = await freePort(Number(process.env.E2E_ISO_PORT || 5181)); process.env.E2E_URL = `http://127.0.0.1:${ISO_PORT}`; }
+  L = require('./lib.cjs');
+  let server;
+  if (isolated) { server = await startIsolatedServer(); console.log(`isolated dev server (HMR off) on ${L.URL}`); }
+  process.on('exit', () => { if (server) server.kill(); });
+  for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { if (server) server.kill(); process.exit(130); });
   const browser = await L.launch();
   const results = [];
   for (const f of files) {
@@ -73,8 +118,10 @@ async function runFlow(browser, flow, attempt) {
     let attempt = 0, r;
     for (;;) {
       r = await runFlow(browser, flow, attempt);
-      if (r.status === 'PASS' || !r.reloaded || attempt >= 2) break;
-      console.log(`  ↻ the dev server reloaded the page mid-flow (source edited during the run) - retrying flow ${flow.id}`);
+      const bootFail = /app failed to boot/.test(r.error || '');
+      if (r.status === 'PASS' || !(r.reloaded || bootFail) || attempt >= 2) break;
+      console.log(`  ↻ ${bootFail ? 'the app did not boot (a source file mid-edit?)' : 'the dev server reloaded the page mid-flow (source edited during the run)'} - retrying flow ${flow.id}`);
+      if (bootFail) await new Promise(res => setTimeout(res, 60_000));
       attempt++;
     }
     results.push(r);

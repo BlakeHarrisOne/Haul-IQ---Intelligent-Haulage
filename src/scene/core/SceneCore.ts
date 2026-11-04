@@ -11,13 +11,25 @@ import type { FollowTarget, PointerKind, SceneContext, SceneModule, ScenePointer
 import { Atmosphere } from './atmosphere';
 import { CameraRig, type CamMode } from './camera';
 import { TerrainLayer } from './terrain';
-import { SolidsLayer } from './solids';
+import { SolidsLayer, type SolidDepletion } from './solids';
 import { SectionLayer } from './section';
 import { currentTheme, palette, watchTheme, type Palette, type ThemeName } from './theme';
 import { drawSiteRefs } from './refs';
+import { LabelService, type Insets } from './labels';
+import { ContourLabels } from './contourLabels';
+import { computeLighting, makeLighting, type Lighting, type SceneEnv } from './environment';
 import css from './core.module.css';
 
+/** SceneContext as built by the core: the contract plus the shift-clock environment (sun / night state). */
+export type CoreSceneContext = SceneContext & {
+  /** Current sun / night state from the shift clock (cockpit headlights, actors' lamps). */
+  environment(): SceneEnv;
+  /** Called whenever the clock / theme lighting changes. Returns an unsubscribe. */
+  onEnvironment(cb: (env: SceneEnv) => void): () => void;
+};
+
 export interface ViewInfo { heading: number; mpp: number; mode: CamMode; transitioning: boolean }
+export type { SceneEnv } from './environment';
 
 export interface SceneStats {
   fps: number;
@@ -45,6 +57,8 @@ interface EngineFns {
   shiftStateAt: (s: Scenario, r: Record<Id, CircuitResult>, tMin: number) => ShiftState;
   resultsFor: (s: Scenario) => Record<Id, CircuitResult>;
 }
+const clamp01 = (x: number) => (x < 0 ? 0 : x > 1 ? 1 : x);
+const GRID_STEPS = [10, 25, 50, 100, 250, 500, 1000];
 let engineFns: EngineFns | null = null;
 let enginePromise: Promise<EngineFns | null> | null = null;
 function loadEngine(): Promise<EngineFns | null> {
@@ -71,7 +85,21 @@ export class SceneCore {
   readonly terrain = new TerrainLayer();
   readonly solids: SolidsLayer;
   readonly section: SectionLayer;
-  readonly ctx: SceneContext;
+  readonly ctx: CoreSceneContext;
+  /** The scene's one label placer (core block labels + module labels). */
+  readonly labels: LabelService;
+  /** Shift-clock lighting (sun / sky / night) for the time on screen. */
+  readonly lighting: Lighting = makeLighting();
+  private contourLabels = new ContourLabels();
+  private envCbs = new Set<(env: SceneEnv) => void>();
+  private envKey = '';
+  private safeInsets: Insets = { top: 70, right: 428, bottom: 96, left: 70 };
+  private probe: HTMLDivElement;
+  private probeRo: ResizeObserver | null = null;
+  /** The user moved the camera since the last home / fit (insets changes then leave the view alone). */
+  private cameraTouched = false;
+  private homedAt = 0;
+  private depMap = new Map<string, SolidDepletion>();
   stats: SceneStats = { fps: 0, frameMs: 0, frames: 0, triangles: 0, calls: 0, terrainTriangles: 0, pixelRatio: 1, buildMs: 0, aoMs: 0, gridNodes: 0, cpuMs: 0, depletionMs: 0, shadowFrames: 0 };
   ready = false;
   readyPromise: Promise<void>;
@@ -129,8 +157,13 @@ export class SceneCore {
     this.labelLayer.className = css.labels;
     this.hudLayer = document.createElement('div');
     this.hudLayer.className = css.hud;
-    container.append(this.canvas, this.overlay, this.labelLayer, this.hudLayer);
+    // probe that resolves the shell's layout variables (right column, chrome bands) to pixels
+    this.probe = document.createElement('div');
+    this.probe.style.cssText = 'position:absolute;left:0;top:0;visibility:hidden;pointer-events:none;box-sizing:content-box;'
+      + 'width:var(--right-col,0px);height:var(--below,0px);border-top:var(--top,0px) solid transparent;';
+    container.append(this.canvas, this.overlay, this.labelLayer, this.hudLayer, this.probe);
     this.octx = this.overlay.getContext('2d')!;
+    this.labels = new LabelService(this.labelLayer, () => this.requestRender());
 
     // renderer
     this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, alpha: false, powerPreference: 'high-performance', preserveDrawingBuffer: false, stencil: false });
@@ -153,7 +186,8 @@ export class SceneCore {
     this.atmos = new Atmosphere(r.capabilities.maxTextureSize);
     this.atmos.addTo(this.scene);
     this.layers.terrain.add(this.terrain.root);
-    this.solids = new SolidsLayer(this.labelLayer);
+    this.terrain.onAsyncReady = () => this.requestRender(true);
+    this.solids = new SolidsLayer(this.labelLayer, this.labels, this.terrain.carve);
     this.layers.solids.add(this.solids.root);
     this.solids.setLabelHandlers(
       id => useApp.getState().select({ kind: 'asset', id }),
@@ -168,7 +202,7 @@ export class SceneCore {
       follow: () => this.follow,
     });
     this.applyTheme();
-    this.rig.safe = { top: 70, right: 428, bottom: 78, left: 70 };
+    this.rig.safe = { ...this.safeInsets };
 
     // context
     this.ctx = this.makeContext();
@@ -176,10 +210,13 @@ export class SceneCore {
     // events
     this.ro = new ResizeObserver(() => this.resize());
     this.ro.observe(container);
+    if (typeof ResizeObserver !== 'undefined') {
+      this.probeRo = new ResizeObserver(() => this.refreshInsets());
+      this.probeRo.observe(this.probe, { box: 'border-box' });
+    }
     this.resize();
-    this.rig.safe = this.insets();
     this.bindEvents();
-    this.unsubs.push(watchTheme(t => { this.theme = t; this.pal = palette(t); this.applyTheme(); this.requestRender(true); }));
+    this.unsubs.push(watchTheme(t => { this.theme = t; this.pal = palette(t); this.applyTheme(); this.syncEnvironment(true); this.requestRender(true); }));
 
     // store
     const st = useApp.getState();
@@ -187,6 +224,7 @@ export class SceneCore {
     this.syncLayers(st);
     this.rig.setMode(st.camera === 'plan' ? 'plan' : st.camera, 0);
     this.unsubs.push(useApp.subscribe((s, p) => this.onStore(s, p)));
+    this.syncEnvironment(true);
     this.syncDepletion();
     this.syncSection(st);
     this.solids.setSelected(st.selection.kind === 'asset' ? st.selection.id : null);
@@ -201,9 +239,12 @@ export class SceneCore {
 
   // ─────────────────────────────────────────────────────────── context
 
-  private makeContext(): SceneContext {
+  private makeContext(): CoreSceneContext {
     const self = this;
     return {
+      labels: this.labels,
+      environment: () => this.lighting.env,
+      onEnvironment(cb) { self.envCbs.add(cb); return () => { self.envCbs.delete(cb); }; },
       three: THREE,
       renderer: this.renderer,
       scene: this.scene,
@@ -247,6 +288,16 @@ export class SceneCore {
     const t = g.raycast(r.origin.x, r.origin.y, r.origin.z, r.direction.x, r.direction.y, r.direction.z, this.frameV.vx);
     if (t < 0) return null;
     return r.origin.clone().addScaledVector(r.direction, t);
+  }
+
+  /** Terrain hit (scene coordinates) written into `out`; null off-surface. Allocation-free. */
+  private pickTerrainInto(x: number, y: number, out: THREE.Vector3): THREE.Vector3 | null {
+    const g = this.terrain.grid;
+    if (!g) return null;
+    const r = this.ray(x, y).ray;
+    const t = g.raycast(r.origin.x, r.origin.y, r.origin.z, r.direction.x, r.direction.y, r.direction.z, this.frameV.vx);
+    if (t < 0) return null;
+    return out.copy(r.origin).addScaledVector(r.direction, t);
   }
 
   pickTerrain(x: number, y: number): Vec3 | null {
@@ -293,9 +344,10 @@ export class SceneCore {
     if (s.camera !== p.camera) this.setCameraMode(s.camera);
     if (s.selection !== p.selection) { this.solids.setSelected(s.selection.kind === 'asset' ? s.selection.id : null); this.requestRender(); }
     if (s.hover !== p.hover || s.selection !== p.selection || s.timeline.playing !== p.timeline.playing || s.scenario !== p.scenario) this.syncLabelFocus(s);
-    if (s.panels !== p.panels) { this.rig.safe = this.insets(); this.requestRender(); }
+    if (s.panels !== p.panels) this.refreshInsets();
     if (s.section !== p.section || s.scenario !== p.scenario) this.syncSection(s);
-    if (s.timeline.tMin !== p.timeline.tMin || s.scenario !== p.scenario) this.syncDepletion();
+    if (s.timeline.tMin !== p.timeline.tMin || s.timeline.horizon !== p.timeline.horizon || s.scenario !== p.scenario) this.syncDepletion(s.timeline.horizon !== p.timeline.horizon);
+    if (s.timeline.tMin !== p.timeline.tMin || s.scenario.shift !== p.scenario.shift) this.syncEnvironment();
   }
 
   private frameFor(sc: Scenario, topo: MeshAsset[]): Frame {
@@ -343,9 +395,11 @@ export class SceneCore {
       this.rig.setBounds(b);
       this.atmos.setSiteBox(b);
       if ((!this.homed || topoChanged) && !b.isEmpty() && (topo.length || solids.length)) {
-        this.rig.safe = this.insets();
+        this.rig.safe = { ...this.safeInsets };
         this.rig.home(b);
         this.homed = true;
+        this.homedAt = performance.now();
+        this.cameraTouched = false;
       }
       if (veChanged) this.lastSectionKey = '';
     }
@@ -402,28 +456,97 @@ export class SceneCore {
   }
   private gridOn = true;
 
+  private depEntry(id: string): SolidDepletion {
+    let d = this.depMap.get(id);
+    if (!d) { d = { f: 0, f0: 0, delta: 0, period: 'shift' }; this.depMap.set(id, d); }
+    return d;
+  }
+
+  /**
+   * Depletion for the timeline position and horizon (store `timeline.horizon`):
+   *  - 'shift': the engine's shift simulation (bcm so far; the slab = everything mined since the shift started);
+   *  - 'week': 7 days of each circuit's daily production mapped onto the slider (slab = the trailing shift);
+   *  - 'completion': time-lapse 0 → 100 % of each dig block across the slider (slab = the trailing shift).
+   */
   private syncDepletion(force = false) {
     const t0 = performance.now();
     const s = useApp.getState();
     const sc = s.scenario;
-    const fr = new Map<string, number>();
+    const hz = s.timeline.horizon ?? 'shift';
+    for (const d of this.depMap.values()) { d.f = 0; d.f0 = 0; d.delta = 0; d.period = hz; }
     if (this.overrideFrac !== null) {
-      for (const a of sc.assets) if (a.role === 'dig' || a.role === 'dump') fr.set(a.id, this.overrideFrac);
+      const f = this.overrideFrac;
+      for (const a of sc.assets) if (a.role === 'dig' || a.role === 'dump') {
+        const d = this.depEntry(a.id);
+        const bcm = a.block?.plannedBcm ?? a.stats.volume ?? 0;
+        d.f = f; d.f0 = Math.max(0, f - 0.05); d.delta = (d.f - d.f0) * bcm; d.period = 'shift';
+      }
     } else if (sc.circuits.length) {
       if (!engineFns) { void loadEngine().then(f => { if (f && !this.disposed) this.syncDepletion(true); }); return; }
       try {
-        const st = engineFns.shiftStateAt(sc, engineFns.resultsFor(sc), s.timeline.tMin);
+        const results = engineFns.resultsFor(sc);
+        const st = engineFns.shiftStateAt(sc, results, s.timeline.tMin);
+        const u = clamp01(s.timeline.tMin / Math.max(1, sc.shift.lengthH * 60));
         for (const pc of st.perCircuit) {
           const c = sc.circuits.find(x => x.id === pc.circuitId);
           if (!c) continue;
-          if (c.digId) fr.set(c.digId, Math.min(1, (fr.get(c.digId) ?? 0) + (pc.digFraction || 0)));
-          if (c.dumpId) fr.set(c.dumpId, Math.min(1, (fr.get(c.dumpId) ?? 0) + (pc.dumpFraction || 0)));
+          const dig = c.digId ? sc.assets.find(a => a.id === c.digId) : undefined;
+          const dump = c.dumpId ? sc.assets.find(a => a.id === c.dumpId) : undefined;
+          const digBcm = dig?.block?.plannedBcm ?? dig?.stats.volume ?? 0;
+          const swell = sc.materials.find(m => m.id === c.materialId)?.swell ?? 1;
+          const dumpCap = dump?.block?.plannedBcm != null ? dump.block.plannedBcm : (dump?.stats.volume ?? 0) / swell;
+          const shiftBcm = pc.bcmShift || 0;
+          let B: number, B0: number, Bd: number, Bd0: number;
+          if (hz === 'shift') {
+            B = pc.bcmSoFar || 0; B0 = 0;
+            Bd = (pc.dumpFraction || 0) * dumpCap; Bd0 = 0;
+          } else if (c.active === false) {
+            continue;
+          } else {
+            const total = hz === 'week' ? 7 * (results[c.id]?.assigned?.bcmPerDay ?? shiftBcm * 2) : digBcm;
+            B = Math.min(digBcm > 0 ? digBcm : Infinity, u * total);
+            B0 = Math.max(0, B - shiftBcm);
+            Bd = B; Bd0 = B0;
+          }
+          if (dig && digBcm > 0) {
+            const d = this.depEntry(dig.id);
+            // counter: bcm mined this shift ('shift') or the running total ('week' / 'completion')
+            d.f = Math.min(1, d.f + B / digBcm); d.f0 = Math.min(d.f, d.f0 + B0 / digBcm); d.delta += B;
+          }
+          if (dump && dumpCap > 0) {
+            const d = this.depEntry(dump.id);
+            d.f = Math.min(1, d.f + Bd / dumpCap); d.f0 = Math.min(d.f, d.f0 + Bd0 / dumpCap); d.delta += Bd;
+          }
         }
       } catch (e) { console.warn('[scene] shift state failed', e); }
     }
-    if (this.solids.setFractions(fr, force)) { this.shadowDirty = true; this.requestRender(true); this.stats.depletionMs = Math.round((performance.now() - t0) * 100) / 100; }
+    if (this.solids.setDepletion(this.depMap, force)) { this.shadowDirty = true; this.requestRender(true); this.stats.depletionMs = Math.round((performance.now() - t0) * 100) / 100; }
+    else this.requestRender();
     this.terrain.setGlows(this.solids.glowSpots());
   }
+
+  /** Sun / sky / night from the shift clock (scenario.shift.startHour + timeline.tMin), tinted by the theme. */
+  private syncEnvironment(force = false) {
+    const s = useApp.getState();
+    const hour = (s.scenario.shift?.startHour ?? 6) + s.timeline.tMin / 60;
+    // ~1 min of clock resolution: no work while the timeline only nudges
+    const key = `${Math.round(hour * 60)}|${this.theme}`;
+    if (!force && key === this.envKey) return;
+    this.envKey = key;
+    const L = computeLighting(this.lighting, hour, this.pal, this.theme);
+    this.renderer.toneMappingExposure = L.exposure;
+    this.renderer.setClearColor(L.backdrop);
+    this.atmos.setLighting(L);
+    this.terrain.setLighting(L);
+    this.solids.setNight(L.env.night);
+    this.shadowDirty = true;
+    for (const cb of this.envCbs) { try { cb(L.env); } catch (e) { console.error('[scene] environment listener', e); } }
+    this.requestRender(true);
+  }
+
+  /** Current sun / night state (also on the context and sceneApi). */
+  environment(): SceneEnv { return this.lighting.env; }
+  onEnvironment(cb: (env: SceneEnv) => void): () => void { this.envCbs.add(cb); return () => { this.envCbs.delete(cb); }; }
 
   /** Testing / thumbnails: force a depletion fraction on every solid (null = follow the timeline). */
   setDepletionOverride(f: number | null) { this.overrideFrac = f; this.syncDepletion(true); }
@@ -443,23 +566,49 @@ export class SceneCore {
   }
 
   /**
-   * Screen area not covered by app chrome (labels stay inside it; fit/focus frame into it). Defaults follow the shell:
-   * top/bottom chrome bands, the left tool rail, and the right inspector when panels.inspector is open.
+   * Screen area not covered by app chrome (labels stay inside it; fit / plan / focus frame into it). Follows the
+   * shell's layout variables, resolved to pixels by a hidden probe: --right-col (inspector column, 0 when hidden),
+   * --top (top chrome band), --below (timeline dock band) and the left tool rail; `setSafeInsets` overrides any
+   * side. Cached: recomputed only when the probe resizes (a variable changed), on resize / panels / overrides.
    */
-  insets(): import('./labels').Insets {
+  insets(): Insets { return this.safeInsets; }
+
+  private computeInsets(): Insets {
     const st = useApp.getState();
-    // the shell exposes --right-col (inspector column width, 0 when collapsed) on the app root
-    let right = st.panels.inspector ? 428 : 16;
-    const rc = typeof getComputedStyle !== 'undefined' ? getComputedStyle(this.container).getPropertyValue('--right-col').trim() : '';
-    if (rc) { const v = parseFloat(rc); if (Number.isFinite(v)) right = v > 0 ? v + 14 : 16; }
-    const def = { top: 70, right, bottom: 96, left: 70 };
+    let right = st.panels.inspector ? 428 : 16, top = 70, bottom = 96;
+    const left = 70;
+    const shell = typeof getComputedStyle !== 'undefined' && getComputedStyle(this.container).getPropertyValue('--right-col').trim() !== '';
+    if (shell) {
+      const cs = getComputedStyle(this.probe);
+      const rc = parseFloat(cs.width), below = parseFloat(cs.height), tp = parseFloat(cs.borderTopWidth);
+      if (Number.isFinite(rc)) right = rc > 0 ? rc + 14 : 16;
+      if (Number.isFinite(below) && below > 0) bottom = below + 6;
+      if (Number.isFinite(tp) && tp > 0) top = tp + 6;
+    }
     const o = this.insetOverride ?? {};
-    const r = { top: o.top ?? def.top, right: o.right ?? def.right, bottom: o.bottom ?? def.bottom, left: o.left ?? def.left };
+    const r = { top: o.top ?? top, right: o.right ?? right, bottom: o.bottom ?? bottom, left: o.left ?? left };
     // never let insets eat more than ~60 % of a small viewport
     const kx = Math.min(1, (this.w * 0.6) / Math.max(1, r.left + r.right)), ky = Math.min(1, (this.h * 0.6) / Math.max(1, r.top + r.bottom));
     return { top: r.top * ky, bottom: r.bottom * ky, left: r.left * kx, right: r.right * kx };
   }
-  setInsets(i: Partial<import('./labels').Insets> | null) { this.insetOverride = i; this.rig.safe = this.insets(); this.requestRender(); }
+
+  /** Re-read the safe rect; when it moved and the user has not moved the camera since home / fit, re-frame. */
+  private refreshInsets() {
+    const n = this.computeInsets(), o = this.safeInsets;
+    const moved = Math.abs(n.top - o.top) + Math.abs(n.right - o.right) + Math.abs(n.bottom - o.bottom) + Math.abs(n.left - o.left) > 1;
+    this.safeInsets = n;
+    this.rig.safe = { ...n };
+    if (moved && this.homed && !this.cameraTouched && (this.rig.mode === 'orbit' || this.rig.mode === 'plan')) {
+      const b = this.sceneBounds();
+      if (!b.isEmpty()) {
+        if (performance.now() - this.homedAt < 2500 && this.rig.mode === 'orbit' && !this.rig.transitioning) { this.rig.home(b); this.homedAt = performance.now(); }
+        else this.rig.frame(b, 600);
+      }
+    }
+    this.requestRender();
+  }
+
+  setInsets(i: Partial<Insets> | null) { this.insetOverride = i; this.refreshInsets(); }
 
   setCameraMode(m: CameraMode) {
     this.rig.setMode(m);
@@ -470,9 +619,6 @@ export class SceneCore {
 
   private applyTheme() {
     const p = this.pal;
-    this.renderer.toneMappingExposure = p.def.exposure;
-    this.renderer.setClearColor(p.c.backdrop);
-    this.atmos.setTheme(p);
     this.terrain.setTheme(p);
     this.solids.setTheme(p);
     this.section.setTheme(p);
@@ -488,7 +634,8 @@ export class SceneCore {
     this.renderer.setSize(w, h, false);
     this.overlay.width = Math.round(w * this.dpr); this.overlay.height = Math.round(h * this.dpr);
     this.rig.resize(w, h);
-    this.rig.safe = this.insets();
+    this.safeInsets = this.computeInsets();
+    this.rig.safe = { ...this.safeInsets };
     this.section.setResolution(w, h);
     this.requestRender();
   }
@@ -521,6 +668,7 @@ export class SceneCore {
       let camera = false;
       if (!consumed && this.rig.controlsEnabled) {
         camera = this.rig.pointerDown(p.x, p.y, e.button, e.shiftKey);
+        if (camera) this.cameraTouched = true;
         if (camera) { el.setPointerCapture(e.pointerId); }
       }
       this.downAt = { x: p.x, y: p.y, t: performance.now(), button: e.button, consumed, camera };
@@ -557,14 +705,14 @@ export class SceneCore {
     on('pointerleave', e => { this.hovered = false; if (!this.rig.dragging) this.route(this.makePointer('leave', e)); });
     on('dblclick', e => {
       const p = this.makePointer('dblclick', e);
-      if (!this.route(p) && this.rig.controlsEnabled) { this.rig.dblclick(p.x, p.y); this.requestRender(); }
+      if (!this.route(p) && this.rig.controlsEnabled) { this.rig.dblclick(p.x, p.y); this.cameraTouched = true; this.requestRender(); }
     });
     on('wheel', e => {
       e.preventDefault();
       const p = this.makePointer('wheel', e);
       if (this.route(p)) return;
       const dy = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
-      if (this.rig.wheel(p.x, p.y, e.ctrlKey ? dy * 3 : dy)) { this.lastInteract = performance.now(); this.requestRender(); }
+      if (this.rig.wheel(p.x, p.y, e.ctrlKey ? dy * 3 : dy)) { this.lastInteract = performance.now(); this.cameraTouched = true; this.requestRender(); }
     }, { passive: false });
     on('contextmenu', e => {
       e.preventDefault();
@@ -581,7 +729,7 @@ export class SceneCore {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       if (e.code === 'KeyF') { this.fitAll(); e.preventDefault(); return; }
       if (e.code === 'KeyN') { this.rig.faceNorth(); this.requestRender(); return; }
-      if (this.rig.controlsEnabled && this.rig.keyDown(e.code)) { e.preventDefault(); this.requestRender(); }
+      if (this.rig.controlsEnabled && this.rig.keyDown(e.code)) { e.preventDefault(); this.cameraTouched = true; this.requestRender(); }
     };
     const ku = (e: KeyboardEvent) => { this.rig.keyUp(e.code); };
     const blur = () => this.rig.clearKeys();
@@ -658,7 +806,8 @@ export class SceneCore {
     if (drive !== this.lastDrive || plan !== this.lastPlan) {
       this.atmos.setMode(drive, plan);
       this.terrain.setDriving(drive >= 1, this.pal);
-      this.terrain.setHillshade(plan ? 0.62 : 0.34, plan ? 0 : this.pal.def.sunAzDeg - 315);
+      this.terrain.setHillshade(plan ? 0.62 : 0.42, plan ? 0 : this.pal.def.sunAzDeg - 315);
+      this.terrain.setPlot(plan);
       this.lastDrive = drive; this.lastPlan = plan;
       this.shadowDirty = true;
     }
@@ -668,37 +817,56 @@ export class SceneCore {
       if (f.center.distanceToSquared(this.follow.position) > 400) { f.center.copy(this.follow.position); this.atmos.fitShadow(); this.shadowDirty = true; }
     } else if (this.atmos.shadowFocus) { this.atmos.shadowFocus = null; this.atmos.fitShadow(); this.shadowDirty = true; }
     // view centre ground point (scale bar, haze)
-    const c = this.pickTerrainScene(this.w / 2, this.h / 2);
+    const c = this.pickTerrainInto(this.w / 2, this.h / 2, this.centerHit);
     this.centerOk = !!c;
-    if (c) this.centerHit.copy(c);
     const pc = this.rig.persp;
     const dist = cam === this.rig.ortho ? 1e6 : c ? c.distanceTo(pc.position) : this.rig.P.dist;
-    const hazeNear = drive >= 1 ? 250 : dist * 1.35;
-    const hazeFar = drive >= 1 ? 4200 : dist * 7 + this.rig.diag() * 1.5;
+    // haze: in the cab the far ground melts into the horizon sky (≈ 10 % at 500 m, 45 % at 2 km, full by 3.6 km)
+    const hazeNear = drive >= 1 ? 160 : dist * 1.35;
+    const hazeFar = drive >= 1 ? 3600 : dist * 7 + this.rig.diag() * 1.5;
     this.atmos.update(cam, cam === this.rig.ortho ? 1e5 : pc.far, cam === this.rig.ortho ? 1e8 : hazeNear, cam === this.rig.ortho ? 2e8 : hazeFar, (now - this.startT) / 1000);
     // site grid step adapts to zoom (aim ~90 px between lines)
     const mpp = this.rig.metersPerPixel(c);
-    const steps = [10, 25, 50, 100, 250, 500, 1000];
-    const gs = steps.find(s => s / mpp >= 120) ?? 1000;
+    let gs = 1000;
+    for (const st of GRID_STEPS) if (st / mpp >= 120) { gs = st; break; }
     this.terrain.setGrid(gs, this.gridOn && mode !== 'pov' && mode !== 'chase');
     if (this.shadowDirty || kept) { this.renderer.shadowMap.needsUpdate = true; this.shadowDirty = false; this.stats.shadowFrames++; }
     this.solids.syncPlanes();
     this.renderer.render(this.scene, cam);
-    // labels
+    // labels: ONE placement pass over the core's block labels and every module label
     const follow = mode === 'pov' || mode === 'chase';
-    this.solids.updateLabels(cam, this.w, this.h, ve, this.insets(), Math.max(250, cam === this.rig.ortho ? this.rig.diag() : this.rig.P.dist), follow);
+    const labelsOn = this.labelLayer.style.display !== 'none';
+    this.solids.updateLabels(cam, ve, Math.max(250, cam === this.rig.ortho ? this.rig.diag() : this.rig.P.dist), follow);
+    this.labels.place(cam, this.w, this.h, this.safeInsets, this.frameV, labelsOn);
     this.section.update(cam, this.w, this.h, ve, mpp);
     // overlay
     const o = this.octx;
     o.setTransform(1, 0, 0, 1, 0, 0);
     o.clearRect(0, 0, this.overlay.width, this.overlay.height);
     o.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
-    if (this.labelLayer.style.display !== 'none') {
-      if (mode === 'orbit' && this.terrain.grid && this.terrain.hasData && this.gridOn && this.builtTopo.length && this.terrain.meshes[0]?.visible) {
-        drawSiteRefs({ ctx: o, camera: cam, w: this.w, h: this.h, grid: this.terrain.grid, origin: this.frameV.origin, ve, datumY: this.terrain.datumY,
-          stepM: gs * (this.rig.transitioning ? 2 : 1), ink: this.pal.def.overlayInk, halo: this.pal.def.overlayHalo, insets: this.insets() });
+    const dark = this.theme === 'dark';
+    if (!follow) this.solids.drawFaces(o, cam, this.w, this.h, ve);
+    if (labelsOn) {
+      const terrainOn = !!this.terrain.grid && this.terrain.hasData && this.builtTopo.length > 0 && !!this.terrain.meshes[0]?.visible;
+      if (mode === 'orbit' && terrainOn && this.gridOn) {
+        drawSiteRefs({ ctx: o, camera: cam, w: this.w, h: this.h, grid: this.terrain.grid!, origin: this.frameV.origin, ve, datumY: this.terrain.datumY,
+          stepM: gs * (this.rig.transitioning ? 2 : 1), ink: this.pal.def.overlayInk, halo: this.pal.def.overlayHalo, insets: this.safeInsets, dark });
       }
-      this.solids.drawLeaders(o);
+      // RL labels on index contours (orbit / plan), clear of every placed label
+      if (!follow && terrainOn && this.terrain.contoursOn && !this.rig.transitioning) {
+        const J = this.terrain.contourMinor * 5;
+        this.contourLabels.update(this.terrain.smoothGrid, J);
+        const night = this.lighting.env.night > 0.5;
+        const persp = cam !== this.rig.ortho;
+        this.mppK = persp ? (2 * Math.tan((this.rig.persp.fov * Math.PI) / 360)) / this.h : 0;
+        this.mppO = persp ? 0 : (this.rig.ortho.top - this.rig.ortho.bottom) / this.h;
+        this.occlude = persp && this.rig.P.el < 1.0;
+        this.seeTests = 0;
+        this.contourLabels.draw(o, cam, this.w, this.h, ve, this.frameV.origin[2], J, this.safeInsets, this.labels,
+          night ? 'rgba(226,234,246,0.92)' : 'rgba(52,44,36,0.92)', night ? 'rgba(10,14,20,0.75)' : 'rgba(255,255,255,0.82)',
+          this.mppAt, this.occlude ? this.seesPoint : null);
+      }
+      this.labels.drawLeaders(o, dark ? 'rgba(233,237,242,0.75)' : 'rgba(31,35,41,0.55)', dark ? 'rgba(14,17,22,0.7)' : 'rgba(255,255,255,0.9)');
     }
     if (this.overlayCbs.size) {
       for (const cb of this.overlayCbs) { try { o.save(); cb(o, this.w, this.h); o.restore(); } catch (e) { console.error('[scene] overlay', e); } }
@@ -716,11 +884,34 @@ export class SceneCore {
     }
     const cpu = performance.now() - tStart;
     this.stats.cpuMs = Math.round((this.stats.cpuMs ? this.stats.cpuMs * 0.8 + cpu * 0.2 : cpu) * 100) / 100;
-    const v: ViewInfo = { heading: this.rig.headingDeg(), mpp, mode: this.rig.mode, transitioning: this.rig.transitioning };
+    const v = this.viewInfo;
+    v.heading = this.rig.headingDeg(); v.mpp = mpp; v.mode = this.rig.mode; v.transitioning = this.rig.transitioning;
     for (const cb of this.viewCbs) cb(v);
   }
+  private viewInfo: ViewInfo = { heading: 0, mpp: 1, mode: 'orbit', transitioning: false };
   private lastDrive = -1;
   private lastPlan = -1;
+  private mppK = 0;
+  private mppO = 0;
+  private occlude = false;
+  private seeV = new THREE.Vector3();
+  /** Metres per CSS px at a scene point (contour labels). */
+  private mppAt = (x: number, y: number, z: number): number => {
+    if (this.mppO > 0) return this.mppO;
+    const p = this.rig.persp.position;
+    return Math.hypot(x - p.x, y - p.y, z - p.z) * this.mppK;
+  };
+  /** True when nothing on the terrain hides a scene point from the camera. */
+  private seesPoint = (x: number, y: number, z: number): boolean => {
+    const g = this.terrain.grid;
+    if (!g) return true;
+    const p = this.rig.persp.position, d = this.seeV.set(x - p.x, y - p.y, z - p.z);
+    if (++this.seeTests > 24) return false;
+    // march only up to just short of the point itself
+    const t = g.raycast(p.x, p.y, p.z, d.x, d.y, d.z, this.frameV.vx, 0.97);
+    return t < 0;
+  };
+  private seeTests = 0;
 
   onView(cb: (v: ViewInfo) => void): () => void { this.viewCbs.add(cb); this.requestRender(); return () => { this.viewCbs.delete(cb); }; }
 
@@ -750,7 +941,8 @@ export class SceneCore {
   // ─────────────────────────────────────────────────────────── API helpers
 
   fitAll() {
-    this.rig.safe = this.insets();
+    this.rig.safe = { ...this.safeInsets };
+    this.cameraTouched = false;
     const b = this.sceneBounds();
     if (this.rig.mode === 'pov' || this.rig.mode === 'chase') useApp.getState().setCamera('orbit');
     this.rig.frame(b);
@@ -765,6 +957,7 @@ export class SceneCore {
     const m = Math.max(size.x, size.z) * pad + 20;
     box.expandByVector(new THREE.Vector3(m, 0, m));
     if (this.rig.mode === 'pov' || this.rig.mode === 'chase') useApp.getState().setCamera('orbit');
+    this.cameraTouched = true;
     this.rig.frame(box, 1000);
     this.requestRender();
   }
@@ -791,6 +984,10 @@ export class SceneCore {
     for (const u of this.unsubs) u();
     this.unsubs = [];
     this.ro.disconnect();
+    this.probeRo?.disconnect();
+    this.probe.remove();
+    this.labels.dispose();
+    this.envCbs.clear();
     this.terrain.dispose();
     this.solids.dispose();
     this.section.dispose();

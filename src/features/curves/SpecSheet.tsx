@@ -1,6 +1,7 @@
 import { Badge, Card, CardHead, Icon } from '@/ui';
 import { QUALITY_LABEL, qualityTone, sourcesOf, specRows, libraryProvenance } from './oem';
 import type { TruckX } from './physics';
+import p from '@/features/assumptions/shared/page.module.css';
 import c from './curves.module.css';
 
 /** Spec sheet with per-field provenance (OEM / OEM-derived / 3rd party / estimated) and source links. */
@@ -9,7 +10,7 @@ export function SpecSheet({ t, color }: { t: TruckX; color: string }) {
   const src = sourcesOf(t);
   const est = rows.filter(r => r.quality === 'estimated').length;
   return (
-    <Card>
+    <Card className={p.headSafe}>
       <CardHead title={t.name} sub="spec sheet" icon="truck" actions={<Badge tone={est ? 'warn' : 'ok'} icon={est ? 'warning' : 'tick'}>{est} estimated</Badge>} />
       <table className={c.specTable}>
         <tbody>
@@ -59,7 +60,7 @@ function qualityTitle(q: string) {
     case 'oem': return 'Read from an OEM / OEM-dealer spec sheet (captured from web extracts; verify against the PDF page)';
     case 'oem_derived': return 'Arithmetic on OEM values';
     case 'third_party': return 'Spec aggregator, dealer listing or hire company';
-    case 'estimated': return 'Estimated by the documented method (docs/spec/04 §G.2) — calibrate before committing a plan';
+    case 'estimated': return 'Estimated by the documented method (docs/spec/04 §G.2) – calibrate before committing a plan';
     default: return 'Provenance not recorded';
   }
 }

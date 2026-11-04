@@ -55,7 +55,7 @@
 .verdict { font-size: 12.5px; line-height: 18px; color: var(--ink-2); padding: 2px 0 6px; }
 .verdict b { color: var(--ink); }
 .optim { color: var(--bad-ink); font-weight: 650; }
-.pessim { color: var(--warn-ink); font-weight: 650; }
+.pessim { color: var(--ink-2); font-weight: 650; text-decoration: underline dotted var(--ink-3); text-underline-offset: 3px; }
 
 .specTable { width: 100%; border-collapse: collapse; font-size: 13px; }
 .specTable td { padding: 7px 16px 7px 0; border-bottom: 1px solid var(--hair-2); vertical-align: top; }

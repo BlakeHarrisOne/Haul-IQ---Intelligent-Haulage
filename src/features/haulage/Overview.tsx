@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import type { Circuit, CircuitResult, MeshAsset, Scenario } from '@/core/types';
 import { useApp } from '@/state/store';
 import { useResults } from '@/state/derived';
-import { Badge, Button, CardBody, CardHead, Empty, Icon, Section, cx } from '@/ui';
+import { Badge, Button, CardBody, CardHead, Empty, Icon, Section, circuitColor, cx } from '@/ui';
 import { num } from '@/core/format';
 import { recommendedTrucks, stringStats } from './model';
 import { Fig, StatusBadge, TruckPips } from './parts';
@@ -84,7 +84,7 @@ function CircuitRow({ c, r, scenario, onClick }: { c: Circuit; r?: CircuitResult
   const lost = r?.assigned.lostLoaderPtHrsShift ?? 0;
   return (
     <button type="button" className={cx(s.cRow, !c.active && s.cInactive)} onClick={onClick}>
-      <span className={s.cDot} style={{ background: c.color }} />
+      <span className={s.cDot} style={{ background: circuitColor(c.color) }} />
       <span className={s.cName}>{c.name}</span>
       <span>{ok ? <StatusBadge status={r!.assigned.status} short /> : <Badge tone="na">{c.active ? 'No route' : 'Parked'}</Badge>}</span>
       <span className={s.cMeta}>
@@ -114,7 +114,7 @@ function StringsList({ scenario }: { scenario: Scenario }) {
         return (
           <div key={hs.id} className={s.lRow} role="button" tabIndex={0} onClick={() => select({ kind: 'string', id: hs.id })}
             onKeyDown={e => { if (e.key === 'Enter') select({ kind: 'string', id: hs.id }); }}>
-            <span className={s.lineKey} style={{ background: hs.color }} />
+            <span className={s.lineKey} style={{ background: circuitColor(hs.color) }} />
             <span className={s.lName} title={`${hs.name} · ${hs.points.length} points${used ? ` · ${used} circuit${used > 1 ? 's' : ''}` : ''}`}>{hs.name}</span>
             <span className={s.lVal}>{num(st.lengthM)} m</span>
             <button type="button" className={cx(s.iconBtn, hs.visible && s.iconBtnOn)} title={hs.visible ? 'Hide' : 'Show'}

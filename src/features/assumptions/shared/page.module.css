@@ -1,12 +1,15 @@
 /* Shared page layout for the analytics sheets (Assumptions / Truck curves / Compare). The shell provides the
    scrolling sheet (max-width ~1480 px); this is the content inside it. */
-.page { padding: 8px 0 32px; display: flex; flex-direction: column; gap: 18px; color: var(--ink); min-width: 0; }
-.head { display: flex; align-items: flex-end; gap: 16px 24px; flex-wrap: wrap; }
-.headText { min-width: 0; flex: 1 1 520px; }
-.eyebrow { font-size: 12px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-ink); display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
-.title { font: 650 28px/34px var(--font-display); letter-spacing: -.018em; color: var(--ink); }
-.desc { margin-top: 6px; color: var(--ink-2); font-size: 14.5px; line-height: 21px; max-width: 860px; }
-.actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.page { padding: 4px 0 40px; display: flex; flex-direction: column; gap: 16px; color: var(--ink); min-width: 0; }
+/* the page header itself is the UI kit's PageHeader (src/ui/PageHeader.tsx), shared by every sheet */
+
+/* ── card heads: the title never truncates before its meta text (#19) ─────────── */
+.headSafe > header { flex-wrap: wrap; row-gap: 6px; padding-top: 8px; padding-bottom: 8px; }
+.headSafe > header > div:first-child { flex: 1 1 auto; }
+.headSafe > header > div:first-child > span:first-of-type { flex: none; }
+.headSafe > header > div:first-child > span:nth-of-type(2) { flex: 1 1 0; width: 0; min-width: 0; }
+.headSafe > header > span:empty { display: none; }
+
 
 .toolbar { display: flex; gap: 10px 16px; align-items: center; flex-wrap: wrap; }
 .toolLabel { font-size: 12px; font-weight: 650; color: var(--ink-3); letter-spacing: .02em; }
@@ -27,7 +30,8 @@
 .callout { display: flex; gap: 10px; align-items: flex-start; margin: 10px 16px 4px; padding: 10px 12px; border-radius: 10px; font-size: 13.5px; line-height: 19px; }
 .callout svg { flex: none; margin-top: 1px; }
 .calloutWarn { background: var(--warn-50); color: var(--warn-ink); }
-.calloutInfo { background: var(--accent-50); color: var(--accent-ink); }
+.calloutInfo { background: var(--na-50); color: var(--ink-2); }
+.calloutInfo svg { color: var(--ink-3); }
 .calloutBad { background: var(--bad-50); color: var(--bad-ink); }
 .calloutList { margin: 0; padding-left: 18px; }
 

@@ -5,7 +5,7 @@
  */
 import { useMemo, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
 import type { LimitReason, SegmentResult } from '@/core/types';
-import { num } from '@/core/format';
+import { num, signed } from '@/core/format';
 import { AxisX, GridY, chartText, gradeColor, linePath, linear } from '@/ui';
 import { useWidth } from '@/features/assumptions/shared/useWidth';
 import { curveForce, effGradeForce, gearAt, gradeability, type TruckX } from './physics';
@@ -193,13 +193,13 @@ export function RimpullChart({ series, effGradePct, onGrade, massLoaded, massEmp
         <div className={c.tip} style={{ left: tipLeft(x(hoverPt.v)), top: Math.max(4, y(hoverPt.f) - 40) }}>
           <div className={c.tipHead}>Segment {hoverPt.seg.i + 1} · {hoverPt.dir}</div>
           <Row k="Chainage" v={`${num(hoverPt.seg.chainageM, 0)} m · ${num(hoverPt.seg.dist3dM, 1)} m long`} />
-          <Row k="Grade" v={`${hoverPt.grade >= 0 ? '+' : '−'}${num(Math.abs(hoverPt.grade) * 100, 2)} %  (RR ${num(hoverPt.seg.rrPct, 1)} %)`} color={gradeColor(hoverPt.grade)} />
+          <Row k="Grade" v={`${hoverPt.grade >= 0 ? '+' : '−'}${num(Math.abs(hoverPt.grade) * 100, 2)}%  (RR ${num(hoverPt.seg.rrPct, 1)}%)`} color={gradeColor(hoverPt.grade)} />
           <Row k={hoverPt.mode === 'propel' ? 'Resistance' : 'Braking needed'} v={`${num(hoverPt.f, 0)} kN @ ${num(hoverPt.massT, 0)} t`} />
           <Row k="Speed" v={`${num(hoverPt.v, 1)} km/h`} />
           <Row k="Limited by" v={`${LIMIT_TXT[hoverPt.binding ?? hoverPt.limit] ?? hoverPt.binding ?? hoverPt.limit}${hoverPt.gear ? ` · gear ${hoverPt.gear}` : ''}`} />
           <Row k="Time" v={`${num(hoverPt.time, 1)} s`} />
           {hoverPt.limit === 'table' && curveForce(prim.t.rimpull, hoverPt.v) < hoverPt.f && hoverPt.mode === 'propel' && (
-            <div className={c.tipNote} style={{ color: 'var(--bad-ink)' }}>Above the rimpull envelope — the table speed is not physically reachable.</div>
+            <div className={c.tipNote} style={{ color: 'var(--bad-ink)' }}>Above the rimpull envelope – the table speed is not physically reachable.</div>
           )}
         </div>
       )}
@@ -211,8 +211,8 @@ export function RimpullChart({ series, effGradePct, onGrade, massLoaded, massEmp
             return (
               <div key={s.t.id} style={{ marginTop: i ? 6 : 0 }}>
                 <Row k={`${s.t.name} rimpull`} v={f > 0 ? `${num(f, 0)} kN${g ? ` · G${g}` : ''}` : 'beyond top speed'} color={s.color} />
-                {i === 0 && f > 0 && <Row k="climbs loaded / empty" v={`${num(gradeability(f, massLoaded), 1)} / ${num(gradeability(f, massEmpty), 1)} %`} />}
-                {rf > 0 && <Row k="retarder" v={`${num(rf, 0)} kN${i === 0 ? ` · holds −${num(gradeability(rf, massLoaded), 1)} % loaded` : ''}`} color={s.color} dashed />}
+                {i === 0 && f > 0 && <Row k="climbs loaded / empty" v={`${num(gradeability(f, massLoaded), 1)} / ${num(gradeability(f, massEmpty), 1)}%`} />}
+                {rf > 0 && <Row k="retarder" v={`${num(rf, 0)} kN${i === 0 ? ` · holds −${num(gradeability(rf, massLoaded), 1)}% loaded` : ''}`} color={s.color} dashed />}
               </div>
             );
           })}
@@ -224,7 +224,7 @@ export function RimpullChart({ series, effGradePct, onGrade, massLoaded, massEmp
         <LegBtn on={show.env} onClick={() => setShow(s => ({ ...s, env: !s.env }))} label="Rimpull envelope" stroke={prim.color} w={2.75} />
         {!!prim.t.rimpullGears?.length && <LegBtn on={show.gears} onClick={() => setShow(s => ({ ...s, gears: !s.gears }))} label="Per-gear rimpull" stroke="var(--ink-4)" w={1.2} />}
         <LegBtn on={show.ret} onClick={() => setShow(s => ({ ...s, ret: !s.ret }))} label="Retarder (continuous)" stroke={prim.color} w={2} dash="5 3" />
-        <LegBtn on={show.res} onClick={() => setShow(s => ({ ...s, res: !s.res }))} label={`Resistance @ ${effGradePct > 0 ? '+' : ''}${effGradePct} % eff.`} stroke="var(--ink)" w={1.5} />
+        <LegBtn on={show.res} onClick={() => setShow(s => ({ ...s, res: !s.res }))} label={`Resistance @ ${signed(effGradePct, Number.isInteger(effGradePct) ? 0 : 1)}% eff.`} stroke="var(--ink)" w={1.5} />
         {points.length > 0 && <LegBtn on={show.pts} onClick={() => setShow(s => ({ ...s, pts: !s.pts }))} label={<>Operating points{circuitLabel ? ` · ${circuitLabel}` : ''} <span style={{ color: 'var(--ink-3)' }}>● loaded ◆ empty · filled = propelling, hollow = braking</span></>} dot />}
         {series.length > 1 && series.map(s => (
           <LegBtn key={s.t.id} on={vis(s.t.id)} onClick={() => setHidden(h => ({ ...h, [s.t.id]: !h[s.t.id] }))} label={s.t.name} stroke={s.color} w={2.5} />

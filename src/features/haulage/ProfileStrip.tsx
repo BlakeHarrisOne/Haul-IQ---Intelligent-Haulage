@@ -5,7 +5,10 @@
  *   1. RL: topo surface under the string as a soft terrain area, the string coloured per segment by grade,
  *      stop signs, dig / dump end markers, selected / hovered vertex; vertical exaggeration Fit · 1× · 2× · 5× · 10×.
  *   2. Grade strip: one cell per segment, grade-class colour; segments the spreadsheet drops are hatched red.
- *   3. Speed: loaded (solid) and empty (dashed) step lines from the engine, with limit-reason labels.
+ *   3. Speed: loaded (solid) and empty (dashed) step lines from the engine, with limit-reason labels; ticks 0/20/40/60.
+ *  Verdict first (HRL §11.2/11.3): the header leads with "Max 9.0% over 100 m on the S51 ramp – within 10%"; the RL
+ *  lane shades that 100 m window, draws the fitted grade (3 px, verdict colour) and the 10% limit (dashed) through it.
+ *  The left gutter has two columns: lane names (RL m / Grade / km/h / Ch m) and tick values, so they never collide.
  *  Hover: crosshair + readout, synced to the 3D view through store.hover. Click selects the vertex. Drag a vertex
  *  vertically to edit its RL (one undo step, "Edit RL").
  */
@@ -14,10 +17,11 @@ import type { Circuit, CircuitResult, HaulString, LimitReason, Scenario, Segment
 import type { CircuitResultExt, TravelProfile } from '@/engine';
 import { useApp } from '@/state/store';
 import { useCircuitResult } from '@/state/derived';
-import { Icon, Segmented, chartText, gradeColor, linear, cx } from '@/ui';
-import { grade as fmtGrade, num } from '@/core/format';
+import { Icon, Segmented, chartText, circuitColor, gradeColor, linear, cx } from '@/ui';
+import { grade as fmtGrade, num, pct } from '@/core/format';
 import {
-  VE_OPTIONS, chainagesOf, clamp, nearestVertex, profileScales, resultByPoint, segmentAt, segmentsOf, withXYZ, type SegRow, type VE,
+  GRADE_LIMIT, GRADE_WINDOW_M, VE_OPTIONS, chainagesOf, clamp, gradePlace, maxFittedGrade, nearestVertex, profileScales, resultByPoint,
+  segmentAt, segmentsOf, withXYZ, type GradeFit, type SegRow, type VE,
 } from './model';
 import { profileAlongString, type ProfileSample } from '@/geom';
 import { topoIndex } from './geo';
@@ -103,11 +107,11 @@ function Profile({ hs, circuit, result, scenario }: { hs: HaulString; circuit?: 
   const engSegs = useMemo(() => (result?.ok ? resultByPoint(hs.points.length, result.segments) : []), [result, hs.points.length]);
   const hasSpeed = !!result?.ok && result.segments.length > 0;
 
-  // layout
-  const ML = 58, MR = 16, MT = 14;
+  // layout: the left gutter holds two columns - lane names at LANE_X (start-anchored) and tick values at ML − 6 (end-anchored)
+  const ML = 76, MR = 16, MT = 14, LANE_X = 12;
   const AXIS = 20;
-  const showSpeed = hasSpeed && H >= 130;
-  const SPEED_H = showSpeed ? clamp(Math.round(H * 0.25), 32, 60) : 0;
+  const showSpeed = hasSpeed && H >= 140;
+  const SPEED_H = showSpeed ? clamp(Math.round(H * 0.3), 44, 72) : 0;
   const BAND = 7;
   const yAxis = H - AXIS;
   const speedTop = yAxis - SPEED_H;
@@ -132,9 +136,14 @@ function Profile({ hs, circuit, result, scenario }: { hs: HaulString; circuit?: 
     for (const sg of result?.segments ?? []) m = Math.max(m, sg.speedLoadedKmh, sg.speedEmptyKmh);
     const pf = (result as CircuitResultExt | undefined)?.profiles;
     for (const leg of [pf?.loaded, pf?.empty]) for (const iv of leg?.intervals ?? []) m = Math.max(m, iv.v0 * 3.6, iv.v1 * 3.6);
-    return Math.max(40, Math.ceil(m / 10) * 10);
+    return Math.max(60, Math.ceil(m / 20) * 20);
   }, [result]);
-  const ys = useMemo(() => linear([0, vMax], [yAxis - 2, speedTop + 4]), [vMax, yAxis, speedTop]);
+  const ys = useMemo(() => linear([0, vMax], [yAxis - 2, speedTop + 5]), [vMax, yAxis, speedTop]);
+  const vStep = vMax <= 80 ? 20 : 40;
+  const vTicks = useMemo(() => { const o: number[] = []; for (let v = 0; v <= vMax + 1e-9; v += vStep) o.push(v); return o; }, [vMax, vStep]);
+
+  // the steepest 100 m (committed points: the verdict does not flicker while a vertex is dragged)
+  const fit = useMemo<GradeFit | undefined>(() => maxFittedGrade(hs.points), [hs.points]);
 
   // hover state from the mouse, or from the 3D view
   const mouseCh = mouse ? clamp(x.invert(mouse.x), 0, L) : undefined;
@@ -236,7 +245,7 @@ function Profile({ hs, circuit, result, scenario }: { hs: HaulString; circuit?: 
       });
       return d;
     };
-    const labels: { x: number; y: number; text: string }[] = [];
+    const labels: { x: number; y: number; text: string; w: number }[] = [];
     let k = 0;
     while (k < segsR.length) {
       const reason = segsR[k].limitLoaded;
@@ -246,7 +255,10 @@ function Profile({ hs, circuit, result, scenario }: { hs: HaulString; circuit?: 
       if ((reason === 'rimpull' || reason === 'retarder' || reason === 'speed-limit') && xb - xa >= 54) {
         let vmin = Infinity;
         for (let q = k; q <= j; q++) vmin = Math.min(vmin, segsR[q].speedLoadedKmh);
-        labels.push({ x: (xa + xb) / 2, y: Math.max(speedTop + 10, ys(segsR[k].speedLoadedKmh) - 4), text: reason === 'speed-limit' ? `limit ${num(segsR[k].speedLimitKmh)}` : LIMIT_TEXT[reason] });
+        const text = reason === 'speed-limit' ? `limit ${num(segsR[k].speedLimitKmh)}` : LIMIT_TEXT[reason];
+        const lx = (xa + xb) / 2, w = text.length * 5.8 + 8;
+        const prev = labels[labels.length - 1];
+        if (!prev || lx - w / 2 > prev.x + prev.w / 2 + 6) labels.push({ x: lx, y: Math.max(speedTop + 11, ys(segsR[k].speedLoadedKmh) - 5), text, w });
       }
       k = j + 1;
     }
@@ -333,23 +345,24 @@ function Profile({ hs, circuit, result, scenario }: { hs: HaulString; circuit?: 
   const dig = scenario.assets.find(a => a.id === (hs.digId ?? circuit?.digId));
   const dump = scenario.assets.find(a => a.id === (hs.dumpId ?? circuit?.dumpId));
 
+  const metaText = [
+    `${num(L)} m`, `RL ${num(zMin, 1)}–${num(zMax, 1)}`, `${fmtGrade(st.up, 1)} / ${fmtGrade(st.down, 1)} max`,
+    circuit && result?.ok ? `${circuit.name !== hs.name ? `${circuit.name} · ` : ''}cycle ${num(result.cycleMin, 1)} min` : '',
+  ].filter(Boolean).join(' · ');
+  const place = fit ? gradePlace(hs.points, fit, { dig: dig?.name, dump: dump?.name }) : '';
+  const verdict = fit ? `Max ${pct(Math.abs(fit.grade))} over ${fit.short ? `the whole ${num(L)} m` : `${GRADE_WINDOW_M} m`} ${fit.short ? '' : place} – ${fit.ok ? `within ${pct(GRADE_LIMIT, 0)}` : `over the ${pct(GRADE_LIMIT, 0)} limit`}`.replace(/\s+/g, ' ') : '';
+  const verdictTitle = fit ? `${verdict}. Steepest least-squares grade over any ${GRADE_WINDOW_M} m: ${fmtGrade(fit.grade, 1)} (${fit.grade >= 0 ? 'loaded uphill' : 'loaded downhill'}), Ch ${num(fit.ch0)}–${num(fit.ch1)} m.` : '';
+
   return (
     <>
       <div className={s.stripHead}>
-        <span className={s.stripTitle}><span className={s.lineKey} style={{ background: hs.color, flex: 'none' }} /><span>{hs.name}</span></span>
-        <span className={s.stripMeta}>
-          {num(L)} m · RL {num(zMin, 1)}–{num(zMax, 1)} · {fmtGrade(st.up, 1)} / {fmtGrade(st.down, 1)} max
-          {circuit && result?.ok ? ` · ${circuit.name} · cycle ${num(result.cycleMin, 1)} min` : ''}
-        </span>
-        <span className={s.gap} />
-        {W > 1240 && (
-          <span className={s.stripLegend}>
-            <span><span className={s.lgGrade}><i style={{ background: 'var(--grade-flat)' }} /><i style={{ background: 'var(--grade-mod)' }} /><i style={{ background: 'var(--grade-steep)' }} /><i style={{ background: 'var(--grade-max)' }} /></span>Grade ≤4 / 8 / 10 / &gt;10 %</span>
-            {terrainRuns.length > 0 && <span><i className={s.lgTerrain} />Surface</span>}
-            {showSpeed && <span><svg width="18" height="8" aria-hidden><line x1="1" x2="17" y1="4" y2="4" stroke="var(--c1)" strokeWidth="2" strokeLinecap="round" /></svg>Loaded</span>}
-            {showSpeed && <span><svg width="18" height="8" aria-hidden><line x1="1" x2="17" y1="4" y2="4" stroke="var(--c1)" strokeWidth="1.6" strokeDasharray="3 3" strokeLinecap="round" /></svg>Empty</span>}
+        <span className={s.stripName} title={metaText}><span className={s.lineKey} style={{ background: circuitColor(hs.color), flex: 'none' }} /><span>{hs.name}</span></span>
+        {fit && (
+          <span className={cx(s.verdict, fit.ok ? s.tOk : s.tBad)} title={verdictTitle}>
+            <Icon name={fit.ok ? 'tick' : 'warning'} size={15} strokeWidth={2.2} /><span>{verdict}</span>
           </span>
         )}
+        <span className={s.gap} />
         <span className={s.stripMetaFixed} title={sc.capped ? `Capped: the profile only fits up to ${num(sc.veFit, 1)}× at this height` : 'Vertical exaggeration'}>
           VE {num(sc.veUsed, sc.veUsed < 10 ? 1 : 0)}×{sc.capped ? ' max' : ''}
         </span>
@@ -371,11 +384,13 @@ function Profile({ hs, circuit, result, scenario }: { hs: HaulString; circuit?: 
             {yTicks.map(t => (
               <g key={t}>
                 <line x1={box.left} x2={box.right} y1={Math.round(y(t)) + 0.5} y2={Math.round(y(t)) + 0.5} stroke="var(--hair)" />
-                <text x={box.left - 8} y={y(t)} dy="0.32em" textAnchor="end" style={chartText}>{num(t)}</text>
+                <text x={box.left - 6} y={y(t)} dy="0.32em" textAnchor="end" style={chartText}>{num(t)}</text>
               </g>
             ))}
-            <text x={box.left - 8} y={box.top - 4} textAnchor="end" style={{ ...chartText, fontWeight: 650 }}>RL m</text>
+            <text x={LANE_X} y={box.top + 2} dy="0.32em" style={{ ...chartText, fontWeight: 650 }}>RL m</text>
 
+            {fit && <FitOverlay fit={fit} x={x} y={y} box={box} clipId={`pclip-${hs.id}`} L={L}
+              avoid={[endLabelBox(x(0), y(pts[0].z), `Dig${dig ? ` · ${dig.name}` : ''}`, 'start', box.top), endLabelBox(x(L), y(pts[pts.length - 1].z), `Dump${dump ? ` · ${dump.name}` : ''}`, 'end', box.top)]} />}
             {staticLayer}
             {/* stop signs */}
             {pts.map((p, i) => p.stop ? <StopGlyph key={`st${p.id}`} x={x(chain[i])} y={Math.max(box.top + 7, y(p.z) - 14)} /> : null)}
@@ -393,19 +408,24 @@ function Profile({ hs, circuit, result, scenario }: { hs: HaulString; circuit?: 
             )}
 
             {/* grade strip */}
-            <text x={box.left - 8} y={(bandTop + bandBottom) / 2} dy="0.32em" textAnchor="end" style={{ ...chartText, fontSize: 10.5 }}>grade</text>
+            <text x={LANE_X} y={(bandTop + bandBottom) / 2} dy="0.32em" style={{ ...chartText, fontWeight: 650 }}>Grade</text>
             {bandLayer}
 
             {/* speed lane */}
             {showSpeed && speed && (
               <g>
-                <line x1={box.left} x2={box.right} y1={Math.round(ys(vMax / 2)) + 0.5} y2={Math.round(ys(vMax / 2)) + 0.5} stroke="var(--hair-2)" />
-                <text x={box.left - 8} y={ys(vMax)} dy="0.6em" textAnchor="end" style={{ ...chartText, fontSize: 10.5 }}>{num(vMax)}</text>
-                <text x={box.left - 8} y={yAxis - 3} textAnchor="end" style={{ ...chartText, fontSize: 10.5, fontWeight: 650 }}>km/h</text>
+                {vTicks.map(v => (
+                  <g key={v}>
+                    {v > 0 && <line x1={box.left} x2={box.right} y1={Math.round(ys(v)) + 0.5} y2={Math.round(ys(v)) + 0.5} stroke="var(--hair-2)" />}
+                    <text x={box.left - 6} y={ys(v)} dy="0.32em" textAnchor="end" style={{ ...chartText, fontSize: 10.5 }}>{v}</text>
+                  </g>
+                ))}
+                <text x={LANE_X} y={(speedTop + yAxis) / 2} dy="0.32em" style={{ ...chartText, fontWeight: 650 }}>km/h</text>
                 <path d={speed.empty} fill="none" stroke="var(--c1)" strokeWidth={1.5} strokeDasharray="3 3" opacity={0.85} />
                 <path d={speed.loaded} fill="none" stroke="var(--c1)" strokeWidth={2} strokeLinejoin="round" />
                 {speed.labels.map((l, k) => (
-                  <text key={k} x={l.x} y={l.y} textAnchor="middle" style={{ ...chartText, fontSize: 10.5, fill: 'var(--ink-2)' }}>{l.text}</text>
+                  <text key={k} x={l.x} y={l.y} textAnchor="middle" paintOrder="stroke" stroke="var(--surface)" strokeWidth={3} strokeLinejoin="round"
+                    style={{ ...chartText, fontSize: 10.5, fill: 'var(--ink-2)' }}>{l.text}</text>
                 ))}
                 {result?.segments.map(sg => sg.limitLoaded === 'table-out-of-range' ? (
                   <rect key={`d${sg.i}`} x={x(sg.chainageM)} y={speedTop + 2} width={Math.max(2, x(sg.chainageM + sg.dist3dM) - x(sg.chainageM))} height={yAxis - speedTop - 2} fill="url(#hatchBad)" opacity={0.8} />
@@ -421,7 +441,7 @@ function Profile({ hs, circuit, result, scenario }: { hs: HaulString; circuit?: 
                 <text x={x(t)} y={yAxis + 15} textAnchor={t === 0 ? 'start' : 'middle'} style={chartText}>{num(t)}</text>
               </g>
             ))}
-            <text x={box.left - 8} y={yAxis + 15} textAnchor="end" style={{ ...chartText, fontWeight: 650 }}>Ch m</text>
+            <text x={LANE_X} y={yAxis + 15} style={{ ...chartText, fontWeight: 650 }}>Ch m</text>
 
             {/* hover crosshair */}
             {ro && (mouse || drag) && (
@@ -459,6 +479,18 @@ function Profile({ hs, circuit, result, scenario }: { hs: HaulString; circuit?: 
           </div>
         )}
       </div>
+      <div className={s.stripFoot} style={{ paddingLeft: ML }}>
+        <span className={s.stripLegend}>
+          <span><span className={s.lgGrade}><i style={{ background: 'var(--grade-flat)' }} /><i style={{ background: 'var(--grade-mod)' }} /><i style={{ background: 'var(--grade-steep)' }} /><i style={{ background: 'var(--grade-max)' }} /></span>Grade ≤4 / 8 / 10 / &gt;10%</span>
+          {terrainRuns.length > 0 && <span><i className={s.lgTerrain} />Surface</span>}
+          {fit && <span><svg width="18" height="8" aria-hidden><line x1="1" x2="17" y1="6" y2="2" stroke={fit.ok ? 'var(--ok)' : 'var(--bad)'} strokeWidth="3" strokeLinecap="round" /></svg>{GRADE_WINDOW_M} m fit</span>}
+          {fit && <span><svg width="18" height="8" aria-hidden><line x1="1" x2="17" y1="7" y2="1" stroke="var(--ink-3)" strokeWidth="1.2" strokeDasharray="4 3" /></svg>{pct(GRADE_LIMIT, 0)} limit</span>}
+          {showSpeed && <span><svg width="18" height="8" aria-hidden><line x1="1" x2="17" y1="4" y2="4" stroke="var(--c1)" strokeWidth="2" strokeLinecap="round" /></svg>Loaded</span>}
+          {showSpeed && <span><svg width="18" height="8" aria-hidden><line x1="1" x2="17" y1="4" y2="4" stroke="var(--c1)" strokeWidth="1.6" strokeDasharray="3 3" strokeLinecap="round" /></svg>Empty</span>}
+        </span>
+        <span className={s.gap} />
+        <span className={s.stripMeta} title={metaText}>{metaText}</span>
+      </div>
     </>
   );
 }
@@ -477,12 +509,57 @@ function StopGlyph({ x, y }: { x: number; y: number }) {
 function EndMark({ x, y, label, anchor, top }: { x: number; y: number; label: string; anchor: 'start' | 'end'; top: number }) {
   const ly = Math.max(top + 2, y - 22);
   const tx = anchor === 'start' ? x + 6 : x - 6;
+  const w = label.length * 6.6 + 6;
   return (
     <g pointerEvents="none">
       <line x1={x} x2={x} y1={ly + 3} y2={y - 5} stroke="var(--ink-3)" strokeWidth={1} />
       <circle cx={x} cy={y} r={4.5} fill="var(--ink)" stroke="var(--surface)" strokeWidth={2} />
-      <text x={tx} y={ly + 4} textAnchor={anchor} paintOrder="stroke" stroke="var(--surface)" strokeWidth={3} strokeLinejoin="round"
-        style={{ ...chartText, fill: 'var(--ink)', fontWeight: 650, fontSize: 11.5 }}>{label}</text>
+      {/* a solid plate, so lines never show through the word gaps */}
+      <rect x={anchor === 'start' ? tx - 3 : tx - w + 3} y={ly - 6} width={w} height={14} rx={4} fill="var(--surface)" opacity={0.92} />
+      <text x={tx} y={ly + 4} textAnchor={anchor} style={{ ...chartText, fill: 'var(--ink)', fontWeight: 650, fontSize: 11.5 }}>{label}</text>
+    </g>
+  );
+}
+
+/** Rectangle an EndMark label occupies (for collision checks). */
+function endLabelBox(x: number, y: number, label: string, anchor: 'start' | 'end', top: number) {
+  const ly = Math.max(top + 2, y - 22), w = label.length * 6.6 + 4;
+  const x0 = anchor === 'start' ? x + 4 : x - 4 - w;
+  return { x0, x1: x0 + w, y0: ly - 8, y1: ly + 8 };
+}
+
+type Rect = { x0: number; x1: number; y0: number; y1: number };
+const overlaps = (a: Rect, b: Rect) => a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0;
+
+/**
+ * HRL grade place chart, in the long section: the steepest 100 m shaded in its verdict colour, the fitted grade as a
+ * 3 px line, the 10% limit dashed through the same point (±70 m), and the caption placed clear of the end labels.
+ */
+function FitOverlay({ fit, x, y, box, clipId, L, avoid }: {
+  fit: GradeFit; x: (v: number) => number; y: (v: number) => number; box: { left: number; right: number; top: number; bottom: number }; clipId: string; L: number; avoid: Rect[];
+}) {
+  const ink = fit.ok ? 'var(--ok)' : 'var(--bad)';
+  const zAt = (ch: number) => fit.zMid + fit.grade * (ch - fit.chMid);
+  const sgn = fit.grade >= 0 ? 1 : -1;
+  const l0 = Math.max(0, fit.chMid - 70), l1 = Math.min(L, fit.chMid + 70);
+  const zLim = (ch: number) => fit.zMid + sgn * GRADE_LIMIT * (ch - fit.chMid);
+  const xa = x(fit.ch0), xb = x(fit.ch1);
+  const text = `${fmtGrade(fit.grade, 1)} over ${fit.short ? 'the string' : `${GRADE_WINDOW_M} m`}`;
+  const w = text.length * 6.9 + 6;
+  const cx0 = clamp((xa + xb) / 2, box.left + w / 2 + 2, box.right - w / 2 - 2);
+  const yTop = Math.min(y(zAt(fit.ch0)), y(zAt(fit.ch1)), y(zLim(l0)), y(zLim(l1)));
+  const yBot = Math.max(y(zAt(fit.ch0)), y(zAt(fit.ch1)));
+  const cands = [yTop - 9, yBot + 17, box.top + 10, box.bottom - 6].map(cy => clamp(cy, box.top + 10, box.bottom - 4));
+  const cy = cands.find(c => !avoid.some(r => overlaps(r, { x0: cx0 - w / 2, x1: cx0 + w / 2, y0: c - 10, y1: c + 4 }))) ?? cands[0];
+  return (
+    <g pointerEvents="none">
+      <g clipPath={`url(#${clipId})`}>
+        <rect x={xa} y={box.top - 6} width={Math.max(1, xb - xa)} height={box.bottom - box.top + 6} fill={`color-mix(in srgb, ${ink} ${fit.ok ? 10 : 12}%, transparent)`} />
+        <line x1={x(l0)} x2={x(l1)} y1={y(zLim(l0))} y2={y(zLim(l1))} stroke="var(--ink-3)" strokeWidth={1.2} strokeDasharray="4 3" />
+        <line x1={xa} x2={xb} y1={y(zAt(fit.ch0))} y2={y(zAt(fit.ch1))} stroke={ink} strokeWidth={3} strokeLinecap="round" opacity={0.9} />
+      </g>
+      <text x={cx0} y={cy} textAnchor="middle" paintOrder="stroke" stroke="var(--surface)" strokeWidth={3.5} strokeLinejoin="round"
+        style={{ ...chartText, fontSize: 12, fontWeight: 700, fill: fit.ok ? 'var(--ok-ink)' : 'var(--bad-ink)' }}>{text}</text>
     </g>
   );
 }

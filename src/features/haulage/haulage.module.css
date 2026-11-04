@@ -44,8 +44,9 @@
 
 /* ── totals strip (overview) ─────────────────────────────────────────────── */
 .totals { display: grid; grid-template-columns: 1.15fr 1fr 1fr; gap: 12px; padding: var(--s3) var(--s4) var(--s2); }
-.meter { position: relative; height: 6px; border-radius: 3px; background: var(--accent-100); overflow: hidden; margin-top: 6px; }
-.meterFill { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: var(--accent); }
+/* counts are data, not selection: neutral ink, rust only when over */
+.meter { position: relative; height: 6px; border-radius: 3px; background: var(--surface-3); box-shadow: inset 0 0 0 1px var(--hair-2); overflow: hidden; margin-top: 6px; }
+.meterFill { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: var(--ink-2); }
 .meterOver { background: var(--bad); }
 
 /* ── circuit rows (overview) ─────────────────────────────────────────────── */
@@ -68,7 +69,7 @@
 .pip { width: 6px; height: 12px; border-radius: 2px; background: var(--hair); }
 .pipOn { background: var(--ink-2); }
 .pipOver { background: var(--warn); }
-.pipExact { position: absolute; top: -1px; bottom: -1px; width: 2px; border-radius: 1px; background: var(--accent); box-shadow: 0 0 0 1.5px var(--surface); }
+.pipExact { position: absolute; top: -1px; bottom: -1px; width: 2px; border-radius: 1px; background: var(--ink); box-shadow: 0 0 0 1.5px var(--surface); }
 
 /* ── plain list rows (strings / assets) ──────────────────────────────────── */
 .lRow {
@@ -116,11 +117,11 @@
 .fBar { position: relative; height: 8px; border-radius: 4px; background: var(--surface-3); }
 .fShort { position: absolute; top: 0; bottom: 0; border-radius: 0 4px 4px 0; background: repeating-linear-gradient(135deg, var(--bad) 0 1.5px, transparent 1.5px 4px); opacity: .55; }
 .fIdle { position: absolute; top: 0; bottom: 0; border-radius: 0 4px 4px 0; background: repeating-linear-gradient(135deg, var(--warn) 0 1.5px, transparent 1.5px 4px); opacity: .6; }
-.fFill { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 4px; background: var(--c1); }
-.fRow:not(.fAssigned) .fFill { background: color-mix(in srgb, var(--c1) 72%, var(--surface)); }
+.fFill { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 4px; background: var(--cc, var(--c1)); }
+.fRow:not(.fAssigned) .fFill { background: color-mix(in srgb, var(--cc, var(--c1)) 72%, var(--surface)); }
 .fTarget { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; border-radius: 1px; background: var(--ink-2); }
 .fZero { color: var(--ink-4); }
-.fLegend { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 8px var(--s4) 0; font-size: 12px; color: var(--ink-3); }
+.fLegend { display: grid; grid-template-columns: repeat(2, minmax(0, max-content)); gap: 4px 20px; padding: 8px var(--s4) 0; font-size: 12px; color: var(--ink-3); }
 .fLegend > span { display: inline-flex; align-items: center; gap: 6px; }
 .lgSw { width: 14px; height: 8px; border-radius: 2px; flex: none; }
 .lgRec { width: 14px; height: 14px; border-radius: 4px; background: var(--ok-50); box-shadow: inset 0 0 0 1.5px var(--ok); }
@@ -129,10 +130,13 @@
 /* ── callout ─────────────────────────────────────────────────────────────── */
 .callout { display: grid; grid-template-columns: 18px 1fr; gap: 10px; margin: var(--s3) var(--s4) 0; padding: 10px 12px; border-radius: 10px; font-size: 13px; line-height: 18px; }
 .callout > svg { margin-top: 1px; }
-.co-info { background: var(--accent-50); color: var(--accent-ink); }
+.co-info { background: var(--na-50); color: var(--ink); }
+.co-info > svg { color: var(--ink-3); }
 .co-ok { background: var(--ok-50); color: var(--ok-ink); }
 .co-bad { background: var(--bad-50); color: var(--bad-ink); }
 .co-warn { background: var(--warn-50); color: var(--warn-ink); }
+.co-na { background: var(--na-50); color: var(--ink); }
+.co-na > svg { color: var(--ink-3); }
 .coBody { min-width: 0; }
 .coTitle { font-weight: 650; }
 .coText { color: var(--ink-2); margin-top: 2px; }
@@ -231,6 +235,15 @@
 .stripTitle > span:last-child { overflow: hidden; text-overflow: ellipsis; }
 .stripMeta { color: var(--ink-3); font-size: 12.5px; white-space: nowrap; font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 0 1 auto; }
 .stripMetaFixed { color: var(--ink-3); font-size: 12.5px; white-space: nowrap; font-variant-numeric: tabular-nums; flex: none; }
+/* the full name never truncates before the verdict does; the meta lives in the footer + tooltip */
+.stripName { display: inline-flex; align-items: center; gap: 8px; font: 600 14px/20px var(--font); white-space: nowrap; flex: none; max-width: 48%; min-width: 0; }
+.stripName > span:last-child { overflow: hidden; text-overflow: ellipsis; }
+.verdict { display: inline-flex; align-items: center; gap: 6px; min-width: 0; flex: 0 1 auto; font: 650 13px/18px var(--font); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.verdict > svg { flex: none; }
+.verdict > span { overflow: hidden; text-overflow: ellipsis; }
+.verdictNa { color: var(--ink-3); font-weight: 500; }
+.stripFoot { display: flex; align-items: center; gap: 12px; height: 26px; padding-right: 16px; flex: none; min-width: 0; border-top: 1px solid var(--hair-2); }
+.stripFoot .stripMeta { flex: 0 1 auto; }
 .stripLegend { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--ink-2); white-space: nowrap; flex: none; }
 .stripLegend > span { display: inline-flex; align-items: center; gap: 5px; }
 .lgGrade { display: inline-flex; gap: 1px; }
@@ -264,3 +277,21 @@
 .phaseRowOn { background: var(--accent-50); box-shadow: inset 3px 0 0 var(--accent); }
 .phaseLabels { display: flex; gap: 2px; margin: 4px var(--s4) 0; font-size: 11px; color: var(--ink-3); }
 .phaseLabels > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.secBody { position: relative; flex: 1; min-height: 0; display: flex; }
+.roadDetail { flex: none; display: flex; flex-direction: column; min-height: 0; border-left: 1px solid var(--hair-2); padding: 0 12px; }
+.rdHead { display: flex; align-items: center; gap: 8px; height: 34px; flex: none; min-width: 0; }
+.rdName { display: inline-flex; align-items: center; gap: 7px; min-width: 0; flex: 1; font: 600 12.5px/18px var(--font); color: var(--ink-2); }
+.rdName > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rdName > i { flex: none; }
+.rdFig { font-size: 12.5px; color: var(--ink-2); white-space: nowrap; font-variant-numeric: tabular-nums; flex: none; }
+.rdFig b { font-size: 16px; font-weight: 700; margin-right: 2px; }
+.rdSvg { display: block; flex: none; overflow: visible; }
+.rdFoot { display: flex; gap: 6px; align-items: center; height: 20px; font-size: 11.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; font-variant-numeric: tabular-nums; flex: none; }
+.rdFoot > span { overflow: hidden; text-overflow: ellipsis; }
+.rdFoot > span:last-child { flex: none; font-weight: 600; }
+.roadVerdicts { display: grid; gap: 4px; padding: 6px var(--s4) 4px; font-size: 13px; line-height: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.roadVerdicts > span { display: flex; gap: 6px; align-items: flex-start; }
+.roadVerdicts svg { flex: none; margin-top: 2px; }
+.roadField { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; font-weight: 600; color: var(--ink-2); min-width: 0; }
+.rdPick { flex: 1; min-width: 0; display: flex; }
+.rdPick > select { min-width: 0; }

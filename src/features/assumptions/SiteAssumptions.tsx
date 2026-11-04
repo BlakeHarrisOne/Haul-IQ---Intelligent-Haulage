@@ -4,16 +4,18 @@
  */
 import { useMemo, useState } from 'react';
 import type { GradeSpeedPoint, LoaderAssumptions, Material, Scenario, ShiftEvent, ShiftEventKind, TruckModel } from '@/core/types';
-import { clock, num } from '@/core/format';
+import { clock, num, signed } from '@/core/format';
 import { useApp } from '@/state/store';
 import { productiveMinutes } from '@/engine';
 import {
-  Badge, Button, Card, CardHead, Dot, Icon, NumberField, Select, TextField, Toggle, AxisX, GridY, Legend, linePath, linear,
+  Badge, Button, Card, CardHead, Dot, EVENT_STYLE, Icon, Select, TextField, Toggle, AxisX, GridY, Legend, circuitColor, eventBackground, linePath, linear,
 } from '@/ui';
+import { NumField } from './shared/NumField';
 import { uid } from '@/core/ids';
 import { defaultLoader, defaultMaterial, defaultShift, defaultSpeeds, defaultTruckLoad, defaultsSource, same, sheetLoadCell } from './defaults';
 import { RefChip } from './Ledger';
 import { useWidth } from './shared/useWidth';
+import p from './shared/page.module.css';
 import s from './assumptions.module.css';
 
 type Commit = (label: string, fn: (s: Scenario) => Scenario) => void;
@@ -25,7 +27,7 @@ export function EditCell({ value, def, onChange, step = 1, dp = 1, unit, width =
   const changed = def != null && value != null && !same(value, def);
   return (
     <span className={s.cell}>
-      <NumberField small value={value} onChange={onChange} step={step} dp={dp} unit={unit} width={width} changed={changed} min={min} max={max}
+      <NumField small value={value} onChange={onChange} step={step} dp={dp} unit={unit} width={width} changed={changed} min={min} max={max}
         title={changed ? `${label}: changed from default ${num(def!, dp)}` : label} />
       {changed
         ? <button type="button" className={s.resetBtn} onClick={() => onChange(def!)} title={`Reset ${label} to ${num(def!, dp)}`} aria-label={`Reset ${label} to default`}><Icon name="reset" size={14} /></button>
@@ -67,7 +69,7 @@ export function LoaderAssumptionsCard({ scenario }: { scenario: Scenario }) {
     return scenario.fleet.loaders.find(l => l.id === u?.modelId)?.name ?? scenario.fleet.loaders.find(l => l.id === `ldr-${unitId}`)?.name;
   };
   return (
-    <Card>
+    <Card className={p.headSafe}>
       <CardHead title="Loader assumptions" sub="per unit" icon="excavator" actions={<RefChip cell="ActiveRoute!H2:J34" />} />
       <div style={{ overflowX: 'auto' }}>
         <table className={s.editTable}>
@@ -80,9 +82,9 @@ export function LoaderAssumptionsCard({ scenario }: { scenario: Scenario }) {
               const circuits = scenario.circuits.filter(c => c.loaderUnitId === a.unitId);
               return (
                 <tr key={a.unitId}>
-                  <td className={s.l}><div className={s.unitName}>{a.unitId}</div><div className={s.subtle}>{modelOf(a.unitId) ?? '—'}</div></td>
+                  <td className={s.l}><div className={s.unitName}>{a.unitId}</div><div className={s.subtle}>{modelOf(a.unitId) ?? '–'}</div></td>
                   <td className={s.l}>
-                    {circuits.length ? circuits.map(c => <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5 }}><Dot color={c.color} />{c.name}</div>) : <span className={s.subtle}>not used</span>}
+                    {circuits.length ? circuits.map(c => <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5 }}><Dot color={circuitColor(c.color)} />{c.name}</div>) : <span className={s.subtle}>not used</span>}
                   </td>
                   <td><EditCell label={`${a.unitId} dump time`} value={a.dumpS} def={d?.dumpS} onChange={v => set(a.unitId, { dumpS: v })} dp={0} width={70} min={0} /></td>
                   <td><EditCell label={`${a.unitId} spot time`} value={a.spotS} def={d?.spotS} onChange={v => set(a.unitId, { spotS: v })} dp={0} width={70} min={0} /></td>
@@ -115,7 +117,7 @@ export function TruckLoadsCard({ scenario }: { scenario: Scenario }) {
       circuits: sc.circuits.map(c => (c.truckModelId === truckId && c.materialId === matId ? { ...c, params: { ...c.params, truckLoadBcm: v } } : c)),
     }));
   return (
-    <Card>
+    <Card className={p.headSafe}>
       <CardHead title="Truck load" sub="bcm per load" icon="truck" actions={<><Toggle on={all} onChange={setAll} label={<span className={s.subtle}>All&nbsp;models</span>} /><RefChip cell="ActiveRoute!N12:N18" /></>} />
       <div style={{ overflowX: 'auto' }}>
         <table className={s.editTable}>
@@ -133,7 +135,7 @@ export function TruckLoadsCard({ scenario }: { scenario: Scenario }) {
                     <td key={m.id}>
                       <EditCell label={`${t.name} ${m.name} load`} value={v} def={defaultTruckLoad(t, m.id)} onChange={x => set(t.id, m.id, x)} dp={0} width={72} min={0} />
                       <div className={s.subtle} title={`${num(v ?? 0, 0)} bcm × ${m.bankDensity} t/bcm bank density${cell ? ` · workbook ${cell}` : ''}`}>
-                        {tonnes != null ? <>≈ {num(tonnes, 0)} t {ratio != null && <Badge tone={ratio > 1.1 ? 'bad' : ratio > 1.0 ? 'warn' : 'na'}>{num(ratio * 100, 0)}%</Badge>}</> : '—'}
+                        {tonnes != null ? <>≈ {num(tonnes, 0)} t {ratio != null && <Badge tone={ratio > 1.1 ? 'bad' : ratio > 1.0 ? 'warn' : 'na'}>{num(ratio * 100, 0)}%</Badge>}</> : '–'}
                       </div>
                     </td>
                   );
@@ -143,7 +145,7 @@ export function TruckLoadsCard({ scenario }: { scenario: Scenario }) {
           </tbody>
         </table>
       </div>
-      <p className={s.cardNote}>Tonnes = bcm × bank density, as a share of rated payload (Cat 10/10/20 policy: mean ≤ 100 %, no load &gt; 120 %). Edits flow to circuits using that truck and material (workbook C21).</p>
+      <p className={s.cardNote}>Tonnes = bcm × bank density, as a share of rated payload (Cat 10/10/20 policy: mean ≤ 100%, no load &gt; 120%). Edits flow to circuits using that truck and material (workbook C21).</p>
     </Card>
   );
 }
@@ -153,7 +155,7 @@ export function MaterialsCard({ scenario }: { scenario: Scenario }) {
   const commit = useCommit();
   const set = (id: string, patch: Partial<Material>) => commit(`Edit material ${id}`, sc => ({ ...sc, materials: sc.materials.map(m => (m.id === id ? { ...m, ...patch } : m)) }));
   return (
-    <Card>
+    <Card className={p.headSafe}>
       <CardHead title="Materials" sub="bank density · swell" icon="solid" />
       <table className={s.editTable}>
         <thead><tr><th className={s.l}>Material</th><th>Bank t/bcm</th><th>Swell lcm/bcm</th><th>Loose t/lcm</th></tr></thead>
@@ -197,7 +199,7 @@ function StepChart({ loaded, empty, hl }: { loaded: GradeSpeedPoint[]; empty: Gr
         onPointerMove={e => { const r = (e.currentTarget as SVGSVGElement).getBoundingClientRect(); setHover(x.invert(e.clientX - r.left)); }}
         onPointerLeave={() => setHover(null)}>
         <GridY y={y} x0={L} x1={W - R} n={4} label="km/h" />
-        <AxisX x={x} y0={H - B} n={8} fmt={v => `${v > 0 ? '+' : ''}${v}%`} label="grade in direction of travel" />
+        <AxisX x={x} y0={H - B} n={8} fmt={v => `${signed(v, 0)}%`} label="grade in direction of travel" />
         <line x1={x(0)} x2={x(0)} y1={T} y2={H - B} stroke="var(--hair)" />
         {hl != null && <rect x={x(hl * 100 - 0.5)} width={x(1) - x(0)} y={T} height={H - B - T} fill="var(--accent-50)" />}
         <path d={linePath(steps(empty), x, y)} fill="none" stroke="var(--c2)" strokeWidth={2} strokeLinejoin="round" />
@@ -209,7 +211,7 @@ function StepChart({ loaded, empty, hl }: { loaded: GradeSpeedPoint[]; empty: Gr
             {ev && <circle cx={x(near[0] * 100)} cy={y(ev[1])} r={4} fill="var(--c2)" stroke="var(--surface)" strokeWidth={2} />}
             <g transform={`translate(${Math.min(W - R - 132, Math.max(L + 4, x(near[0] * 100) + 8))},${T + 4})`}>
               <rect width={128} height={52} rx={8} fill="var(--surface)" stroke="var(--hair)" />
-              <text x={10} y={18} style={{ fontSize: 12, fontWeight: 650, fill: 'var(--ink)' }}>{`${near[0] > 0 ? '+' : ''}${num(near[0] * 100, 0)} % grade`}</text>
+              <text x={10} y={18} style={{ fontSize: 12, fontWeight: 650, fill: 'var(--ink)' }}>{`${signed(near[0] * 100, 0)}% grade`}</text>
               <text x={10} y={34} style={{ fontSize: 12, fill: 'var(--ink-2)' }}>{`Loaded ${near[1]} km/h`}</text>
               <text x={10} y={47} style={{ fontSize: 12, fill: 'var(--ink-2)' }}>{`Empty ${ev?.[1] ?? '–'} km/h`}</text>
             </g>
@@ -244,7 +246,7 @@ export function SpeedTablesCard({ scenario, truckId }: { scenario: Scenario; tru
     }));
   const grades = sp ? [...sp.loaded].sort((a, b) => b[0] - a[0]).map(p => p[0]) : [];
   return (
-    <Card>
+    <Card className={p.headSafe}>
       <CardHead title="Grade → max speed tables" sub="workbook speed model" icon="speed" actions={<>
         <Select small value={truck.id} onChange={setTid} options={scenario.fleet.trucks.map(t => ({ value: t.id, label: t.name }))} />
         <Toggle on={allTrucks} onChange={setAllTrucks} label={<span className={s.subtle}>Edit all trucks</span>} title="The workbook has ONE loaded and ONE empty table for every truck type" />
@@ -274,8 +276,8 @@ export function SpeedTablesCard({ scenario, truckId }: { scenario: Scenario; tru
           <div>
             <StepChart loaded={sp.loaded} empty={sp.empty} hl={focus} />
             <p className={s.cardNote} style={{ padding: '8px 0 0' }}>
-              Lookup is an exact match on ROUND(grade, 2) (Excel half-away-from-zero). Grades beyond ±16 % find no row: the workbook drops
-              that segment's time. The truck selected in ActiveRoute!C3 does <b>not</b> change these speeds — compare with the physics curves on the Truck curves tab.
+              Lookup is an exact match on ROUND(grade, 2) (Excel half-away-from-zero). Grades beyond ±16% find no row: the workbook drops
+              that segment's time. The truck selected in ActiveRoute!C3 does <b>not</b> change these speeds – compare with the physics curves on the Truck curves tab.
             </p>
           </div>
         </div>
@@ -286,7 +288,6 @@ export function SpeedTablesCard({ scenario, truckId }: { scenario: Scenario; tru
 
 // ── shift profile ────────────────────────────────────────────────────────────
 const KINDS: ShiftEventKind[] = ['prestart', 'crib', 'fuel', 'changeover', 'blast', 'other'];
-const KIND_COLOR: Record<ShiftEventKind, string> = { prestart: 'var(--c8)', crib: 'var(--c4)', fuel: 'var(--c5)', changeover: 'var(--c8)', blast: 'var(--c6)', other: 'var(--c7)' };
 
 export function ShiftProfileCard({ scenario }: { scenario: Scenario }) {
   const commit = useCommit();
@@ -301,7 +302,7 @@ export function ShiftProfileCard({ scenario }: { scenario: Scenario }) {
   const events = [...sh.events].sort((a, b) => a.startMin - b.startMin);
   const ptDay = (prodMin / 60) * shifts;
   return (
-    <Card>
+    <Card className={p.headSafe}>
       <CardHead title="Shift profile" sub={`${sh.name} · ${clock(sh.startHour, 0)}–${clock(sh.startHour, total)} · ${sh.lengthH} h`} icon="calendar" actions={<>
         <Badge tone={ptDay >= 18 ? 'ok' : 'bad'} icon={ptDay >= 18 ? 'tick' : 'warning'} title="Fleet productive time per day from this profile; user rule: at least 18 PT h/day">
           {num(prodMin / 60, 2)} PT h/shift · {num(ptDay, 1)} h/day
@@ -310,16 +311,26 @@ export function ShiftProfileCard({ scenario }: { scenario: Scenario }) {
       </>} />
       <div className={s.timeline} aria-hidden>
         <div className={s.tlTrack}>
-          {events.map(e => (
-            <div key={e.id} className={s.tlEvent} title={`${e.label} · ${clock(sh.startHour, e.startMin)} · ${e.durMin} min · ${num(e.fleetStopFraction * 100, 0)}% of fleet stopped`}
-              style={{ left: `${(e.startMin / total) * 100}%`, width: `${(e.durMin / total) * 100}%`, background: KIND_COLOR[e.kind], opacity: 0.35 + 0.65 * e.fleetStopFraction }}>
-              {e.durMin / total > 0.05 ? e.label.split(' ')[0] : ''}
-            </div>
-          ))}
+          {events.map(e => {
+            const es = EVENT_STYLE[e.kind];
+            const frac = e.durMin / total;
+            return (
+              <div key={e.id} className={s.tlEvent} title={`${e.label} · ${clock(sh.startHour, e.startMin)} · ${e.durMin} min · ${num(e.fleetStopFraction * 100, 0)}% of fleet stopped`}
+                style={{ left: `${(e.startMin / total) * 100}%`, width: `${frac * 100}%`, background: eventBackground(e.kind), color: es.ink, opacity: 0.55 + 0.45 * e.fleetStopFraction }}>
+                {frac > 0.025 && <Icon name={es.icon} size={14} />}{frac > 0.07 ? es.label : ''}
+              </div>
+            );
+          })}
         </div>
         <div className={s.tlTicks}>
           {Array.from({ length: sh.lengthH / 2 + 1 }, (_, i) => i * 120).map(m => <span key={m} style={{ left: `${(m / total) * 100}%` }}>{clock(sh.startHour, m)}</span>)}
         </div>
+      </div>
+      <div className={s.tlLegend}>
+        {[...new Set(events.map(e => e.kind))].map(k => (
+          <span key={k}><i className={s.tlSw} style={{ background: eventBackground(k), color: EVENT_STYLE[k].ink }} />{EVENT_STYLE[k].label}</span>
+        ))}
+        <span><i className={s.tlSw} style={{ background: 'color-mix(in srgb, var(--ok-50) 70%, var(--surface))' }} />Productive</span>
       </div>
       <div style={{ overflowX: 'auto' }}>
         <table className={s.editTable}>
@@ -330,7 +341,12 @@ export function ShiftProfileCard({ scenario }: { scenario: Scenario }) {
               return (
                 <tr key={e.id}>
                   <td className={s.l}><TextField small value={e.label} onChange={v => setEv(e.id, { label: v })} width={200} /></td>
-                  <td className={s.l}><Select small value={e.kind} onChange={v => setEv(e.id, { kind: v })} options={KINDS.map(k => ({ value: k, label: k }))} /></td>
+                  <td className={s.l}>
+                    <span className={s.kindCell}>
+                      <span className={s.kindIco} style={{ background: eventBackground(e.kind), color: EVENT_STYLE[e.kind].ink }}><Icon name={EVENT_STYLE[e.kind].icon} size={14} /></span>
+                      <Select small value={e.kind} onChange={v => setEv(e.id, { kind: v })} options={KINDS.map(k => ({ value: k, label: EVENT_STYLE[k].label }))} />
+                    </span>
+                  </td>
                   <td><EditCell label={`${e.label} start (min after shift start)`} value={e.startMin} def={d?.startMin} onChange={v => setEv(e.id, { startMin: v })} dp={0} step={5} unit="min" width={88} min={0} max={total} />
                     <div className={s.subtle}>{clock(sh.startHour, e.startMin)}</div></td>
                   <td><EditCell label={`${e.label} duration`} value={e.durMin} def={d?.durMin} onChange={v => setEv(e.id, { durMin: v })} dp={0} step={5} unit="min" width={88} min={0} max={total} /></td>
@@ -342,7 +358,12 @@ export function ShiftProfileCard({ scenario }: { scenario: Scenario }) {
             })}
           </tbody>
           <tfoot>
-            <tr><td className={s.l} colSpan={5}><b>Productive minutes</b> = {total} − Σ(duration × fleet stopped)</td><td><b>{num(total - prodMin, 0)}</b></td><td /></tr>
+            <tr className={s.sumRow}>
+              <td className={s.l} colSpan={5}>
+                <b>{num(total, 0)} − Σ(duration × fleet stopped)</b> <span className={s.sumVal}>= {num(prodMin, 0)} productive min</span> <span className={s.subtle}>({num(total - prodMin, 0)} lost)</span>
+              </td>
+              <td><b title="Lost fleet-minutes">{num(total - prodMin, 0)}</b></td><td />
+            </tr>
           </tfoot>
         </table>
       </div>

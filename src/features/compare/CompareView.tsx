@@ -6,8 +6,7 @@ import { useCallback, useRef, useState } from 'react';
 import type { Id } from '@/core/types';
 import { useApp } from '@/state/store';
 import { useResults, useScenario } from '@/state/derived';
-import { Button, Card, Empty, MenuButton } from '@/ui';
-import { PageHeader } from '@/features/assumptions/shared/PageHeader';
+import { Button, Card, Empty, MenuButton, PageHeader } from '@/ui';
 import p from '@/features/assumptions/shared/page.module.css';
 import { downloadCsv, fileSafe, type CsvCell } from '@/features/assumptions/shared/csv';
 import { circuitRows, totals, MIN_PT_HRS_DAY, type CircuitRow, type Totals } from './compareData';
@@ -54,7 +53,7 @@ export function CompareView() {
         eyebrow="Fleet & scenarios"
         icon="compare"
         title="Compare"
-        desc={<>Every circuit's haulage, number of trucks, PT hours per day and lost PT side by side — with the {MIN_PT_HRS_DAY} h/day loader rule checked — then try truck what-ifs live and compare this scenario against saved ones.</>}
+        desc={<>Every circuit's haulage, number of trucks, PT hours per day and lost PT side by side – with the {MIN_PT_HRS_DAY} h/day loader rule checked – then try truck what-ifs live and compare this scenario against saved ones.</>}
         actions={<>
           <MenuButton align="right" items={[
             { label: 'Circuits table', icon: 'table', hint: 'CSV', onSelect: () => downloadCsv(`${fileSafe(scenario.name)}-circuits`, circuitsCsv(scenario.name, rows, t)) },

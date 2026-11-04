@@ -1,15 +1,20 @@
 /**
  * Cockpit module (store.camera === 'pov'). The cab itself is real 3D geometry (the actors module swaps the followed
  * truck for its body-without-cab + cab interior shell); this module draws only the glass HUD on top:
- *   speed with an arc gauge and the posted-limit tick · a live route strip (elevation profile of the haul string coloured
- *   by grade class, the truck's position and direction, stop signs, dig / dump ends) · grade, what limits the speed,
- *   load, phase, distance to the dump / dig and to the next stop sign · a top pill with the unit and circuit.
+ *   a caption with the unit, model and circuit · speed with an arc gauge and the posted-limit tick · a live route strip
+ *   (elevation profile of the haul string coloured by grade class, the truck's position and direction, stop signs,
+ *   dig / dump ends) · phase and distance to the dump / dig, the next stop sign · grade, what limits the speed, load.
+ *
+ * Layout rules (design QA #2): fixed-width columns with tabular figures so nothing jumps or is cut off (long text
+ * wraps); the whole HUD stays inside the band between the bottom-right map chrome and its mirror image on the left
+ * (the route strip shrinks, then hides, on narrow viewports); the top centre is left to the shell's rest pill.
  */
 import type { SceneContext, SceneModule } from '../context';
 import { useApp } from '@/state/store';
 import { busOf, type TruckInfo } from '../strings/bus';
 import { gradeRuns, type PathTable } from '../strings/path';
 import { gradeHex, hexToRgb } from '../strings/palette';
+import { escapeHtml } from '../strings';
 import css from '../strings/ui.module.css';
 import { PHASE_COLOR } from '../actors';
 
@@ -17,7 +22,12 @@ const LIMIT_LABEL: Record<string, string> = {
   rimpull: 'Rimpull', retarder: 'Retarder', 'speed-limit': 'Speed limit', 'top-speed': 'Top speed', table: 'Speed table', 'table-out-of-range': 'Off table',
 };
 const PHASE_SHORT: Record<string, string> = { queue: 'Queued', spot: 'Spotting', load: 'Loading', haul: 'Loaded haul', dump: 'Dumping', return: 'Empty return', parked: 'Parked' };
-const PW = 420, PH = 54;            // profile strip size (px)
+const PH = 54;                      // route strip height (px)
+const PW_MAX = 420, PW_MIN = 240;   // route strip width range (px)
+/** Fixed columns: speed 136 + right 184 + route padding 28 + glass padding 12. */
+const FIXED_W = 136 + 184 + 28 + 12;
+/** Room kept free at each side for the bottom-right map chrome (fit + compass, 14 px gutter) and its mirror image. */
+const SIDE_RESERVE = 140;
 const GAUGE_MAX = 60;
 
 export const cockpitModule: SceneModule = (ctx: SceneContext) => {
@@ -29,47 +39,49 @@ export const cockpitModule: SceneModule = (ctx: SceneContext) => {
   const hud = document.createElement('div');
   hud.className = css.hud;
   hud.style.display = 'none';
-  const top = document.createElement('div');
-  top.className = css.hudTop;
-  top.style.display = 'none';
-  root.append(hud, top);
+  root.append(hud);
 
   hud.innerHTML = `
-    <div class="${css.hudCell} ${css.hudSpeed}">
-      <svg class="${css.hudGauge}" viewBox="0 0 120 70" aria-hidden="true">
-        <path d="M12 62 A48 48 0 0 1 108 62" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="6" stroke-linecap="round"/>
-        <path data-k="arc" d="" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
-        <line data-k="lim" x1="0" y1="0" x2="0" y2="0" stroke="#FF8A7A" stroke-width="3" stroke-linecap="round"/>
-      </svg>
-      <div class="${css.hudSpeedVal}"><span data-k="v" class="${css.hudBig}">0</span><span class="${css.hudUnit}">km/h</span></div>
-      <div class="${css.hudLbl}" data-k="limtxt">Speed</div>
-    </div>
-    <div class="${css.hudCell} ${css.hudRoute}">
-      <div class="${css.hudRouteHead}">
-        <span class="${css.hudPhase}"><i data-k="pdot"></i><span data-k="phase">—</span></span>
-        <span data-k="dist" class="${css.hudDist}">—</span>
-        <span data-k="stop" class="${css.hudStop}"></span>
+    <div class="${css.hudCap}" data-k="cap"></div>
+    <div class="${css.hudCols}">
+      <div class="${css.hudCell} ${css.hudSpeed}">
+        <svg class="${css.hudGauge}" viewBox="0 0 120 70" aria-hidden="true">
+          <path d="M12 62 A48 48 0 0 1 108 62" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="6" stroke-linecap="round"/>
+          <path data-k="arc" d="" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+          <line data-k="lim" x1="0" y1="0" x2="0" y2="0" stroke="#FF8A7A" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+        <div class="${css.hudSpeedVal}"><span data-k="v" class="${css.hudBig}">0</span><span class="${css.hudUnit}">km/h</span></div>
+        <div class="${css.hudLbl}" data-k="limtxt">Speed</div>
       </div>
-      <svg data-k="prof" class="${css.hudProfile}" width="${PW}" height="${PH}" viewBox="0 0 ${PW} ${PH}" aria-hidden="true"></svg>
-      <div class="${css.hudEnds}"><span data-k="e0">Dig</span><span data-k="e1">Dump</span></div>
-    </div>
-    <div class="${css.hudCell} ${css.hudRight}">
-      <div class="${css.hudVal}"><span data-k="garrow"></span><span data-k="grade">0.0 %</span></div>
-      <div class="${css.hudLbl}">Grade</div>
-      <div class="${css.hudVal} ${css.hudSmall}" data-k="limit">—</div>
-      <div class="${css.hudLbl}">Limited by</div>
-      <div class="${css.hudVal} ${css.hudSmall}" data-k="load">—</div>
+      <div class="${css.hudCell} ${css.hudRoute}" data-k="route">
+        <div class="${css.hudRouteHead}">
+          <span class="${css.hudPhase}"><i data-k="pdot"></i><span data-k="phase">—</span></span>
+          <span data-k="dist" class="${css.hudDist}">—</span>
+        </div>
+        <svg data-k="prof" class="${css.hudProfile}" aria-hidden="true"></svg>
+        <div class="${css.hudEnds}"><span data-k="e0">Dig</span><span data-k="stop" class="${css.hudStop}"></span><span data-k="e1">Dump</span></div>
+      </div>
+      <div class="${css.hudCell} ${css.hudRight}">
+        <div class="${css.hudGrid}">
+          <span class="${css.hudLbl}">Grade</span><span class="${css.hudVal}"><span data-k="garrow"></span><span data-k="grade">0.0 %</span></span>
+          <span class="${css.hudLbl}">Limit</span><span class="${css.hudSmall}" data-k="limit">—</span>
+          <span class="${css.hudLbl}">Load</span><span class="${css.hudSmall}" data-k="load">—</span>
+        </div>
+      </div>
     </div>`;
   const q = (k: string) => hud.querySelector(`[data-k="${k}"]`) as HTMLElement;
   const el = {
-    arc: q('arc'), lim: q('lim'), limtxt: q('limtxt'), v: q('v'), pdot: q('pdot'), phase: q('phase'), dist: q('dist'), stop: q('stop'),
-    prof: q('prof'), e0: q('e0'), e1: q('e1'), garrow: q('garrow'), grade: q('grade'), limit: q('limit'), load: q('load'),
+    cap: q('cap'), route: q('route'), arc: q('arc'), lim: q('lim'), limtxt: q('limtxt'), v: q('v'), pdot: q('pdot'), phase: q('phase'), dist: q('dist'),
+    stop: q('stop'), prof: q('prof') as unknown as SVGSVGElement, e0: q('e0'), e1: q('e1'), garrow: q('garrow'), grade: q('grade'), limit: q('limit'), load: q('load'),
   };
   let profKey = '';
   let marker: SVGGElement | null = null;
   let profScale = { L: 1, zlo: 0, zhi: 1 };
   let lastPath: PathTable | null = null;
+  let PW = PW_MAX;
+  let routeOn = true;
   const set = (e: Element, txt: string) => { if (e.textContent !== txt) e.textContent = txt; };
+  const setHtml = (e: HTMLElement, html: string) => { if (e.dataset.h !== html) { e.innerHTML = html; e.dataset.h = html; } };
 
   function buildProfile(path: PathTable, stops: number[]) {
     const L = Math.max(1, path.length);
@@ -93,16 +105,29 @@ export const cockpitModule: SceneModule = (ctx: SceneContext) => {
       svg += `<line x1="${x}" x2="${x}" y1="2" y2="${PH}" stroke="rgba(255,255,255,.35)" stroke-dasharray="2 2"/><path transform="translate(${x - 5},1)" d="M3 0h4l3 3v4l-3 3H3L0 7V3z" fill="#C8102E" stroke="#fff" stroke-width=".9"/>`;
     }
     svg += `<g data-k="marker"><line x1="0" x2="0" y1="0" y2="${PH}" stroke="#fff" stroke-width="1.4"/><circle r="5.5" fill="#fff"/><path data-k="mdir" d="M-3,-3 L3,0 L-3,3 Z" fill="#16202a"/></g>`;
+    el.prof.setAttribute('width', String(PW));
+    el.prof.setAttribute('height', String(PH));
+    el.prof.setAttribute('viewBox', `0 0 ${PW} ${PH}`);
     el.prof.innerHTML = svg;
     marker = el.prof.querySelector('[data-k="marker"]');
   }
 
-  const offOverlay = ctx.onOverlay((_g, _w, h) => {
+  /** Route strip width from the room between the side reserves; below the minimum the strip hides. */
+  function layout(w: number) {
+    const room = w - 2 * SIDE_RESERVE - FIXED_W;
+    const on = room >= PW_MIN;
+    const pw = on ? Math.min(PW_MAX, Math.floor(room)) : PW_MIN;
+    if (on !== routeOn) { routeOn = on; hud.classList.toggle(css.hudNoRoute, !on); }
+    if (pw !== PW) { PW = pw; profKey = ''; el.route.style.width = `${PW}px`; }
+  }
+  el.route.style.width = `${PW}px`;
+
+  const offOverlay = ctx.onOverlay((_g, w, h) => {
     const s = st();
     const info = bus.followed;
-    if (s.camera !== 'pov' || !info) { hud.style.display = 'none'; top.style.display = 'none'; return; }
+    if (s.camera !== 'pov' || !info) { hud.style.display = 'none'; return; }
     hud.style.display = '';
-    top.style.display = '';
+    layout(w);
     hud.style.bottom = `${Math.max(16, Math.min(40, h * 0.035)).toFixed(0)}px`;
     render(info);
   });
@@ -111,12 +136,14 @@ export const cockpitModule: SceneModule = (ctx: SceneContext) => {
     const sc = st().scenario;
     const c = sc.circuits.find(x => x.id === info.circuitId);
     const path = info.stringId ? bus.pathOf?.(info.stringId) ?? null : null;
-    // route strip (rebuilt when the string / its geometry changes)
-    if (path) {
+    // caption: unit, model, circuit (never cut: it wraps)
+    setHtml(el.cap, `${escapeHtml(info.unitId)}<span>${escapeHtml(info.modelName)}${c ? ` · ${escapeHtml(c.name)}` : ''}</span>`);
+    // route strip (rebuilt when the string / its geometry / the strip width changes)
+    if (path && routeOn) {
       const stops: number[] = [];
       const hs = sc.strings.find(x => x.id === info.stringId);
       if (hs) for (let i = 0; i < path.n; i++) if (hs.points[path.src[i]]?.stop) stops.push(path.s[i]);
-      const key = `${info.stringId}|${path.length.toFixed(1)}|${path.n}|${stops.length}`;
+      const key = `${info.stringId}|${path.length.toFixed(1)}|${path.n}|${stops.length}|${PW}`;
       if (key !== profKey || path !== lastPath) { profKey = key; lastPath = path; buildProfile(path, stops); }
       if (marker) {
         const sx = Math.max(0, Math.min(profScale.L, info.chainage));
@@ -151,9 +178,8 @@ export const cockpitModule: SceneModule = (ctx: SceneContext) => {
     const towardsDig = info.dir < 0 || info.phase === 'return' || info.phase === 'queue' || info.phase === 'spot' || info.phase === 'load';
     set(el.dist, towardsDig ? `${fmtM(Math.max(0, info.chainage))} to dig` : `${fmtM(Math.max(0, info.pathLength - info.chainage))} to dump`);
     if (info.nextStopM !== undefined) {
-      const html = `<svg width="13" height="13" viewBox="0 0 10 10" aria-hidden="true"><path d="M3 0h4l3 3v4l-3 3H3L0 7V3z" fill="#C8102E" stroke="#fff" stroke-width=".9"/></svg>Stop in ${fmtM(Math.abs(info.nextStopM - info.chainage))}`;
-      if (el.stop.dataset.k !== html) { el.stop.innerHTML = html; el.stop.dataset.k = html; }
-    } else if (el.stop.dataset.k !== '') { el.stop.innerHTML = ''; el.stop.dataset.k = ''; }
+      setHtml(el.stop, `<svg width="12" height="12" viewBox="0 0 10 10" aria-hidden="true"><path d="M3 0h4l3 3v4l-3 3H3L0 7V3z" fill="#C8102E" stroke="#fff" stroke-width=".9"/></svg>Stop in ${fmtM(Math.abs(info.nextStopM - info.chainage))}`);
+    } else setHtml(el.stop, '');
     // grade, limit, load
     const g = info.grade;
     const gc = lighten(gradeHex(g));
@@ -162,9 +188,7 @@ export const cockpitModule: SceneModule = (ctx: SceneContext) => {
     set(el.grade, `${g >= 0 ? '+' : '−'}${(Math.abs(g) * 100).toFixed(1)} %`);
     set(el.garrow, g > 0.004 ? '◢ ' : g < -0.004 ? '◣ ' : '▬ ');
     set(el.limit, info.limit && v > 0.5 ? LIMIT_LABEL[info.limit] ?? info.limit : 'Stationary');
-    set(el.load, info.loaded ? `Loaded · ${info.materialName ?? ''}` : 'Empty');
-    const th = `${info.unitId}<span>${info.modelName}${c ? ` · ${c.name}` : ''}</span>`;
-    if (top.dataset.k !== th) { top.innerHTML = th; top.dataset.k = th; }
+    set(el.load, info.loaded ? (info.materialName ? `${info.materialName}` : 'Loaded') : 'Empty');
   }
 
   return () => { offOverlay(); root.remove(); };

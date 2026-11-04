@@ -3,11 +3,15 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { HaulString, Scenario, StringPoint } from '@/core/types';
 import { useApp } from '@/state/store';
 import { useResults } from '@/state/derived';
-import { Badge, Button, CardBody, CardHead, Ctl, Empty, Icon, Kpi, Modal, MenuButton, Section, cx, uiStyles } from '@/ui';
-import { grade as fmtGrade, num, signed } from '@/core/format';
+import { Badge, Button, CardBody, CardHead, Ctl, Empty, Icon, Kpi, Modal, MenuButton, Section, circuitColor, cx, uiStyles } from '@/ui';
+import { grade as fmtGrade, num, pct, signed } from '@/core/format';
 import { nowIso, uid } from '@/core/ids';
 import { densify, parseStringsText, reversePoints, simplify3d, snapPoints, toCsv, toDataDump, toDxf3dPolyline } from '@/geom';
-import { GLOBAL_DEFAULTS, chainagesOf, circuitsUsingString, segmentsOf, stringStats } from './model';
+import {
+  GLOBAL_DEFAULTS, GRADE_LIMIT, GRADE_WINDOW_M, bundHeightOf, chainagesOf, circuitsUsingString, gradePlace, maxFittedGrade, roadCheck, roadWidthOf,
+  segmentsOf, stringStats, trucksOnString,
+} from './model';
+import { NumField } from '@/features/assumptions/shared/NumField';
 import { topoIndex } from './geo';
 import { PointTable } from './PointTable';
 import { BackButton, Callout, GradeChip, StatusBadge, copyText, downloadText, safeFileName } from './parts';
@@ -100,7 +104,7 @@ function Editor({ hs, scenario }: { hs: HaulString; scenario: Scenario }) {
   return (
     <>
       <CardHead
-        title={<span className={s.headTitle}><BackButton label="Overview" onClick={() => select({ kind: 'none' })} /><span className={s.lineKey} style={{ background: hs.color, flex: 'none' }} /><span>{hs.name}</span></span>}
+        title={<span className={s.headTitle}><BackButton label="Overview" onClick={() => select({ kind: 'none' })} /><span className={s.lineKey} style={{ background: circuitColor(hs.color), flex: "none" }} /><span>{hs.name}</span></span>}
         actions={<>
           {hs.locked && <Badge tone="na" icon="lock">Locked</Badge>}
           <MenuButton items={exportItems} align="right">{(open, toggle) => <Ctl icon="more" small tip="Export & more" on={open} onClick={toggle} />}</MenuButton>
@@ -119,14 +123,16 @@ function Editor({ hs, scenario }: { hs: HaulString; scenario: Scenario }) {
           <Kpi size="sm" label="Rise" value={signed(stats.riseM, 1)} unit="m" delta={`RL ${num(stats.startZ, 1)} → ${num(stats.endZ, 1)}`} deltaTone="na" />
           <Kpi size="sm" label="Fall" value={signed(-stats.fallM, 1)} unit="m" delta={`${num(stats.points)} points`} deltaTone="na" />
           <Kpi size="sm" label="Net grade" value={fmtGrade(stats.netGrade, 1)} delta={`mean |g| ${num(stats.meanAbsGrade * 100, 1)}%`} deltaTone="na" />
-          <Kpi size="sm" label="Max up" value={fmtGrade(stats.maxUp, 1)} deltaTone={stats.maxUp > 0.1 ? 'bad' : 'na'} delta={stats.maxUp > 0.1 ? 'over 10 %' : 'loaded uphill'} />
-          <Kpi size="sm" label="Max down" value={fmtGrade(stats.maxDown, 1)} deltaTone={stats.maxDown < -0.1 ? 'bad' : 'na'} delta={stats.maxDown < -0.1 ? 'over 10 %' : 'loaded downhill'} />
+          <Kpi size="sm" label="Max up" value={fmtGrade(stats.maxUp, 1)} deltaTone={stats.maxUp > 0.1 ? 'bad' : 'na'} delta={stats.maxUp > 0.1 ? 'over 10%' : 'loaded uphill'} />
+          <Kpi size="sm" label="Max down" value={fmtGrade(stats.maxDown, 1)} deltaTone={stats.maxDown < -0.1 ? 'bad' : 'na'} delta={stats.maxDown < -0.1 ? 'over 10%' : 'loaded downhill'} />
         </div>
 
+        <RoadSection hs={hs} scenario={scenario} dig={dig?.name} dump={dump?.name} />
+
         {stats.droppedCount > 0 && (
-          <Callout tone="bad" title={`${stats.droppedCount} segment${stats.droppedCount > 1 ? 's' : ''} steeper than ±16 % (${num(stats.droppedM, 1)} m)`}
+          <Callout tone="bad" title={`${stats.droppedCount} segment${stats.droppedCount > 1 ? 's' : ''} steeper than ±16% (${num(stats.droppedM, 1)} m)`}
             action={firstDrop && <Button size="sm" onClick={() => select({ kind: 'string', id: hs.id, pointIndex: firstDrop.i })}>Show first · point {firstDrop.i + 1}</Button>}>
-            The workbook's speed table stops at ±16 %, so calc.xlsm silently counts these at 0 s while keeping their distance (spreadsheet mode replicates this unless the circuit clamps steep grades). Usually a vertical step in the string - re-snap or simplify it.
+            The workbook's speed table stops at ±16%, so calc.xlsm silently counts these at 0 s while keeping their distance (spreadsheet mode replicates this unless the circuit clamps steep grades). Usually a vertical step in the string – re-snap or simplify it.
           </Callout>
         )}
 
@@ -152,7 +158,7 @@ function Editor({ hs, scenario }: { hs: HaulString; scenario: Scenario }) {
             const r = results[c.id];
             return (
               <button key={c.id} type="button" className={cx(s.lRow, s.lRowWide)} onClick={() => select({ kind: 'circuit', id: c.id })}>
-                <span className={s.cDot} style={{ background: c.color, justifySelf: 'center' }} />
+                <span className={s.cDot} style={{ background: circuitColor(c.color), justifySelf: "center" }} />
                 <span className={s.lName}>{c.name}<span className={s.lHint}>{c.haulStringId === hs.id ? 'main haul' : 'alternative'}</span></span>
                 <span className={s.lVal}>{r?.ok && c.haulStringId === hs.id ? `${num(r.cycleMin, 1)} min` : ''}</span>
                 <span>{r?.ok && c.haulStringId === hs.id ? <StatusBadge status={r.assigned.status} short /> : <Icon name="right" size={16} style={{ color: 'var(--ink-3)' }} />}</span>
@@ -173,6 +179,41 @@ function Editor({ hs, scenario }: { hs: HaulString; scenario: Scenario }) {
       </CardBody>
       {pasting && <PasteModal hs={hs} onClose={() => setPasting(false)} />}
     </>
+  );
+}
+
+/** Road geometry (HRL §11.1): carriageway width + bund height, verdicts first (width for two-way, 100 m fitted grade). */
+function RoadSection({ hs, scenario, dig, dump }: { hs: HaulString; scenario: Scenario; dig?: string; dump?: string }) {
+  const updateString = useApp(st => st.updateString);
+  const widest = trucksOnString(scenario, hs.id)[0] ?? [...scenario.fleet.trucks].sort((a, b) => (b.dims?.width ?? 0) - (a.dims?.width ?? 0))[0];
+  const w = roadWidthOf(hs);
+  const chk = widest?.dims?.width ? roadCheck(w, widest.dims.width) : undefined;
+  const fit = useMemo(() => maxFittedGrade(hs.points), [hs.points]);
+  return (
+    <Section title="Road">
+      <div className={s.roadVerdicts}>
+        {fit && (
+          <span className={fit.ok ? s.tOk : s.tBad}><Icon name={fit.ok ? 'tick' : 'warning'} size={14} strokeWidth={2.2} />
+            Max {pct(Math.abs(fit.grade))} over {fit.short ? 'the whole string' : `${GRADE_WINDOW_M} m ${gradePlace(hs.points, fit, { dig, dump })}`} – {fit.ok ? `within ${pct(GRADE_LIMIT, 0)}` : `over the ${pct(GRADE_LIMIT, 0)} limit`}
+          </span>
+        )}
+        {chk && widest && (
+          <span className={chk.ok ? s.tOk : s.tBad} title={`Two-way rule: 3.5 × the widest vehicle (${widest.name}, ${num(widest.dims.width, 2)} m)`}><Icon name={chk.ok ? 'tick' : 'warning'} size={14} strokeWidth={2.2} />
+            {chk.ok ? `Wide enough for two-way ${widest.name} (needs ${num(chk.neededM, 1)} m)` : `${num(-chk.marginM, 1)} m too narrow for two-way ${widest.name} (needs ${num(chk.neededM, 1)} m)`}
+          </span>
+        )}
+      </div>
+      <div className={s.setup}>
+        <label className={s.roadField}><span>Carriageway width</span>
+          <NumField small value={w} unit="m" dp={1} step={0.5} min={4} max={80} disabled={hs.locked} title="Running width between the bunds"
+            changed={hs.roadWidthM != null} onChange={v => updateString(hs.id, { roadWidthM: v })} />
+        </label>
+        <label className={s.roadField}><span>Bund height</span>
+          <NumField small value={bundHeightOf(hs)} unit="m" dp={1} step={0.1} min={0} max={6} disabled={hs.locked} title="Safety bund / windrow height (≥ ½ the largest tyre)"
+            changed={hs.bundHeightM != null} onChange={v => updateString(hs.id, { bundHeightM: v })} />
+        </label>
+      </div>
+    </Section>
   );
 }
 
@@ -240,7 +281,7 @@ function PasteModal({ hs, onClose }: { hs: HaulString; onClose: () => void }) {
         {parsed ? (
           <>
             <span><b>{count}</b> points{first0 ? ` · ${first0.name}` : ''}</span>
-            {parsed.strings.length > 1 && <span className={s.tWarn}>{parsed.strings.length} strings found - using the first</span>}
+            {parsed.strings.length > 1 && <span className={s.tWarn}>{parsed.strings.length} strings found – using the first</span>}
             {first && last && <span className={s.num}>{num(first[0], 1)}, {num(first[1], 1)} → {num(last[0], 1)}, {num(last[1], 1)}</span>}
             {parsed.warnings.slice(0, 3).map((w, k) => <span key={k} className={cx(s.tWarn)} style={{ flexBasis: '100%' }}>{w}</span>)}
           </>

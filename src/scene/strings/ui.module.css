@@ -208,16 +208,18 @@
 .bar > span { display: block; height: 100%; background: var(--accent, #0A6FE6); border-radius: 2px; }
 
 /* ── cockpit HUD (glass, over the 3D cab) ────────────────────────────────────────── */
+/* Fixed-width columns (the cockpit module sizes the route strip to the room left between the map chrome on the
+   right and its mirror image on the left), nothing is ever cut off: long phase / material text wraps instead. */
 .hud {
   position: absolute;
   left: 50%;
   bottom: 24px;
   transform: translateX(-50%);
   display: flex;
-  align-items: stretch;
-  padding: 12px 6px 12px;
+  flex-direction: column;
+  padding: 8px 6px 11px;
   border-radius: 18px;
-  background: linear-gradient(180deg, rgba(22, 30, 40, .62), rgba(12, 17, 24, .7));
+  background: linear-gradient(180deg, rgba(22, 30, 40, .64), rgba(12, 17, 24, .72));
   -webkit-backdrop-filter: blur(16px) saturate(150%);
   backdrop-filter: blur(16px) saturate(150%);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14), inset 0 1px 0 rgba(255, 255, 255, .12), 0 14px 40px rgba(0, 0, 0, .3);
@@ -225,33 +227,44 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, .35);
   font-variant-numeric: tabular-nums;
 }
-.hudCell { display: flex; flex-direction: column; justify-content: center; padding: 0 16px; min-width: 64px; }
-.hudCell + .hudCell { box-shadow: inset 1px 0 0 rgba(255, 255, 255, .12); }
-.hudSpeed { position: relative; align-items: center; width: 128px; padding-top: 2px; }
-.hudGauge { width: 116px; height: 66px; display: block; }
-.hudSpeedVal { margin-top: -40px; display: flex; align-items: baseline; gap: 2px; }
-.hudBig { font-family: var(--font-display, inherit); font-size: 38px; font-weight: 600; line-height: 1; letter-spacing: -.02em; }
-.hudUnit { font-size: 12px; font-weight: 600; color: rgba(236, 242, 248, .72); margin-left: 2px; }
-.hudVal { font-size: 20px; font-weight: 650; line-height: 1.1; white-space: nowrap; }
-.hudSmall { font-size: 14px; font-weight: 600; margin-top: 6px; }
-.hudLbl { font-size: 10px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; color: rgba(236, 242, 248, .6); margin-top: 3px; white-space: nowrap; }
-.hudRoute { padding: 0 14px; }
-.hudRouteHead { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; white-space: nowrap; font-size: 13px; }
-.hudPhase { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 650; }
-.hudPhase i { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 0 2px rgba(255, 255, 255, .25); }
-.hudDist { font-weight: 600; color: rgba(244, 247, 250, .92); }
-.hudStop { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; font-weight: 600; color: #FFD2CC; }
-.hudProfile { display: block; border-radius: 8px; background: rgba(255, 255, 255, .06); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08); }
-.hudEnds { display: flex; justify-content: space-between; margin-top: 3px; font-size: 10.5px; font-weight: 600; color: rgba(236, 242, 248, .62); letter-spacing: .02em; }
-.hudRight { min-width: 132px; }
-.hudTop {
-  position: absolute; left: 50%; top: 18px; transform: translateX(-50%);
-  display: inline-flex; align-items: center; gap: 10px;
-  height: 30px; padding: 0 14px; border-radius: 999px;
-  background: rgba(16, 22, 30, .5);
-  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16);
-  color: #F4F7FA; font-size: 12.5px; font-weight: 650;
+.hudCap {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  padding: 0 16px 7px; margin-bottom: 8px;
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, .1);
+  font-size: 12px; font-weight: 650; letter-spacing: .01em; line-height: 16px;
 }
-.hudTop span { color: rgba(236, 242, 248, .72); font-weight: 500; }
-@media (max-width: 760px) { .hudRoute { display: none; } }
+.hudCap span { color: rgba(236, 242, 248, .7); font-weight: 500; }
+.hudCols { display: flex; align-items: stretch; }
+.hudCell { display: flex; flex-direction: column; justify-content: center; padding: 0 16px; flex: none; }
+.hudCell + .hudCell { box-shadow: inset 1px 0 0 rgba(255, 255, 255, .12); }
+.hudSpeed { position: relative; align-items: center; width: 136px; padding-top: 2px; box-sizing: border-box; }
+.hudGauge { width: 116px; height: 66px; display: block; }
+.hudSpeedVal { margin-top: -40px; display: flex; align-items: baseline; justify-content: center; gap: 2px; width: 100%; }
+.hudBig { font-family: var(--font-display, inherit); font-size: 34px; font-weight: 600; line-height: 1; letter-spacing: -.02em; }
+.hudUnit { font-size: 12px; font-weight: 600; color: rgba(236, 242, 248, .72); margin-left: 2px; }
+.hudLbl { font-size: 10px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; color: rgba(236, 242, 248, .6); margin-top: 3px; white-space: nowrap; }
+.hudRoute { padding: 0 14px; box-sizing: content-box; }
+.hudRouteHead { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 5px; font-size: 13px; line-height: 17px; }
+.hudPhase { display: inline-flex; align-items: flex-start; gap: 7px; font-size: 14px; font-weight: 650; flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.hudPhase i { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex: none; box-shadow: 0 0 0 2px rgba(255, 255, 255, .25); }
+.hudDist { font-weight: 600; color: rgba(244, 247, 250, .92); flex: none; white-space: nowrap; }
+.hudProfile { display: block; border-radius: 8px; background: rgba(255, 255, 255, .06); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08); }
+.hudEnds {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: start; gap: 10px; margin-top: 4px;
+  font-size: 10.5px; font-weight: 600; line-height: 13px; color: rgba(236, 242, 248, .62); letter-spacing: .02em;
+}
+.hudEnds > :last-child { text-align: right; }
+.hudStop { display: inline-flex; align-items: center; gap: 5px; font-weight: 650; color: #FFD2CC; white-space: nowrap; }
+.hudStop:empty { visibility: hidden; }
+.hudRight { width: 184px; box-sizing: border-box; }
+.hudGrid { display: grid; grid-template-columns: 50px minmax(0, 1fr); align-items: baseline; column-gap: 8px; row-gap: 6px; }
+.hudGrid .hudLbl { margin-top: 0; }
+.hudVal { font-size: 20px; font-weight: 650; line-height: 1.1; white-space: nowrap; }
+.hudSmall { font-size: 14px; font-weight: 600; line-height: 1.2; white-space: normal; overflow-wrap: anywhere; }
+.hudNoRoute .hudRoute { display: none; }
+
+/* ── shared-placer chips and the hover-card layer ──────────────────────────────── */
+/* a pin handed to ctx.labels: the core places its top-left corner and draws the stem / leader + anchor */
+.placed { position: absolute; left: 0; top: 0; will-change: transform; }
+/* hover cards ride the HUD layer, above every scene label */
+.cardLayer { z-index: var(--z-card, 40); }

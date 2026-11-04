@@ -1,11 +1,12 @@
 /**
  * Speed vs grade, small multiples (Loaded | Empty): the workbook's grade → max-speed table (step line) against the
  * physics balance speed (smooth) for the same truck, payload and rolling resistance. Shaded where the spreadsheet is
- * optimistic (faster than physics → too few trucks) or pessimistic (slower → too many trucks).
+ * optimistic (faster than physics → too few trucks: solid rust tint) or pessimistic (slower → too many trucks: neutral
+ * hatch), so the two read apart in both themes and in greyscale print.
  */
 import { useMemo, useState, type PointerEvent } from 'react';
 import type { GradeSpeedPoint } from '@/core/types';
-import { num } from '@/core/format';
+import { num, signed } from '@/core/format';
 import { AxisX, GridY, chartText, linePath, linear } from '@/ui';
 import { useWidth } from '@/features/assumptions/shared/useWidth';
 import { excelRound } from '@/features/assumptions/shared/excel';
@@ -16,7 +17,7 @@ import { speedAxisMax } from './domains';
 import type { SeriesTruck } from './RimpullChart';
 import c from './curves.module.css';
 
-const GMAX = 20; // % shown either side (table covers ±16 %)
+const GMAX = 20; // % shown either side (table covers ±16%)
 const GRADES = range(-GMAX / 100, GMAX / 100, 0.0025);
 
 interface Panel { dir: 'loaded' | 'empty'; mass: (t: TruckX) => number; payload: (t: TruckX) => number; table?: GradeSpeedPoint[] }
@@ -41,7 +42,7 @@ export function verdictRanges(rows: { g: number; sheet?: number; phys: number }[
 
 const fmtRange = ([a, b]: [number, number]) => {
   const f = (v: number) => `${v > 0 ? '+' : v < 0 ? '−' : ''}${num(Math.abs(v), 0)}`;
-  return a === b ? `${f(a)} %` : `${f(a)}…${f(b)} %`;
+  return a === b ? `${f(a)}%` : `${f(a)} to ${f(b)}%`;
 };
 
 function PanelChart({ p, series, rr, limit, W, hoverG, setHoverG }: {
@@ -55,7 +56,7 @@ function PanelChart({ p, series, rr, limit, W, hoverG, setHoverG }: {
   const x = linear([-GMAX, GMAX], [L, W - R]);
   const y = linear([0, ymax], [H - B, T]);
   const phys = data[0];
-  // step line of the table: each row holds over its rounding window [g − 0.5 %, g + 0.5 %)
+  // step line of the table: each row holds over its rounding window [g − 0.5%, g + 0.5%)
   const steps: [number, number][] = (p.table ? [...p.table].sort((a, b) => a[0] - b[0]) : []).flatMap(([g, v]) => [[g * 100 - 0.5, v], [g * 100 + 0.5, v]] as [number, number][]);
   // shaded difference runs
   const runs = useMemo(() => {
@@ -85,14 +86,19 @@ function PanelChart({ p, series, rr, limit, W, hoverG, setHoverG }: {
     <div style={{ position: 'relative' }}>
       <svg width={W} height={H} className={c.svg} onPointerMove={onMove} onPointerLeave={() => setHoverG(null)} role="img"
         aria-label={`${p.dir} speed versus grade: workbook table against physics for ${prim.t.name}`}>
+        <defs>
+          <pattern id={`pess-${p.dir}`} width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <rect width="6" height="6" fill="color-mix(in srgb, var(--na) 10%, transparent)" /><line x1="0" y1="0" x2="0" y2="6" stroke="var(--ink-3)" strokeWidth="1.3" strokeOpacity=".55" />
+          </pattern>
+        </defs>
         <rect x={L} y={T} width={x(-16.5) - L} height={H - B - T} fill="var(--surface-3)" />
         <rect x={x(16.5)} y={T} width={W - R - x(16.5)} height={H - B - T} fill="var(--surface-3)" />
         <text x={(L + x(-16.5)) / 2} y={T + 14} textAnchor="middle" style={{ ...chartText, fontSize: 10.5 }}>no row</text>
         <text x={(x(16.5) + W - R) / 2} y={T + 14} textAnchor="middle" style={{ ...chartText, fontSize: 10.5 }}>no row</text>
         <GridY y={y} x0={L} x1={W - R} n={5} label="km/h" />
-        <AxisX x={x} y0={H - B} n={8} fmt={v => `${v > 0 ? '+' : ''}${v}`} label="grade %, direction of travel" x1={W - R} />
+        <AxisX x={x} y0={H - B} n={8} fmt={v => signed(v, 0)} label="grade %, direction of travel" x1={W - R} />
         <line x1={x(0)} x2={x(0)} y1={T} y2={H - B} stroke="var(--hair)" />
-        {runs.map((r, i) => <path key={i} d={area(r.pts)} fill={r.k === 'o' ? 'var(--bad-100)' : 'var(--warn-100)'} opacity={0.85} />)}
+        {runs.map((r, i) => <path key={i} d={area(r.pts)} fill={r.k === 'o' ? 'var(--bad-100)' : `url(#pess-${p.dir})`} opacity={r.k === 'o' ? 0.9 : 1} />)}
         <path d={linePath(steps, x, y)} fill="none" stroke="var(--ink-2)" strokeWidth={2} strokeLinejoin="round" />
         {data.map((d, i) => (
           <path key={series[i].t.id} d={linePath(d.map(q => [q.g * 100, q.b.kmh]), x, y)} fill="none" stroke={series[i].color} strokeWidth={i === 0 ? 2.5 : 1.75} strokeLinejoin="round" strokeLinecap="round" />
@@ -107,8 +113,8 @@ function PanelChart({ p, series, rr, limit, W, hoverG, setHoverG }: {
       </svg>
       {hv && (
         <div className={c.tip} style={{ left: x(hv.g * 100) > W - 240 ? x(hv.g * 100) - 236 : x(hv.g * 100) + 14, top: T + 4 }}>
-          <div className={c.tipHead}>{hv.g >= 0 ? '+' : '−'}{num(Math.abs(hv.g) * 100, 2)} % · {p.dir}</div>
-          <TipRow k={`Workbook (ROUND → ${num(excelRound(hv.g, 2) * 100, 0)} %)`} v={hs != null ? `${hs} km/h` : 'no row → time dropped'} color="var(--ink-2)" />
+          <div className={c.tipHead}>{hv.g >= 0 ? '+' : '−'}{num(Math.abs(hv.g) * 100, 2)}% · {p.dir}</div>
+          <TipRow k={`Workbook (ROUND → ${num(excelRound(hv.g, 2) * 100, 0)}%)`} v={hs != null ? `${hs} km/h` : 'no row → time dropped'} color="var(--ink-2)" />
           {data.map((d, i) => { const q = d.find(z => z.g === hv.g)!; return <TipRow key={i} k={`${series[i].t.name}`} v={`${num(q.b.kmh, 1)} km/h · ${limTxt(q.b)}`} color={series[i].color} />; })}
           {hs != null && (() => {
             const q = hv.b.kmh;

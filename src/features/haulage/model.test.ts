@@ -4,6 +4,7 @@ import {
   changedParams, chainagesOf, effectiveSeg, fleetRows, insertAfter, nearestVertex, profileScales,
   recommendedTrucks, removeAt, resultByPoint, sectionScales, segmentAt, segmentsOf, sheetDrops, stopsPerCycle, stringStats,
   truckingCall, truckStateAt, withSegOverride, withStop, withXYZ, GLOBAL_DEFAULTS,
+  maxFittedGrade, gradePlace, roadCheck, roadWidthOf, bundHeightOf, tyreSize, apparentWidth, ROAD_WIDTH_DEFAULT_M,
 } from './model';
 
 const P = (e: number, n: number, z: number, extra: Partial<StringPoint> = {}): StringPoint => ({ id: `p${e}_${n}`, e, n, z, ...extra });
@@ -116,8 +117,9 @@ describe('fleet chooser', () => {
     expect(rows[0].achieved).toBeLessThan(rows[1].achieved);
   });
   it('labels deliberate under/over trucking', () => {
-    expect(truckingCall(3, 4, options[2])).toMatchObject({ tone: 'bad', title: 'Deliberately under-trucked by 1' });
-    expect(truckingCall(5, 4, options[4]).tone).toBe('warn');
+    // deliberate choices are not errors: clay for under, neutral for over
+    expect(truckingCall(3, 4, options[2])).toMatchObject({ tone: 'warn', title: 'Deliberately under-trucked by 1' });
+    expect(truckingCall(5, 4, options[4]).tone).toBe('na');
     expect(truckingCall(4, 4, options[3]).title).toBe('Balanced');
   });
 });
@@ -181,5 +183,63 @@ describe('truck phase model', () => {
   it('spaces trucks through the cycle', () => {
     const a = truckStateAt(r, p, 2, 0, 0)!, b = truckStateAt(r, p, 2, 1, 0)!;
     expect(b.cycleFrac - a.cycleFrac).toBeCloseTo(0.5, 9);
+  });
+});
+
+describe('100 m fitted grade (HRL grade place chart)', () => {
+  it('finds a sustained ramp and ignores a short spike', () => {
+    // 300 m flat, a 150 m ramp at 9 % (plan), 300 m flat; plus a 4 m long 20 % bump on the first flat
+    const pts = [P(0, 0, 100), P(100, 0, 100), P(102, 0, 100.4), P(104, 0, 100), P(300, 0, 100), P(450, 0, 113.5), P(750, 0, 113.5)];
+    const f = maxFittedGrade(pts)!;
+    expect(f.short).toBe(false);
+    // 9 % plan grade → dZ / 3D distance = 0.09 / √(1 + 0.09²)
+    expect(f.grade).toBeCloseTo(0.09 / Math.hypot(1, 0.09), 3);
+    expect(f.ok).toBe(true);
+    expect(f.ch0).toBeGreaterThan(290);
+    expect(f.ch1).toBeLessThan(460);
+  });
+  it('fails a ramp steeper than 10 % and keeps the sign (downhill loaded)', () => {
+    const pts = [P(0, 0, 200), P(200, 0, 176), P(400, 0, 176)];
+    const f = maxFittedGrade(pts)!;
+    expect(f.grade).toBeLessThan(-0.11);
+    expect(f.ok).toBe(false);
+  });
+  it('fits the whole string when it is shorter than the window', () => {
+    const f = maxFittedGrade([P(0, 0, 0), P(50, 0, 2)])!;
+    expect(f.short).toBe(true);
+    expect(f.grade).toBeCloseTo(2 / Math.hypot(50, 2), 6);
+  });
+  it('names the place from the segment zone and the nearest end', () => {
+    const pts = [P(0, 0, 100), P(300, 0, 100, { seg: { zone: 'road' } }), P(450, 0, 113.5, { seg: { zone: 'ramp' } }), P(500, 0, 113.5)];
+    pts[1].seg = { zone: 'ramp' };
+    const f = maxFittedGrade(pts)!;
+    expect(gradePlace(pts, f, { dig: 'EX09 OB block', dump: 'S51 West lift' })).toBe('on the S51 ramp');
+    expect(gradePlace([P(0, 0, 0), P(300, 0, 20)], maxFittedGrade([P(0, 0, 0), P(300, 0, 20)])!)).toMatch(/^at Ch \d/);
+  });
+});
+
+describe('road width check (3.5 × widest vehicle, two-way)', () => {
+  it('passes and fails with the margin', () => {
+    expect(roadCheck(30, 7.645)).toMatchObject({ ok: true });
+    expect(roadCheck(30, 7.645).neededM).toBeCloseTo(26.7575, 6);
+    const r = roadCheck(25, 8.7);
+    expect(r.ok).toBe(false);
+    expect(r.marginM).toBeCloseTo(25 - 30.45, 6);
+  });
+  it('defaults width and bund height', () => {
+    expect(roadWidthOf({})).toBe(ROAD_WIDTH_DEFAULT_M);
+    expect(roadWidthOf({ roadWidthM: 24 })).toBe(24);
+    expect(bundHeightOf({})).toBe(1.8);
+    expect(bundHeightOf({ bundHeightM: 0 })).toBe(0);
+  });
+  it('reads tyre codes and widens an oblique crossing', () => {
+    const t = tyreSize('37.00-R57', { width: 7.6, height: 6.5 });
+    expect(t.widthM).toBeCloseTo(0.94, 2);
+    expect(t.diaM).toBeGreaterThan(3.4);
+    expect(t.diaM).toBeLessThan(3.8);
+    expect(tyreSize(undefined, { width: 7, height: 6 }).diaM).toBeCloseTo(3.3, 6);
+    expect(apparentWidth(30, 1)).toBe(30);
+    expect(apparentWidth(30, 0.5)).toBe(60);
+    expect(apparentWidth(30, 0)).toBe(150);
   });
 });

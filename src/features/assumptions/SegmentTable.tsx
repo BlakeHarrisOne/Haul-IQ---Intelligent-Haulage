@@ -3,6 +3,7 @@ import type { CircuitResult, LimitReason, SegmentResult } from '@/core/types';
 import { num } from '@/core/format';
 import { Badge, Button, Card, CardHead, gradeColor, Icon } from '@/ui';
 import { excelRound } from './shared/excel';
+import p from './shared/page.module.css';
 import s from './assumptions.module.css';
 
 export const REASON: Record<LimitReason, string> = {
@@ -14,7 +15,7 @@ export const REASON_LONG: Record<LimitReason, string> = {
   'speed-limit': 'Speed limit (segment / zone / global cap)',
   'top-speed': 'Truck top speed',
   table: 'Grade → max-speed lookup table (workbook Travel Time!P3:T35)',
-  'table-out-of-range': 'Grade outside the ±16 % table: the workbook VLOOKUP returns "" and the segment time is dropped (counted as 0 s)',
+  'table-out-of-range': 'Grade outside the ±16% table: the workbook VLOOKUP returns "" and the segment time is dropped (counted as 0 s)',
 };
 
 type Key = 'i' | 'chain' | 'dist' | 'grade' | 'vL' | 'tL' | 'vE' | 'tE';
@@ -52,7 +53,7 @@ export function SegmentTable({ result, onExport }: { result: CircuitResult; onEx
   );
   const sheet = result.speedModel === 'spreadsheet';
   return (
-    <Card>
+    <Card className={p.headSafe}>
       <CardHead
         title="Segment travel times"
         sub={`${result.segments.length} segments · ${sheet ? "the workbook's Travel Time sheet" : 'rimpull / retarder model'}`}
@@ -70,7 +71,7 @@ export function SegmentTable({ result, onExport }: { result: CircuitResult; onEx
               {th('chain', 'Chainage m')}
               {th('dist', 'Dist 3D m', 'A')}
               {th('grade', 'Grade %', 'B')}
-              <th title="ROUND(grade, 2) — the exact-match key of the workbook VLOOKUP">ROUND(g,2) %</th>
+              <th title="ROUND(grade, 2) – the exact-match key of the workbook VLOOKUP">ROUND(g,2) %</th>
               {th('vL', 'Loaded km/h', 'C', s.sepL)}
               {th('tL', 'Loaded s', 'D')}
               {th('vE', 'Empty km/h', 'L', s.sepL)}

@@ -1,7 +1,11 @@
 /**
  * Haul-string ribbons: a strip of per-leg quads (mitred at the joints) widened in the vertex shader so the road keeps
- * its true width (m) when near and never gets thinner than `uMinPx` when far. One shader, three passes:
- *   mode 0 road  - grade / circuit colour, white casing with a hairline rim, chainage ticks, drifting direction chevrons
+ * its true carriageway width (`uWidthM` = HaulString.roadWidthM) when near and never gets thinner than `uMinPx` when far.
+ * One shader, three passes:
+ *   mode 0 road  - the string line (grade / circuit colour, white casing with a hairline rim, chainage ticks, drifting
+ *                  direction chevrons) at `uMinPx`; once the true carriageway is clearly wider on screen, a calm
+ *                  grade-tinted band out to ±roadWidth/2 with thin casing lines on its edges (HRL width band) appears
+ *                  round it, so planners see the real road geometry, not just the centre line
  *   mode 1 glow  - soft accent halo outside the road (selected / hovered)
  *   mode 2 ghost - dashed, faint copy drawn only where the road is hidden by the terrain (cuts), so it is never lost.
  * Pattern from the Rain Model VS_LINE/FS_LINE (§3.10 of docs/spec/03-design-rainmodel.md), ported to Three.js.
@@ -111,7 +115,7 @@ const FS = /* glsl */ `
 #include <common>
 #include <logdepthbuf_pars_fragment>
 uniform int uMode;
-uniform float uTime, uChevSpeed, uChev, uOpacity, uHover, uHoverLeg, uDpr, uTicks, uExtraPx, uDir;
+uniform float uTime, uChevSpeed, uChev, uOpacity, uHover, uHoverLeg, uDpr, uTicks, uExtraPx, uDir, uMinPx, uBand, uBandA, uEdgeA;
 uniform vec3 uCasing, uGlow;
 varying float vAcross, vChain, vHalfPx, vMpp, vLeg, vBuried;
 varying vec3 vColor;
@@ -119,25 +123,47 @@ void main() {
   #include <logdepthbuf_fragment>
   float ax = abs(vAcross);                 // device px from the centre line
   float halfPx = vHalfPx;
-  if (uMode == 1) {                        // glow
+  if (uMode == 1) {                        // glow: a halo just outside the road edge, a faint tint inside
     float out_ = ax - halfPx;
     float gp = uExtraPx * uDpr;
-    float a = (1.0 - smoothstep(0.0, gp, out_)) * (out_ > 0.0 ? 1.0 : 0.85);
+    float a = out_ > 0.0 ? 1.0 - smoothstep(0.0, gp, out_) : 0.35;
     a *= a;
     gl_FragColor = vec4(uGlow, a * uOpacity);
     return;
   }
-  float fromEdge = halfPx - ax;
-  float alpha = clamp(fromEdge + 0.5, 0.0, 1.0);
-  if (alpha <= 0.0) discard;
-  if (uMode == 2) {                        // ghost: stretches below the surface, dashed
-    if (vBuried < 0.5) discard;
+  // carriageway band: shown once the true road is clearly wider than the string line; the line then keeps uMinPx
+  float coreMin = uMinPx * 0.5 * uDpr;
+  float bandK = uBand * smoothstep(coreMin * 1.6, coreMin * 3.2, halfPx);
+  float coreHalf = mix(halfPx, coreMin, bandK);
+  float outA = clamp(halfPx - ax + 0.5, 0.0, 1.0);
+  if (outA <= 0.0) discard;
+  if (uMode == 2) {                        // ghost: stretches below the surface, dashed (string line only)
+    float ga = clamp(coreHalf - ax + 0.5, 0.0, 1.0);
+    if (vBuried < 0.5 || ga <= 0.0) discard;
     float dashPx = mod(vChain / vMpp, 16.0 * uDpr);
     if (dashPx > 9.0 * uDpr) discard;
     vec3 c = mix(vColor, vec3(1.0), 0.35);
-    gl_FragColor = vec4(c, alpha * 0.32 * uOpacity);
+    gl_FragColor = vec4(c, ga * 0.32 * uOpacity);
     return;
   }
+  if (ax > coreHalf + 0.5 * uDpr) {
+    // band: grade tint at a calm alpha, a thin darker casing line just inside each edge, a soft light halo outside it
+    float fe = halfPx - ax;                                   // device px in from the edge
+    float line = 1.0 - smoothstep(0.55 * uDpr, 1.25 * uDpr, abs(fe - 1.15 * uDpr));
+    float halo = (1.0 - smoothstep(0.0, 1.0 * uDpr, abs(fe - 2.6 * uDpr))) * 0.5;
+    vec3 edgeC = vColor * 0.52;
+    vec3 c = mix(vColor, vec3(1.0), halo);
+    c = mix(c, edgeC, line);
+    float a = max(uBandA * (1.0 - halo * 0.6), max(line * uEdgeA, halo * 0.35));
+    // soft hand-off into the string line's casing
+    a *= smoothstep(0.0, 1.5 * uDpr, ax - coreHalf);
+    gl_FragColor = vec4(c, a * bandK * outA * uOpacity);
+    return;
+  }
+  halfPx = coreHalf;
+  float fromEdge = halfPx - ax;
+  float alpha = clamp(fromEdge + 0.5, 0.0, 1.0);
+  if (alpha <= 0.0) discard;
   float cw = clamp(halfPx * 0.16, 1.0 * uDpr, 3.2 * uDpr);
   vec3 col = vColor;
   float rel = ax / max(halfPx, 1.0);
@@ -189,6 +215,11 @@ export interface RibbonUniforms {
   uHoverLeg: THREE.IUniform<number>;
   uTicks: THREE.IUniform<number>;
   uDir: THREE.IUniform<number>;
+  /** 1 = draw the carriageway band (mode 0) once the true width is wider than the line. */
+  uBand: THREE.IUniform<number>;
+  /** Band fill alpha / edge casing alpha. */
+  uBandA: THREE.IUniform<number>;
+  uEdgeA: THREE.IUniform<number>;
   uCasing: THREE.IUniform<THREE.Color>;
   uGlow: THREE.IUniform<THREE.Color>;
 }
@@ -210,6 +241,9 @@ export function makeRibbonMaterial(mode: 0 | 1 | 2, shared: Pick<RibbonUniforms,
     uHoverLeg: { value: -10 },
     uTicks: { value: 1 },
     uDir: { value: 1 },
+    uBand: { value: mode === 0 ? 1 : 0 },
+    uBandA: { value: 0.18 },
+    uEdgeA: { value: 0.8 },
     uCasing: { value: new THREE.Color('#ffffff') },
     uGlow: { value: new THREE.Color('#0A6FE6') },
   };

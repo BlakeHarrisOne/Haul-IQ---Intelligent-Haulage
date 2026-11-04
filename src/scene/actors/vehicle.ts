@@ -43,6 +43,13 @@ export interface TruckGeoms {
   /** Driver eye in local axes (the seated eye the model and the POV use). */
   eye: [number, number, number];
   cabSide: 1 | -1;
+  /**
+   * Mirror glasses (local axes): centre, size (m) and the outward side as local z sign (−1 = vehicle left). The glass
+   * faces back (−x); the POV shows a live view there.
+   */
+  mirrors: { pos: [number, number, number]; w: number; h: number; outward: 1 | -1 }[];
+  /** Lamp centres (local axes): headlights on the deck pods, tail lights at the rear. */
+  lamps: { head: [number, number, number][]; tail: [number, number, number][] };
 }
 
 export function tyreDiameter(code: string | undefined, H: number, L: number): { D: number; tw: number; rimR: number } {
@@ -277,10 +284,12 @@ export function buildTruck(model: Pick<TruckModel, 'dims'> & { name?: string }):
   rails([[xRl, cs * 0.1 * W + cs * 0.65], [xRl, cs * yRl], [cabF + 0.15, cs * yRl]], deck, 1.05);
   rails([[xRl, -cs * yRl], [xBF + 0.2, -cs * yRl]], deck, 1.05);
   // ── mirrors
+  const mirrorHeads: V3[] = [];
   for (const [hp, base] of [[[-0.02 * L, cs * (hw - 0.14), deck + 1.55], [xRl, cs * yRl, deck + 1.05]], [[-0.03 * L, -cs * (hw - 0.14), deck + 1.3], [xRl, -cs * yRl, deck + 1.05]]] as [V3, V3][]) {
     K.beam(base, [hp[0], hp[1], hp[2] - 0.2], 0.04, 0.04, C.steel);
     K.obox(hp, [1, 0, 0], [0, 1, 0], [0, 0, 1], 0.05, 0.12, 0.3, C.black);
     const xg = hp[0] - 0.052;
+    mirrorHeads.push([xg, hp[1], hp[2]]);
     K.face([[xg, hp[1] - 0.1, hp[2] - 0.26], [xg, hp[1] + 0.1, hp[2] - 0.26], [xg, hp[1] + 0.1, hp[2] + 0.26], [xg, hp[1] - 0.1, hp[2] + 0.26]], C.glassHi, 0, null, [-1, 0, 0]);
   }
   // ── engine hood, air cleaner, exhaust stacks (deck, beside the cab)
@@ -403,11 +412,16 @@ export function buildTruck(model: Pick<TruckModel, 'dims'> & { name?: string }):
   }
   const hingeV = toLocal(-0.92 * L, 0, zFl0 - 0.05);
   const eyeL = toLocal(ex, eyR, ezR);
+  const mirrors = mirrorHeads.map(m => ({ pos: toLocal(m[0], m[1], m[2]), w: 0.2, h: 0.52, outward: (m[1] >= 0 ? -1 : 1) as 1 | -1 }));
+  const lamps = {
+    head: [1, -1].flatMap(sd => [-0.2, 0.2].map(dy => toLocal(xDF + 0.05, sd * 0.36 * W + dy, deck - 0.51))),
+    tail: [1, -1].map(sd => toLocal(-0.96 * L, sd * 0.12 * W, 0.63 * D)),
+  };
   const bodyNoCab = K.build(origin);
   K.append(KC);
   return {
     body: K.build(origin), bodyNoCab, cabInterior: KI.build(origin), tray: T.build(origin), load: Lh.build(origin), wheelHi: WH.build(), wheelLo: WL.build(),
     wheels, hinge: [hingeV[0], hingeV[1]], L, W, H, D, wheelbase: 0.47 * L, frontX: 0.47 * L, frontAxleX: 0.235 * L,
-    eye: eyeL, cabSide: cs,
+    eye: eyeL, cabSide: cs, mirrors, lamps,
   };
 }

@@ -71,7 +71,8 @@ export type Quality = 'oem' | 'oem_derived' | 'third_party' | 'estimated' | 'n/a
 export const QUALITY_LABEL: Record<Quality, string> = {
   oem: 'OEM', oem_derived: 'OEM-derived', third_party: '3rd party', estimated: 'Estimated', 'n/a': 'n/a', unknown: 'not recorded',
 };
-export const qualityTone = (q: Quality): 'ok' | 'info' | 'warn' | 'na' => (q === 'oem' ? 'ok' : q === 'oem_derived' ? 'info' : q === 'estimated' || q === 'third_party' ? 'warn' : 'na');
+/** Provenance badge tone. Neutral for OEM-derived (the accent is reserved for selection / focus / the primary action). */
+export const qualityTone = (q: Quality): 'ok' | 'warn' | 'na' => (q === 'oem' ? 'ok' : q === 'estimated' || q === 'third_party' ? 'warn' : 'na');
 
 /** Provenance of a spec-sheet field: data_quality key, else the TruckModel.estimated list. */
 export function qualityOf(t: TruckX, key: string, estimatedField?: string): Quality {
@@ -86,8 +87,8 @@ export interface SpecRow { label: string; value: string; quality: Quality; note?
 
 export function specRows(t: TruckX): SpecRow[] {
   const o = oemFor(t);
-  const f = (v: number | undefined, dp = 1, unit = '') => (v == null || !Number.isFinite(v) ? '—' : `${v.toLocaleString('en-AU', { maximumFractionDigits: dp })}${unit ? ' ' + unit : ''}`);
-  const gears = t.gears?.length ? t.gears.map(g => `${g.gear}: ${f(g.maxKmh, 1)}`).join(' · ') : t.drive === 'electric' ? 'AC electric — no gears' : '—';
+  const f = (v: number | undefined, dp = 1, unit = '') => (v == null || !Number.isFinite(v) ? '–' : `${v.toLocaleString('en-AU', { maximumFractionDigits: dp })}${unit ? ' ' + unit : ''}`);
+  const gears = t.gears?.length ? t.gears.map(g => `${g.gear}: ${f(g.maxKmh, 1)}`).join(' · ') : t.drive === 'electric' ? 'AC electric – no gears' : '–';
   return [
     { label: 'Drive', value: t.drive === 'electric' ? 'AC electric' : 'Mechanical', quality: 'oem', note: o?.transmission.type },
     { label: 'Engine', value: `${f(o?.engine.gross_kW, 0, 'kW gross')}${o?.engine.net_kW ? ` / ${f(o.engine.net_kW, 0)} net` : ''}`, quality: qualityOf(t, 'engine', 'enginePowerKW'), note: o?.engine.model },
@@ -97,10 +98,10 @@ export function specRows(t: TruckX): SpecRow[] {
     { label: 'Gears (max km/h)', value: gears, quality: qualityOf(t, 'gear_speeds', 'gears') },
     { label: 'Top speed', value: f(t.topSpeedKmh, 1, 'km/h'), quality: qualityOf(t, 'gear_speeds', 'topSpeedKmh'), note: o?.transmission.notes },
     { label: 'Stall rimpull', value: f(o?.rimpull.stall_rimpull_kN ?? t.rimpull[0]?.[1], 0, 'kN'), quality: qualityOf(t, 'stall_rimpull'), note: o?.rimpull.stall_rimpull_source },
-    { label: 'Rimpull curves', value: t.rimpullGears?.length ? `${t.rimpullGears.length} gears + envelope` : `${t.rimpull.length}-point envelope`, quality: qualityOf(t, 'rimpull_curve', 'rimpull'), note: 'Power-based model from net power and OEM gear speeds — see method below.' },
+    { label: 'Rimpull curves', value: t.rimpullGears?.length ? `${t.rimpullGears.length} gears + envelope` : `${t.rimpull.length}-point envelope`, quality: qualityOf(t, 'rimpull_curve', 'rimpull'), note: 'Power-based model from net power and OEM gear speeds – see method below.' },
     { label: 'Retarder', value: `${f(t.retarderPowerKW ?? o?.retarder.continuous_power_kW, 0, 'kW continuous')} · ${descent(t)}`, quality: qualityOf(t, 'retarder', 'retarder'), note: o?.retarder.power_source },
     { label: 'Body (heaped)', value: f(t.bodyHeapedM3 ?? o?.body?.default_heaped_m3, 1, 'm³'), quality: qualityOf(t, 'body', 'bodyHeapedM3') },
-    { label: 'Tyre', value: t.dims.tyre ?? o?.tyre ?? '—', quality: qualityOf(t, 'tyre', 'tyre') },
+    { label: 'Tyre', value: t.dims.tyre ?? o?.tyre ?? '–', quality: qualityOf(t, 'tyre', 'tyre') },
     { label: 'Dimensions L × W × H', value: `${f(t.dims.length, 1)} × ${f(t.dims.width, 1)} × ${f(t.dims.height, 1)} m`, quality: dimsQuality(t, 'dims'), note: srcNote(t, /dimension/i) },
     { label: 'Operator eye height', value: f(t.dims.eyeHeight, 1, 'm'), quality: dimsQuality(t, 'dims.eyeHeight'), note: t.dims.eyeBack != null ? `${f(t.dims.eyeBack, 2)} m behind front · ${f(Math.abs(t.dims.eyeRight ?? 0), 2)} m ${(t.dims.eyeRight ?? 0) < 0 ? 'left' : 'right'} of centre` : undefined },
     { label: 'Turning circle', value: f(o?.turning?.clearance_circle_diameter_m, 1, 'm'), quality: qualityOf(t, 'turning') },

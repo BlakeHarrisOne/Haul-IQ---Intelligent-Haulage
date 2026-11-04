@@ -2,7 +2,7 @@
  * Haulage feature - pure helpers (no React, no DOM). Unit-tested in model.test.ts.
  *
  *  - point rows → segments (segment i starts at point i, like SegmentOverrides),
- *  - spreadsheet drop detection (|ROUND(grade, 2)| > 16 % → the workbook silently times the segment at 0 s),
+ *  - spreadsheet drop detection (|ROUND(grade, 2)| > 16% → the workbook silently times the segment at 0 s),
  *  - per-segment override application (speed limit / RR / zone / stop flags),
  *  - fleet chooser rows (the spreadsheet's row-28 "# trucks" buttons, generalised),
  *  - loader defaults + changed-vs-default detection for circuit assumptions,
@@ -10,8 +10,8 @@
  *  - a kinematic truck phase model for the truck card.
  */
 import type {
-  Circuit, CircuitParams, CircuitResult, FleetOption, Id, Scenario, SegmentOverrides, SegmentResult,
-  SegmentZone, StringPoint, TruckingStatus,
+  Circuit, CircuitParams, CircuitResult, FleetOption, HaulString, Id, Scenario, SegmentOverrides, SegmentResult,
+  SegmentZone, StringPoint, TruckModel, TruckingStatus,
 } from '@/core/types';
 import { CAT_HEX, linear, type Scale } from '@/ui/chart';
 import { uid } from '@/core/ids';
@@ -21,7 +21,7 @@ export interface XYZ { e: number; n: number; z: number }
 
 // ─────────────────────────────────────────────────────────────── spreadsheet rounding / drops
 
-/** The grade lookup tables stop at ±16 %; anything that ROUNDs beyond is dropped (Q3). */
+/** The grade lookup tables stop at ±16%; anything that ROUNDs beyond is dropped (Q3). */
 export const SHEET_MAX_GRADE = 0.16;
 
 /** True when the spreadsheet would drop this segment's travel time (|ROUND(grade,2)| > 0.16). */
@@ -39,7 +39,7 @@ export interface SegRow {
   grade: number;
   /** Cumulative 3D chainage at the segment start (m). */
   chainage: number;
-  /** The spreadsheet would drop this segment's time (|grade| rounds above 16 %). */
+  /** The spreadsheet would drop this segment's time (|grade| rounds above 16%). */
   dropped: boolean;
   /** Coincident points: zero length (skipped by every calculation). */
   zero: boolean;
@@ -255,22 +255,25 @@ export function fleetRows(r: CircuitResult, assigned: number, targetBcmDay: numb
   }));
 }
 
-export interface TruckingCall { tone: 'ok' | 'bad' | 'warn'; title: string; detail: string }
+export interface TruckingCall { tone: 'ok' | 'bad' | 'warn' | 'na'; title: string; detail: string }
 
-/** Plain-language verdict for an assigned truck count. */
+/**
+ * Plain-language verdict for an assigned truck count. A deliberate choice is not an error: under-trucking reads in
+ * clay (it costs loader PT), over-trucking in neutral; red is kept for real faults.
+ */
 export function truckingCall(n: number, rec: number, o: FleetOption | undefined): TruckingCall {
   if (!o) return { tone: 'warn', title: 'No result', detail: 'The circuit could not be calculated.' };
   const d = n - rec;
   if (d < 0) {
     return {
-      tone: 'bad',
+      tone: 'warn',
       title: `Deliberately under-trucked by ${-d}`,
       detail: `${fmt1(o.lostLoaderPtHrsShift)} h/shift of loader hang time. Schedule it, or look for a shorter haul.`,
     };
   }
   if (d > 0) {
     return {
-      tone: 'warn',
+      tone: 'na',
       title: `Deliberately over-trucked by ${d}`,
       detail: `${fmt1(o.truckQueueHrsShift)} truck-h/shift queuing at the loader. Free a truck for another circuit.`,
     };
@@ -505,6 +508,132 @@ export function truckStateAt(r: CircuitResult, p: CircuitParams, n: number, k: n
 }
 
 export const PHASE_LABEL: Record<TruckPhase, string> = { spot: 'Spotting', load: 'Loading', haul: 'Hauling loaded', dump: 'Dumping', return: 'Returning empty' };
+
+// ─────────────────────────────────────────────────────────────── 100 m fitted grade (HRL §11.2)
+
+/** Haul-road design limit on the grade fitted over any 100 m (HRL grade place chart). */
+export const GRADE_LIMIT = 0.10;
+export const GRADE_WINDOW_M = 100;
+
+export interface GradeFit {
+  /** Least-squares grade (dZ / 3D chainage) over the window, loaded direction (+ = uphill dig → dump). */
+  grade: number;
+  /** Window start / end chainage (3D, m). */
+  ch0: number;
+  ch1: number;
+  /** Window centre and the fitted RL there (the fitted line passes through it). */
+  chMid: number;
+  zMid: number;
+  /** Segment containing the window centre. */
+  segIndex: number;
+  /** The string is shorter than the window: the fit covers all of it. */
+  short: boolean;
+  ok: boolean;
+}
+
+/**
+ * Steepest grade fitted over any `windowM` of the string (least squares on RL vs chainage, sampled every `stepM`).
+ * Short spikes between two survey points do not set the value; a sustained ramp does.
+ */
+export function maxFittedGrade(points: readonly XYZ[], windowM = GRADE_WINDOW_M, stepM = 2, limit = GRADE_LIMIT): GradeFit | undefined {
+  if (points.length < 2) return undefined;
+  const chain = chainagesOf(points);
+  const L = chain[chain.length - 1];
+  if (!(L > 0)) return undefined;
+  const zAt = (ch: number) => {
+    const i = segmentAt(chain, ch);
+    const a = chain[i], b = chain[i + 1];
+    const f = b > a ? clamp((ch - a) / (b - a), 0, 1) : 0;
+    return points[i].z + (points[i + 1].z - points[i].z) * f;
+  };
+  const n = Math.max(2, Math.ceil(L / stepM) + 1);
+  const xs = new Float64Array(n), zs = new Float64Array(n);
+  for (let k = 0; k < n; k++) { xs[k] = Math.min(L, k * stepM); zs[k] = zAt(xs[k]); }
+  // prefix sums → O(1) regression per window
+  const Sx = new Float64Array(n + 1), Sz = new Float64Array(n + 1), Sxx = new Float64Array(n + 1), Sxz = new Float64Array(n + 1);
+  for (let k = 0; k < n; k++) { Sx[k + 1] = Sx[k] + xs[k]; Sz[k + 1] = Sz[k] + zs[k]; Sxx[k + 1] = Sxx[k] + xs[k] * xs[k]; Sxz[k + 1] = Sxz[k] + xs[k] * zs[k]; }
+  const fit = (i0: number, i1: number) => {
+    const m = i1 - i0 + 1;
+    const sx = Sx[i1 + 1] - Sx[i0], sz = Sz[i1 + 1] - Sz[i0], sxx = Sxx[i1 + 1] - Sxx[i0], sxz = Sxz[i1 + 1] - Sxz[i0];
+    const den = m * sxx - sx * sx;
+    const b = Math.abs(den) < 1e-12 ? 0 : (m * sxz - sx * sz) / den;
+    return { b, a: (sz - b * sx) / m };
+  };
+  const short = L <= windowM;
+  let best = { b: 0, a: zs[0], i0: 0, i1: n - 1 };
+  if (short) {
+    const f = fit(0, n - 1);
+    best = { ...f, i0: 0, i1: n - 1 };
+  } else {
+    const span = Math.max(1, Math.round(windowM / stepM));
+    best = { b: 0, a: zs[0], i0: 0, i1: Math.min(n - 1, span) };
+    let bestAbs = -1;
+    for (let i0 = 0; i0 + span < n; i0++) {
+      const f = fit(i0, i0 + span);
+      if (Math.abs(f.b) > bestAbs) { bestAbs = Math.abs(f.b); best = { ...f, i0, i1: i0 + span }; }
+    }
+  }
+  const ch0 = xs[best.i0], ch1 = xs[best.i1], chMid = (ch0 + ch1) / 2;
+  return {
+    grade: best.b, ch0, ch1, chMid, zMid: best.a + best.b * chMid, segIndex: segmentAt(chain, chMid), short,
+    ok: Math.abs(best.b) <= limit + 1e-9,
+  };
+}
+
+const PLACE: Partial<Record<SegmentZone, string>> = { pit: 'in the pit', road: 'on the haul road', crusher: 'at the crusher', intersection: 'at the intersection' };
+const firstWord = (s?: string) => s?.trim().split(/\s+/)[0];
+
+/** Where a fitted window lies, in plain words ("on the S51 ramp", "in the pit", or the chainage). */
+export function gradePlace(points: readonly StringPoint[], f: GradeFit, ends: { dig?: string; dump?: string } = {}): string {
+  const zone = points[f.segIndex]?.seg?.zone;
+  const L = chainagesOf(points)[points.length - 1] || 1;
+  const nearDump = f.chMid > L / 2;
+  const endName = firstWord(nearDump ? ends.dump : ends.dig);
+  if (zone === 'ramp') return endName ? `on the ${endName} ramp` : 'on the ramp';
+  if (zone === 'dump') return ends.dump ? `on ${ends.dump}` : 'on the dump';
+  if (zone && PLACE[zone]) return PLACE[zone]!;
+  return `at Ch ${Math.round(f.ch0).toLocaleString('en-AU')}–${Math.round(f.ch1).toLocaleString('en-AU')} m`;
+}
+
+// ─────────────────────────────────────────────────────────────── road width (HRL §11.1)
+
+export const ROAD_WIDTH_DEFAULT_M = 30;
+export const BUND_HEIGHT_DEFAULT_M = 1.8;
+/** Two-way haul road rule of thumb: running width ≥ 3.5 × the widest vehicle (½ w clearance · w · ½ w · w · ½ w). */
+export const TWO_WAY_FACTOR = 3.5;
+
+export const roadWidthOf = (hs: Pick<HaulString, 'roadWidthM'>) => (hs.roadWidthM != null && hs.roadWidthM > 0 ? hs.roadWidthM : ROAD_WIDTH_DEFAULT_M);
+export const bundHeightOf = (hs: Pick<HaulString, 'bundHeightM'>) => (hs.bundHeightM != null && hs.bundHeightM >= 0 ? hs.bundHeightM : BUND_HEIGHT_DEFAULT_M);
+/** Bund base width for a 1.5 H : 1 V windrow with a 0.6 m crest. */
+export const bundBase = (h: number) => (h > 0 ? 3 * h + 0.6 : 0);
+
+export interface RoadCheck { widthM: number; neededM: number; widestM: number; ok: boolean; marginM: number }
+
+export function roadCheck(widthM: number, widestVehicleM: number): RoadCheck {
+  const neededM = TWO_WAY_FACTOR * widestVehicleM;
+  return { widthM, neededM, widestM: widestVehicleM, ok: widthM + 1e-9 >= neededM, marginM: widthM - neededM };
+}
+
+/** Trucks running on a string (its circuits' models, main or alternative haul), widest first. */
+export function trucksOnString(s: Scenario, hsId: Id): TruckModel[] {
+  const ids = new Set(s.circuits.filter(c => c.haulStringId === hsId || c.altHaulStringIds?.includes(hsId)).map(c => c.truckModelId));
+  return s.fleet.trucks.filter(t => ids.has(t.id)).sort((a, b) => (b.dims?.width ?? 0) - (a.dims?.width ?? 0));
+}
+
+/** Tyre size from an OEM code ('37.00-R57', '33.00R51', '27.00 R49'): section width and overall diameter, m. */
+export function tyreSize(code: string | undefined, dims: { width: number; height: number }): { widthM: number; diaM: number } {
+  const m = code?.match(/(\d+(?:\.\d+)?)\s*-?\s*R\s*(\d+(?:\.\d+)?)/i);
+  if (m) {
+    const w = Number(m[1]) * 0.0254, rim = Number(m[2]) * 0.0254;
+    return { widthM: w, diaM: rim + 2 * w * 1.13 };
+  }
+  return { widthM: dims.width * 0.12, diaM: dims.height * 0.55 };
+}
+
+/** Angle factor: a road crossed by a line at angle θ shows width / sin θ along that line (capped for near-parallel). */
+export function apparentWidth(widthM: number, sinTheta: number): number {
+  return widthM / Math.max(0.2, Math.abs(sinTheta));
+}
 
 // ─────────────────────────────────────────────────────────────── misc
 

@@ -2,10 +2,13 @@
  * Lighting + atmosphere: sun DirectionalLight with soft PCF shadows fitted to the site (or to the followed truck in
  * POV/chase), hemisphere fill, sky dome (gradient, horizon band, 3-lobe sun glow, drifting fair-weather cloud,
  * stars at night — Rain Model RMAtmos lineage), distance haze via scene fog, and the lower-horizon driving sky.
+ * Colours and the sun come from the shift clock (environment.ts `Lighting`), never from the UI theme alone.
  */
 import * as THREE from 'three';
 import { NOISE_GLSL } from './glsl';
-import type { Palette } from './theme';
+import type { Lighting } from './environment';
+
+const D2R = Math.PI / 180;
 
 const SKY_VS = /* glsl */ `
 varying vec3 vDir;
@@ -17,7 +20,7 @@ void main() {
 
 const SKY_FS = /* glsl */ `
 uniform vec3 uZen; uniform vec3 uHor; uniform vec3 uBack; uniform vec3 uGlow; uniform vec3 uSunDir;
-uniform float uSunAmt; uniform float uStars; uniform float uCloud; uniform float uTime; uniform float uDrive;
+uniform float uSunAmt; uniform float uStars; uniform float uCloud; uniform float uTime; uniform float uDrive; uniform vec3 uSunTrue;
 varying vec3 vDir;
 ${NOISE_GLSL}
 float fbm(vec2 p) { float s = 0.0, a = 0.5; for (int i = 0; i < 5; i++) { s += a * hk_vnoise(p); p = p * 2.03 + 11.7; a *= 0.5; } return s; }
@@ -44,7 +47,7 @@ void main() {
   }
   float below = smoothstep(0.0, -0.035, d.y);
   col = mix(col, uBack, below);
-  float cs = max(dot(d, uSunDir), 0.0);
+  float cs = max(dot(d, uSunTrue), 0.0);
   float glow = (pow(cs, 900.0) * 0.9 + pow(cs, 40.0) * 0.35 + pow(cs, 4.0) * 0.18) * smoothstep(-0.02, 0.1, d.y);
   col += uGlow * glow * uSunAmt;
   gl_FragColor = vec4(col, 1.0);
@@ -60,7 +63,9 @@ export class Atmosphere {
   /** Unit vector towards the sun (scene). */
   readonly sunDir = new THREE.Vector3(0, 1, 0);
   private skyMat: THREE.ShaderMaterial;
-  private pal: Palette | null = null;
+  private L: Lighting | null = null;
+  /** True sun direction (sky glow sits on the real sun even when the key light's elevation is clamped). */
+  readonly sunTrue = new THREE.Vector3(0, 1, 0);
   private drive = 0;
   private planK = 0;
   /** Site bounds (scene, exaggerated) for shadow fitting. */
@@ -84,7 +89,7 @@ export class Atmosphere {
     this.skyU = {
       uZen: { value: new THREE.Color() }, uHor: { value: new THREE.Color() }, uBack: { value: new THREE.Color() },
       uGlow: { value: new THREE.Color() }, uSunDir: { value: this.sunDir }, uSunAmt: { value: 1 }, uStars: { value: 0 },
-      uCloud: { value: 0.35 }, uTime: { value: 0 }, uDrive: { value: 0 },
+      uCloud: { value: 0.35 }, uTime: { value: 0 }, uDrive: { value: 0 }, uSunTrue: { value: this.sunTrue },
     };
     this.skyMat = new THREE.ShaderMaterial({
       vertexShader: SKY_VS, fragmentShader: SKY_FS, uniforms: this.skyU, side: THREE.BackSide,
@@ -103,8 +108,9 @@ export class Atmosphere {
 
   setSiteBox(b: THREE.Box3) { this.siteBox.copy(b); this.fitShadow(); }
 
-  setTheme(p: Palette) {
-    this.pal = p;
+  /** New clock time / theme. */
+  setLighting(L: Lighting) {
+    this.L = L;
     this.applyColors();
   }
 
@@ -115,53 +121,57 @@ export class Atmosphere {
   }
 
   private applyColors() {
-    const p = this.pal;
-    if (!p) return;
-    const d = p.def, c = p.c, k = this.drive;
+    const L = this.L;
+    if (!L) return;
+    const k = this.drive, pk = this.planK;
     const u = this.skyU;
-    u.uZen.value.copy(c.skyZenith).lerp(c.driveZenith, k);
-    u.uHor.value.copy(c.skyHorizon).lerp(c.driveHorizon, k);
-    u.uBack.value.copy(c.backdrop).lerp(c.driveGround, k);
-    u.uGlow.value.copy(c.glow);
-    u.uStars.value = d.stars;
+    u.uZen.value.copy(L.skyZenith).lerp(L.driveZenith, k);
+    u.uHor.value.copy(L.skyHorizon).lerp(L.driveHorizon, k);
+    u.uBack.value.copy(L.backdrop).lerp(L.driveGround, k);
+    u.uGlow.value.copy(L.glow);
+    u.uStars.value = L.stars;
     u.uDrive.value = k;
-    u.uCloud.value = d.stars > 0 ? 0.12 : 0.32;
-    this.fog.color.copy(c.backdrop).lerp(c.driveHorizon, k);
-    this.sun.color.copy(c.sun);
-    this.sun.intensity = d.sunIntensity * (1 - 0.15 * this.planK);
-    this.sun.shadow.intensity = d.shadowIntensity * (1 - 0.45 * this.planK);
-    this.hemi.color.copy(c.hemiSky);
-    this.hemi.groundColor.copy(c.hemiGround);
-    this.hemi.intensity = d.hemiIntensity * (1 + 0.2 * this.planK);
-    // sun direction: theme's sun, blended to a cartographic NW 50° in plan
-    const az = THREE.MathUtils.lerp(d.sunAzDeg, 315, this.planK) * (Math.PI / 180);
-    const el = THREE.MathUtils.lerp(d.sunElDeg, 52, this.planK) * (Math.PI / 180);
-    this.sunDir.set(Math.sin(az) * Math.cos(el), Math.sin(el), -Math.cos(az) * Math.cos(el)).normalize();
-    u.uSunAmt.value = d.stars > 0 ? 0.35 : 1;
+    u.uCloud.value = L.cloud;
+    u.uSunAmt.value = L.sunAmt;
+    // haze: the page backdrop at overview, the driving horizon in the cab (far ground melts into the sky)
+    this.fog.color.copy(L.backdrop).lerp(L.driveHorizon, k);
+    this.sun.color.copy(L.sunColor);
+    // plan: the baked 4-light hillshade carries the relief ("engineer's plot"), the sun only adds a little modelling
+    this.sun.intensity = L.sunIntensity * (1 - 0.42 * pk);
+    this.sun.shadow.intensity = L.shadowIntensity * (1 - 0.55 * pk);
+    this.hemi.color.copy(L.hemiSky);
+    this.hemi.groundColor.copy(L.hemiGround);
+    this.hemi.intensity = L.hemiIntensity * (1 + 0.55 * pk);
+    // key light: the clock's sun (or moon), blended to a cartographic NW 50° in plan by day
+    const day = L.env.daylight;
+    this.tmpV.set(Math.sin(315 * D2R) * Math.cos(52 * D2R), Math.sin(52 * D2R), -Math.cos(315 * D2R) * Math.cos(52 * D2R));
+    this.sunDir.copy(L.sunDir).lerp(this.tmpV, pk * day).normalize();
+    const e = L.env;
+    const az = e.sunAzDeg * D2R, el = Math.max(-0.2, e.sunElDeg * D2R);
+    this.sunTrue.set(Math.sin(az) * Math.cos(el), Math.sin(el), -Math.cos(az) * Math.cos(el)).normalize();
     this.fitShadow();
   }
 
-  /** Fit the orthographic shadow camera to the site box (or the POV focus) in light space. */
+  /** Fit the orthographic shadow camera to the site box (or the POV focus) in light space (allocation-free). */
   fitShadow() {
     const cam = this.sun.shadow.camera;
-    let box = this.siteBox;
+    const box = this.fitBox.copy(this.siteBox);
     if (this.shadowFocus) {
       const { center, radius } = this.shadowFocus;
-      box = new THREE.Box3(center.clone().subScalar(radius), center.clone().addScalar(radius));
-      box.min.y = Math.min(box.min.y, this.siteBox.min.y);
-      box.max.y = Math.max(box.max.y, this.siteBox.max.y);
+      box.min.set(center.x - radius, Math.min(center.y - radius, this.siteBox.min.y), center.z - radius);
+      box.max.set(center.x + radius, Math.max(center.y + radius, this.siteBox.max.y), center.z + radius);
     }
-    const ctr = box.getCenter(this.tmpV);
-    const size = box.getSize(new THREE.Vector3());
-    const dist = size.length() + 100;
+    const ctr = box.getCenter(this.tmpV2);
+    const dist = box.getSize(this.tmpV3).length() + 100;
     this.sun.position.copy(ctr).addScaledVector(this.sunDir, dist);
     this.sun.target.position.copy(ctr);
     this.sun.updateMatrixWorld();
     this.sun.target.updateMatrixWorld();
-    // light view matrix
-    this.tmpM.lookAt(this.sun.position, ctr, new THREE.Vector3(0, 1, 0));
-    const view = new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion().setFromRotationMatrix(this.tmpM)).invert();
-    const lo = new THREE.Vector3(Infinity, Infinity, Infinity), hi = new THREE.Vector3(-Infinity, -Infinity, -Infinity);
+    // light view matrix (rotation only, about the sun position)
+    this.tmpM.lookAt(this.sun.position, ctr, this.up);
+    this.tmpQ.setFromRotationMatrix(this.tmpM);
+    const view = this.tmpM2.makeRotationFromQuaternion(this.tmpQ).invert();
+    const lo = this.tmpLo.set(Infinity, Infinity, Infinity), hi = this.tmpHi.set(-Infinity, -Infinity, -Infinity);
     let i = 0;
     for (let x = 0; x < 2; x++) for (let y = 0; y < 2; y++) for (let z = 0; z < 2; z++) {
       const v = this.corners[i++].set(x ? box.max.x : box.min.x, y ? box.max.y + 25 : box.min.y, z ? box.max.z : box.min.z);
@@ -173,6 +183,14 @@ export class Atmosphere {
     cam.updateProjectionMatrix();
     this.sun.shadow.needsUpdate = true;
   }
+  private fitBox = new THREE.Box3();
+  private tmpV2 = new THREE.Vector3();
+  private tmpV3 = new THREE.Vector3();
+  private tmpLo = new THREE.Vector3();
+  private tmpHi = new THREE.Vector3();
+  private tmpM2 = new THREE.Matrix4();
+  private tmpQ = new THREE.Quaternion();
+  private up = new THREE.Vector3(0, 1, 0);
 
   /** Per-frame: keep the sky around the camera, set haze distances. */
   update(camera: THREE.Camera, far: number, hazeNear: number, hazeFar: number, time: number) {

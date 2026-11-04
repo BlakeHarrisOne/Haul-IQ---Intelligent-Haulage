@@ -120,12 +120,12 @@ export class HeightGrid {
    * March a scene-space ray against the surface. Returns ray parameter t of the first hit or −1.
    * o/d are scene space (d need not be unit). Coarse march at ~0.8 node spacing in plan, then bisection.
    */
-  raycast(ox: number, oy: number, oz: number, dx: number, dy: number, dz: number, ve: number): number {
+  raycast(ox: number, oy: number, oz: number, dx: number, dy: number, dz: number, ve: number, tLimit = Infinity): number {
     // clip to the grid's AABB in scene space
     const x0 = this.ox, x1 = this.ox + (this.nx - 1) * this.dx;
     const z0 = -(this.oy + (this.ny - 1) * this.dx), z1 = -this.oy;
     const y0 = this.minH * ve - 1, y1 = this.maxH * ve + 1;
-    let tmin = 0, tmax = Infinity;
+    let tmin = 0, tmax = tLimit;
     const slab = (o: number, d: number, lo: number, hi: number) => {
       if (Math.abs(d) < 1e-12) return o >= lo && o <= hi;
       let ta = (lo - o) / d, tb = (hi - o) / d;
@@ -238,6 +238,42 @@ export class HeightGrid {
       }
     }
     return { data: img, w, h: hh };
+  }
+
+  /**
+   * Heights smoothed by `passes` × a 3-tap box in each direction (NaN-aware; off-surface stays NaN). Contours are
+   * drawn from this on gentle ground so survey noise does not crinkle them (HRL contours a ~2 m smoothed surface).
+   */
+  smoothed(passes = 2): Float32Array {
+    const { nx, ny } = this;
+    let src = this.h;
+    const tmp = new Float32Array(nx * ny), out = new Float32Array(nx * ny);
+    for (let p = 0; p < passes; p++) {
+      for (let j = 0; j < ny; j++) {
+        const r = j * nx;
+        for (let i = 0; i < nx; i++) {
+          const c = src[r + i];
+          if (c !== c) { tmp[r + i] = NaN; continue; }
+          let s = c, n = 1;
+          if (i > 0) { const v = src[r + i - 1]; if (v === v) { s += v; n++; } }
+          if (i < nx - 1) { const v = src[r + i + 1]; if (v === v) { s += v; n++; } }
+          tmp[r + i] = s / n;
+        }
+      }
+      for (let j = 0; j < ny; j++) {
+        const r = j * nx;
+        for (let i = 0; i < nx; i++) {
+          const c = tmp[r + i];
+          if (c !== c) { out[r + i] = NaN; continue; }
+          let s = c, n = 1;
+          if (j > 0) { const v = tmp[r - nx + i]; if (v === v) { s += v; n++; } }
+          if (j < ny - 1) { const v = tmp[r + nx + i]; if (v === v) { s += v; n++; } }
+          out[r + i] = s / n;
+        }
+      }
+      if (p < passes - 1) src = out.slice();
+    }
+    return out;
   }
 
   /** Low percentile of valid heights (pit floor estimate). */

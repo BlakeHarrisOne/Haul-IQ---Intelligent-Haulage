@@ -65,10 +65,10 @@ export function TrucksDotPlot({ rows }: { rows: CircuitRow[] }) {
       )}
       <div className={s.legend}>
         <span><svg width="14" height="14"><circle cx="7" cy="7" r="5" fill="var(--c1)" /></svg>assigned</span>
-        <span><svg width="14" height="14"><circle cx="7" cy="7" r="4.5" fill="none" stroke="var(--ink-2)" strokeWidth="2" /></svg>needed (exact)</span>
-        <span><svg width="10" height="14"><line x1="5" x2="5" y1="2" y2="12" stroke="var(--ink-3)" strokeWidth="2" /></svg>recommended</span>
-        <span><svg width="16" height="8"><line x1="1" x2="15" y1="4" y2="4" stroke="var(--bad)" strokeWidth="3" opacity=".55" /></svg>gap: under</span>
-        <span><svg width="16" height="8"><line x1="1" x2="15" y1="4" y2="4" stroke="var(--warn)" strokeWidth="3" opacity=".55" /></svg>over</span>
+        <span title="trucks needed, exact"><svg width="14" height="14"><circle cx="7" cy="7" r="4.5" fill="none" stroke="var(--ink-2)" strokeWidth="2" /></svg>needed</span>
+        <span title="recommended trucks"><svg width="10" height="14"><line x1="5" x2="5" y1="2" y2="12" stroke="var(--ink-3)" strokeWidth="2" /></svg>rec.</span>
+        <span title="gap: under-trucked"><svg width="16" height="8"><line x1="1" x2="15" y1="4" y2="4" stroke="var(--bad)" strokeWidth="3" opacity=".55" /></svg>under</span>
+        <span title="gap: over-trucked"><svg width="16" height="8"><line x1="1" x2="15" y1="4" y2="4" stroke="var(--warn)" strokeWidth="3" opacity=".55" /></svg>over</span>
       </div>
     </div>
   );

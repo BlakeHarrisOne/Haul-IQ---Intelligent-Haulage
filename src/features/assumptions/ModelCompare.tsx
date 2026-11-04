@@ -1,20 +1,21 @@
-/** "Spreadsheet vs Rimpull" — the same circuit solved by the workbook lookup and by the physics model, with the why. */
+/** "Spreadsheet vs Rimpull" – the same circuit solved by the workbook lookup and by the physics model, with the why. */
 import { useMemo } from 'react';
 import type { CircuitResult, LimitReason } from '@/core/types';
 import { num } from '@/core/format';
 import { Card, CardHead, Icon } from '@/ui';
 import { delta, deltaTone, fmtDelta, fmtPctDelta } from './shared/delta';
 import { REASON } from './SegmentTable';
+import p from './shared/page.module.css';
 import s from './assumptions.module.css';
 
 interface Row { label: string; a: number; b: number; dp: number; unit: string; better: 'up' | 'down' | 'none'; hi?: boolean }
 
 const BANDS: { label: string; lo: number; hi: number }[] = [
-  { label: 'Down ≥ 8 %', lo: -1, hi: -0.075 },
-  { label: 'Down 4–7 %', lo: -0.075, hi: -0.035 },
-  { label: 'Flat ±3 %', lo: -0.035, hi: 0.035 },
-  { label: 'Up 4–7 %', lo: 0.035, hi: 0.075 },
-  { label: 'Up ≥ 8 %', lo: 0.075, hi: 1 },
+  { label: 'Down ≥ 8%', lo: -1, hi: -0.075 },
+  { label: 'Down 4–7%', lo: -0.075, hi: -0.035 },
+  { label: 'Flat ±3%', lo: -0.035, hi: 0.035 },
+  { label: 'Up 4–7%', lo: 0.035, hi: 0.075 },
+  { label: 'Up ≥ 8%', lo: 0.075, hi: 1 },
 ];
 
 /** Per-band travel-time differences (rimpull − spreadsheet), loaded and empty legs, in seconds. */
@@ -62,15 +63,15 @@ export function ModelCompare({ sheet, rim, assigned }: { sheet: CircuitResult; r
     const big = [...bands].map(b => ({ ...b, t: b.dl + b.de })).sort((a, b) => Math.abs(b.t) - Math.abs(a.t))[0];
     if (big && Math.abs(big.t) >= 1) out.push(`Biggest difference on ${big.label.toLowerCase()} segments (${big.n}): physics is ${big.t > 0 ? 'slower' : 'faster'} by ${num(Math.abs(big.t), 0)} s per cycle.`);
     const dropped = sheet.segments.filter(x => x.limitLoaded === 'table-out-of-range' || x.limitEmpty === 'table-out-of-range');
-    if (dropped.length) out.push(`The workbook drops ${dropped.length} segment(s) steeper than ±16 % (${num(dropped.reduce((a, x) => a + x.dist3dM, 0), 1)} m) — their time counts as 0 s; physics times them.`);
+    if (dropped.length) out.push(`The workbook drops ${dropped.length} segment(s) steeper than ±16% (${num(dropped.reduce((a, x) => a + x.dist3dM, 0), 1)} m) – their time counts as 0 s; physics times them.`);
     const share = limitShare(rim).filter(([k]) => k !== 'table' && k !== 'table-out-of-range').slice(0, 3);
-    if (share.length) out.push(`Physics time is bound by ${share.map(([k, v]) => `${REASON[k]} ${num(v * 100, 0)} %`).join(', ')}.`);
+    if (share.length) out.push(`Physics time is bound by ${share.map(([k, v]) => `${REASON[k]} ${num(v * 100, 0)}%`).join(', ')}.`);
     if (rim.speedModel === sheet.speedModel || (rim.segments.every(x => x.limitLoaded === 'table' || x.limitLoaded === 'table-out-of-range') && rim.segments.length))
-      out.push('The engine returned table speeds for the rimpull run — the physics model is not active yet in this build.');
+      out.push('The engine returned table speeds for the rimpull run – the physics model is not active yet in this build.');
     return out;
   }, [sheet, rim, bands]);
   return (
-    <Card>
+    <Card className={p.headSafe}>
       <CardHead title="Spreadsheet vs rimpull" sub="same circuit, two speed models" icon="compare" />
       <table className={s.cmpTable}>
         <thead><tr><th className={s.l}>Result</th><th>Spreadsheet</th><th>Rimpull</th><th>Δ</th></tr></thead>

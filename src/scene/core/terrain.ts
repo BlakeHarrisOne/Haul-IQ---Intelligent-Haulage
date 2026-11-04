@@ -1,8 +1,10 @@
 /**
  * Terrain layer: topo surface mesh with the survey material (earthy elevation/slope palette, 4-light hillshade
- * emphasis, multi-octave micro detail + bump, anti-aliased contours and site grid, baked horizon AO, optional slope
- * heat), strata skirt walls around the model boundary, a crisp rim line, and a seamless backdrop ground with a soft
- * contact shadow and the real sun shadow.
+ * emphasis, multi-octave micro detail + bump, near-field gravel within ~150 m, HRL-weight analytic contours (minor +
+ * index) and site grid, baked horizon AO, optional slope heat, Rain Model "plot" look in plan), live carving of the
+ * dug part of dig blocks with cut / fill recolour that keeps the hillshade (carve.ts), strata skirt walls around
+ * the model boundary, a crisp rim line, and a seamless backdrop ground with a soft contact shadow and the real sun
+ * shadow. Night (from the shift clock) darkens the ground and lights the working faces.
  */
 import * as THREE from 'three';
 import type { MeshAsset, Vec3 } from '@/core/types';
@@ -10,6 +12,9 @@ import { HeightGrid } from './heightGrid';
 import { boundaryEdges, smoothNormals, toLocal, windsDown, type LocalMesh } from './meshUtil';
 import { BUMP_GLSL, NOISE_GLSL, hillshadeLights } from './glsl';
 import type { Palette } from './theme';
+import type { Lighting } from './environment';
+import { CARVE_GLSL, CarveAtlas } from './carve';
+import { makeGravelTexture } from './detail';
 import { GRADE_HEX } from '@/ui';
 
 export interface TerrainUniforms {
@@ -55,6 +60,10 @@ export class TerrainLayer {
   private contactTex: THREE.Texture | null = null;
   private owned: { dispose(): void }[] = [];
   private driving = false;
+  /** Dig/dump column atlas + live depletion planes (terrain carving and cut/fill recolour). */
+  readonly carve = new CarveAtlas();
+  private depthMat: THREE.MeshDepthMaterial;
+  private gravel: THREE.DataTexture | null = null;
 
   constructor() {
     this.root.name = 'terrain-core';
@@ -67,7 +76,7 @@ export class TerrainLayer {
       uZ0: { value: 0 },
       uRange: { value: new THREE.Vector2(0, 100) },
       uFloorRL: { value: -1e6 },
-      uContour: { value: new THREE.Vector4(5, 5, 1, 0) },
+      uContour: { value: new THREE.Vector4(2, 5, 1, 0) },
       uInk: { value: new THREE.Color('#4A3F33') },
       uInkAlpha: { value: 0.4 },
       uGrid: { value: new THREE.Vector4(100, 0.1, 1, 0) },
@@ -94,6 +103,19 @@ export class TerrainLayer {
       uGlowCol: { value: new THREE.Color('#FFB46A') },
       uGlowK: { value: 0 },
       uBump: { value: 0.9 },
+      uNight: { value: 0 },
+      uTerrMul: { value: 1 },
+      uPlot: { value: 0 },
+      uPlotLo: { value: new THREE.Color('#CCC2B0') },
+      uPlotHi: { value: new THREE.Color('#F7F1E3') },
+      uNearK: { value: 0 },
+      uGravel: { value: this.aoTex },
+      uCutCol: { value: new THREE.Color('#4A82BF') },
+      uCutFresh: { value: new THREE.Color('#6FB2FF') },
+      uFillCol: { value: new THREE.Color('#87AF87') },
+      uSmH: { value: this.aoTex },
+      uSmX: { value: new THREE.Vector4(0, 0, 1, 0) },
+      uSmSize: { value: new THREE.Vector2(1, 1) },
       uHeat: { value: [new THREE.Color(GRADE_HEX.flat), new THREE.Color(GRADE_HEX.mod), new THREE.Color(GRADE_HEX.steep), new THREE.Color(GRADE_HEX.max)] },
       // skirt
       uTopsoil: { value: new THREE.Color() },
@@ -102,7 +124,9 @@ export class TerrainLayer {
       uRockB: { value: new THREE.Color() },
       uCoal: { value: new THREE.Color() },
     };
+    Object.assign(this.u, this.carve.uniforms);
     this.terrainMat = this.makeTerrainMaterial();
+    this.depthMat = this.makeDepthMaterial();
     this.skirtMat = this.makeSkirtMaterial();
     this.rimMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7, depthWrite: false });
     this.rimMat.onBeforeCompile = sh => {
@@ -113,7 +137,7 @@ export class TerrainLayer {
     this.shadowCatcherMat = new THREE.ShadowMaterial({ opacity: 0.16, depthWrite: false });
     const big = new THREE.PlaneGeometry(1, 1);
     big.rotateX(-Math.PI / 2);
-    this.owned.push(big, this.terrainMat, this.skirtMat, this.rimMat, this.groundMat, this.contactMat, this.shadowCatcherMat, this.aoTex);
+    this.owned.push(big, this.terrainMat, this.depthMat, this.skirtMat, this.rimMat, this.groundMat, this.contactMat, this.shadowCatcherMat, this.carve);
     this.ground = new THREE.Mesh(big, this.groundMat);
     this.ground.name = 'backdrop-ground';
     this.ground.renderOrder = -5;
@@ -133,12 +157,18 @@ export class TerrainLayer {
     m.onBeforeCompile = sh => {
       Object.assign(sh.uniforms, this.u);
       sh.vertexShader = sh.vertexShader
-        .replace('#include <common>', '#include <common>\nvarying vec3 vLoc;\nvarying vec3 vNObj;')
-        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvLoc = position;\nvNObj = normal;');
+        .replace('#include <common>', `#include <common>\nvarying vec3 vLoc;\nvarying vec3 vNObj;\nvarying vec3 vCF;\nvarying float vCarve;\n${CARVE_GLSL}`)
+        .replace('#include <begin_vertex>', `#include <begin_vertex>
+  vCF = vec3(0.0); vCarve = 0.0;
+  transformed = hk_carve(transformed, vCF, vCarve);
+  vLoc = transformed;
+  vNObj = normal;`);
       let f = sh.fragmentShader;
       f = f.replace('#include <common>', `#include <common>
 varying vec3 vLoc;
 varying vec3 vNObj;
+varying vec3 vCF;
+varying float vCarve;
 uniform float uZ0; uniform vec2 uRange; uniform float uFloorRL;
 uniform vec4 uContour; uniform vec3 uInk; uniform float uInkAlpha;
 uniform vec4 uGrid; uniform vec3 uGridInk; uniform vec2 uGridOff;
@@ -147,12 +177,18 @@ uniform vec3 uLow; uniform vec3 uMid; uniform vec3 uHigh; uniform vec3 uBatter; 
 uniform float uSlopeOn; uniform float uHS; uniform float uShadeVex; uniform vec3 uHSL[4]; uniform vec4 uHSW;
 uniform float uDetail; uniform float uBump; uniform vec3 uHeat[4]; uniform float uCurv;
 uniform vec4 uGlowP[8]; uniform vec3 uGlowCol; uniform float uGlowK;
+uniform float uNight; uniform float uTerrMul; uniform float uPlot; uniform vec3 uPlotLo; uniform vec3 uPlotHi;
+uniform float uNearK; uniform sampler2D uGravel;
+uniform vec3 uCutCol; uniform vec3 uCutFresh; uniform vec3 uFillCol;
+uniform sampler2D uSmH; uniform vec4 uSmX; uniform vec2 uSmSize;
 ${NOISE_GLSL}
 ${BUMP_GLSL}
 float hk_tanS; float hk_rl; float hk_fw; vec2 hk_pw; float hk_bh;`);
       f = patch(f, 'color_fragment', /* glsl */ `
   {
     vec3 nT = normalize(vNObj);
+    // carved ground (dug part of a dig block): faceted normal of the carved geometry
+    if (vCarve > 0.001) { vec3 dn = normalize(cross(dFdx(vLoc), dFdy(vLoc))); nT = dn.y < 0.0 ? -dn : dn; }
     hk_rl = vLoc.y + uZ0;
     hk_pw = vec2(vLoc.x, -vLoc.z);
     hk_fw = hk_footprint(hk_pw);
@@ -164,7 +200,7 @@ float hk_tanS; float hk_rl; float hk_fw; vec2 hk_pw; float hk_bh;`);
     // sparse olive vegetation patches on gentle undisturbed ground (mid elevations only)
     float vegN = hk_vnoise(hk_pw / 170.0 + 4.0) * 0.65 + hk_vnoise(hk_pw / 37.0 + 9.0) * 0.35;
     float veg = smoothstep(0.5, 0.78, vegN) * (1.0 - smoothstep(0.08, 0.2, hk_tanS)) * smoothstep(0.28, 0.45, t) * (1.0 - smoothstep(0.86, 0.97, t));
-    base = mix(base, uVeg * (0.92 + 0.16 * hk_vnoise(hk_pw / 9.0)), veg * 0.38);
+    base = mix(base, uVeg * (0.92 + 0.16 * hk_vnoise(hk_pw / 9.0)), veg * 0.38 * (1.0 - uPlot));
     // batters: darker by slope, with rock strata banding by RL (warped so beds undulate)
     float bat = smoothstep(0.2, 0.9, hk_tanS);
     float warp = (hk_vnoise(hk_pw / 140.0) - 0.5) * 7.0;
@@ -177,8 +213,8 @@ float hk_tanS; float hk_rl; float hk_fw; vec2 hk_pw; float hk_bh;`);
     float g = 0.0;
     hk_bh = 0.0;
     if (wv < 0.999) { g += hk_ground(hk_pw, hk_fw) * (1.0 - wv); hk_bh += hk_bump(hk_pw, hk_fw) * (1.0 - wv); }
+    float bx = smoothstep(-0.25, 0.25, abs(nT.x) - abs(nT.z));
     if (wv > 0.001) {
-      float bx = smoothstep(-0.25, 0.25, abs(nT.x) - abs(nT.z));
       vec2 pa = vec2(vLoc.x, hk_rl * 1.6), pb = vec2(vLoc.z, hk_rl * 1.6);
       float fa = hk_footprint(pa), fb = hk_footprint(pb);
       float ga = bx < 0.999 ? hk_ground(pa, fa) : 0.0, gb = bx > 0.001 ? hk_ground(pb + 17.0, fb) : 0.0;
@@ -186,12 +222,26 @@ float hk_tanS; float hk_rl; float hk_fw; vec2 hk_pw; float hk_bh;`);
       g += mix(ga, gb, bx) * wv;
       hk_bh += mix(ba, bb, bx) * wv;
     }
-    base *= 1.0 + uDetail * g;
-    base = mix(base, base * vec3(1.03, 1.0, 0.95), clamp(g * 1.5, -0.5, 0.5));
+    // broad tonal drift reads as "sandy blotches" from afar: keep it for the close-up only
+    float farK = smoothstep(0.6, 3.0, hk_fw);
+    base *= 1.0 + uDetail * g * (1.0 - 0.6 * farK);
+    base = mix(base, base * vec3(1.03, 1.0, 0.95), clamp(g * 1.5, -0.5, 0.5) * (1.0 - farK));
+    // near field (≲150 m from the eye): tiled gravel, two rotated scales, triplanar on faces
+    float vd = length(vViewPosition);
+    float nearK = uNearK * (1.0 - smoothstep(70.0, 160.0, vd));
+    if (nearK > 0.002) {
+      vec2 qa = hk_pw, qb = mat2(0.8, -0.6, 0.6, 0.8) * hk_pw;
+      if (wv > 0.5) { qa = mix(vec2(vLoc.x, hk_rl), vec2(vLoc.z, hk_rl), step(0.5, bx)); qb = qa.yx * vec2(1.0, -1.0); }
+      vec4 g1 = texture2D(uGravel, qa / 2.4);
+      vec4 g2 = texture2D(uGravel, qb / 0.83 + 0.37);
+      float alb = mix(g1.r, g2.r, 0.38) * 1.594;
+      base *= mix(1.0, alb, nearK * 0.85);
+      hk_bh += ((g1.g - 0.5) * 0.05 + (g2.g - 0.5) * 0.02) * nearK;
+    }
     // baked curvature: crests a touch brighter, toes darker (bench lines read at any distance)
     {
       vec2 cUV = vec2(((vLoc.x - uAOX.x) * uAOX.z + 0.5) / uAOSize.x, ((-vLoc.z - uAOX.y) * uAOX.z + 0.5) / uAOSize.y);
-      float cv = (texture2D(uAO, cUV).g - 0.5) * 2.0;
+      float cv = (texture2D(uAO, cUV).g - 0.5) * 2.0 * (1.0 - vCarve);
       base *= 1.0 + uCurv * (0.55 * max(cv, 0.0) - 0.75 * max(-cv, 0.0));
     }
     // survey hillshade emphasis (normals exaggerated for shading only)
@@ -199,6 +249,14 @@ float hk_tanS; float hk_rl; float hk_fw; vec2 hk_pw; float hk_bh;`);
     vec4 dl = clamp(vec4(dot(ne, uHSL[0]), dot(ne, uHSL[1]), dot(ne, uHSL[2]), dot(ne, uHSL[3])), 0.0, 1.0);
     float hs = dot(uHSW, dl);
     base *= mix(1.0, 0.42 + 0.78 * hs, uHS);
+    // plan: Rain Model's survey plot (78 % 4-light grey + 22 % hypsometric tint), linear-space
+    if (uPlot > 0.0) {
+      float gray = clamp((hs - 0.15) / 0.85, 0.0, 1.0);
+      vec3 tint = mix(uPlotLo, uPlotHi, t);
+      vec3 plot = 0.78 * vec3(gray * gray) * vec3(1.0, 0.97, 0.91) + 0.22 * tint;
+      plot *= 1.0 + 0.5 * uDetail * g * (1.0 - farK);
+      base = mix(base, plot, uPlot);
+    }
     if (uSlopeOn > 0.5) {
       float gr = hk_tanS;
       // continuous ramp through the grade classes (0 / 4 / 8 / 10 %+), not pass/fail
@@ -207,8 +265,20 @@ float hk_tanS; float hk_rl; float hk_fw; vec2 hk_pw; float hk_bh;`);
       heat = mix(heat, uHeat[3], smoothstep(0.08, 0.10, gr));
       base = mix(base, heat * (0.55 + 0.6 * hs), 0.62);
     }
-    diffuseColor.rgb = base;
+    // cut / fill (Rain Model): carved ground cool blue, built ground sage, both keep the ground's own shading;
+    // ground opened this shift is a brighter blue
+    float cutK = smoothstep(0.05, 0.9, vCF.x);
+    if (cutK > 0.0) {
+      // walls of the cut darker than its floor so a carved trench reads as a hole, not a raised box
+      float wall = smoothstep(0.35, 1.3, hk_tanS);
+      base = mix(base, mix(uCutCol, uCutFresh, vCF.z) * (0.55 + 0.75 * hs) * mix(1.0, 0.62, wall), cutK * 0.9);
+    }
+    float fillK = smoothstep(0.05, 0.9, vCF.y);
+    if (fillK > 0.0) base = mix(base, uFillCol * (0.55 + 0.75 * hs), fillK * 0.8);
+    diffuseColor.rgb = base * uTerrMul;
   }`);
+      f = patch(f, 'normal_fragment_begin', /* glsl */ `
+  if (vCarve > 0.001) normal = normalize(cross(dFdx(vViewPosition), dFdy(vViewPosition)));`);
       f = patch(f, 'normal_fragment_maps', /* glsl */ `
   {
     vec2 dH = vec2(dFdx(hk_bh), dFdy(hk_bh)) * uBump;
@@ -217,7 +287,7 @@ float hk_tanS; float hk_rl; float hk_fw; vec2 hk_pw; float hk_bh;`);
       f = patch(f, 'aomap_fragment', /* glsl */ `
   {
     vec2 aoUV = vec2(((vLoc.x - uAOX.x) * uAOX.z + 0.5) / uAOSize.x, ((-vLoc.z - uAOX.y) * uAOX.z + 0.5) / uAOSize.y);
-    float ao = texture2D(uAO, aoUV).r;
+    float ao = mix(texture2D(uAO, aoUV).r, 0.82, vCarve);
     ao = mix(1.0, ao * ao, uAOStr);
     reflectedLight.indirectDiffuse *= ao;
     reflectedLight.directDiffuse *= mix(1.0, ao, 0.5);
@@ -231,7 +301,7 @@ float hk_tanS; float hk_rl; float hk_fw; vec2 hk_pw; float hk_bh;`);
         vec4 gp = uGlowP[i];
         vec3 dv = vLoc - gp.xyz;
         float r2 = dot(dv, dv) / (gp.w * gp.w);
-        gsum += exp(-r2 * 2.2) * (1.0 + 0.0 * gp.w);
+        gsum += exp(-r2 * 2.2);
       }
       outgoingLight += uGlowCol * diffuseColor.rgb * gsum * uGlowK;
     }
@@ -244,26 +314,44 @@ float hk_tanS; float hk_rl; float hk_fw; vec2 hk_pw; float hk_bh;`);
       float gfade = smoothstep(7.0, 18.0, uGrid.x / hk_fw);
       outgoingLight = mix(outgoingLight, uGridInk * 0.35, gl * gfade * uGrid.y);
     }
-    // anti-aliased contours: minor at the interval, major every Nth; faded before they crowd
+    // contours (HRL weight): minor ~1 px and index ~1.6 px at any zoom; each fades only where its lines would crowd
+    // (not by slope, so batters keep theirs); dead-flat ground (dump tops, pit floor) stays clean
     if (uContour.z > 0.5) {
-      float I = uContour.x;
-      float fz = max(fwidth(hk_rl), 1e-5);
-      float r = floor(hk_rl / I + 0.5);
-      float dpx = abs(hk_rl - r * I) / fz;
-      float isMajor = 1.0 - step(0.5, abs(r - uContour.y * floor(r / uContour.y + 0.5)));
-      float wpx = mix(0.55, 1.15, isMajor);
-      float line = 1.0 - smoothstep(wpx - 0.5, wpx + 0.6, dpx);
-      float spacing = I / fz;
-      float fade = mix(smoothstep(3.0, 7.0, spacing), smoothstep(1.4, 3.0, spacing * uContour.y), isMajor);
-      // flats (dump tops, pit floor) stay clean: no speckle where the slope / height change per pixel vanishes
-      fade *= smoothstep(0.006, 0.035, hk_tanS);
-      float a = line * fade * uInkAlpha * mix(0.6, 1.0, isMajor);
-      outgoingLight = mix(outgoingLight, uInk * 0.12 + outgoingLight * 0.25, a);
+      // gentle ground: RL from the lightly smoothed surface (no survey-noise crinkles); steep faces / carved ground: true RL
+      float rlC = hk_rl;
+      if (vCarve < 0.001) {
+        vec2 sUV = vec2(((hk_pw.x - uSmX.x) * uSmX.z + 0.5) / uSmSize.x, ((hk_pw.y - uSmX.y) * uSmX.z + 0.5) / uSmSize.y);
+        float rlS = texture2D(uSmH, sUV).r + uSmX.w + uZ0;
+        rlC = mix(rlS, hk_rl, smoothstep(0.15, 0.4, hk_tanS));
+      }
+      float fz = max(fwidth(rlC), 1e-5);
+      float I = uContour.x, J = uContour.x * uContour.y;
+      float d1 = abs(fract(rlC / I + 0.5) - 0.5) * I / fz;
+      float d2 = abs(fract(rlC / J + 0.5) - 0.5) * J / fz;
+      float l1 = (1.0 - smoothstep(0.3, 1.0, d1)) * smoothstep(2.4, 5.5, I / fz);
+      float l2 = (1.0 - smoothstep(0.6, 1.4, d2)) * smoothstep(1.6, 3.6, J / fz);
+      float flatK = smoothstep(0.0008, 0.004, hk_tanS);
+      float a = max(l1 * 0.36, l2 * 0.64) * flatK * uInkAlpha;
+      outgoingLight = mix(outgoingLight, uInk * mix(0.2, 0.55, uNight) + outgoingLight * 0.12, clamp(a, 0.0, 1.0));
     }
   }`, 'before');
       sh.fragmentShader = f;
     };
-    m.customProgramCacheKey = () => 'hk-terrain-v5';
+    m.customProgramCacheKey = () => 'hk-terrain-v7';
+    return m;
+  }
+
+  /** Shadow-map depth material with the same carving (the dug trench must not be shadowed by ground that is gone). */
+  private makeDepthMaterial(): THREE.MeshDepthMaterial {
+    const m = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking });
+    m.onBeforeCompile = sh => {
+      Object.assign(sh.uniforms, this.carve.uniforms);
+      sh.vertexShader = sh.vertexShader
+        .replace('#include <common>', `#include <common>\n${CARVE_GLSL}`)
+        .replace('#include <begin_vertex>', `#include <begin_vertex>
+  { vec3 cfx = vec3(0.0); float cvx = 0.0; transformed = hk_carve(transformed, cfx, cvx); }`);
+    };
+    m.customProgramCacheKey = () => 'hk-terrain-depth-v1';
     return m;
   }
 
@@ -277,7 +365,7 @@ float hk_tanS; float hk_rl; float hk_fw; vec2 hk_pw; float hk_bh;`);
       let f = sh.fragmentShader;
       f = f.replace('#include <common>', `#include <common>
 varying vec3 vLoc; varying float vTop;
-uniform float uZ0; uniform float uFloorRL;
+uniform float uZ0; uniform float uFloorRL; uniform float uTerrMul;
 uniform vec3 uTopsoil; uniform vec3 uWeathered; uniform vec3 uRockA; uniform vec3 uRockB; uniform vec3 uCoal;
 ${NOISE_GLSL}`);
       f = patch(f, 'color_fragment', /* glsl */ `
@@ -312,11 +400,11 @@ ${NOISE_GLSL}`);
     c *= 1.0 - (1.0 - smoothstep(0.5, 1.5, d5)) * 0.14 * (1.0 - smoothstep(0.12, 0.35, fwf));
     // fine grain
     c *= 0.94 + 0.12 * hk_vnoise(vec2(along, rl * 2.0) / max(0.8, fw * 2.0));
-    diffuseColor.rgb = c;
+    diffuseColor.rgb = c * uTerrMul;
   }`);
       sh.fragmentShader = f;
     };
-    m.customProgramCacheKey = () => 'hk-skirt-v1';
+    m.customProgramCacheKey = () => 'hk-skirt-v2';
     return m;
   }
 
@@ -354,6 +442,7 @@ ${NOISE_GLSL}`);
       g.boundingBox = new THREE.Box3(new THREE.Vector3(...L.min), new THREE.Vector3(...L.max));
       g.boundingSphere = g.boundingBox.getBoundingSphere(new THREE.Sphere());
       const mesh = new THREE.Mesh(g, this.terrainMat);
+      mesh.customDepthMaterial = this.depthMat;
       mesh.name = `topo:${a.id}`;
       mesh.userData.assetId = a.id;
       mesh.castShadow = true;
@@ -368,6 +457,8 @@ ${NOISE_GLSL}`);
     this.u.uGridOff.value.set(((origin[0] % 1000) + 1000) % 1000, ((origin[1] % 1000) + 1000) % 1000);
     const grid = HeightGrid.fromMeshes(locals);
     this.grid = grid;
+    if (grid) this.carve.setSnap(grid.dx);
+    this.ensureGravel();
     const rangeLo = grid ? grid.percentile(0.01) : this.min.y, rangeHi = grid ? grid.percentile(0.995) : this.max.y;
     this.u.uRange.value.set(rangeLo + origin[2], rangeHi + origin[2]);
     const relief = this.max.y - this.min.y;
@@ -376,7 +467,7 @@ ${NOISE_GLSL}`);
     const med = grid ? grid.percentile(0.5) : this.max.y;
     this.u.uFloorRL.value = med - this.floorY > 12 ? this.floorY + origin[2] : -1e6;
     this.datumY = this.min.y - Math.max(10, 0.14 * relief);
-    if (grid) this.bakeAO(grid);
+    if (grid) { this.bakeAO(grid); this.bakeSmooth(grid); }
     this.buildSkirt(locals);
     this.buildApron();
     this.buildBackdrop();
@@ -402,6 +493,31 @@ ${NOISE_GLSL}`);
     this.aoMs = performance.now() - t0;
   }
   aoMs = 0;
+
+  /** Smoothed heights (contours on gentle ground + their RL labels), as a half-float texture over the grid. */
+  smoothGrid: { ox: number; oy: number; nx: number; ny: number; dx: number; h: Float32Array } | null = null;
+  private smTex: THREE.DataTexture | null = null;
+  private bakeSmooth(g: HeightGrid) {
+    const sm = g.smoothed(2);
+    this.smoothGrid = { ox: g.ox, oy: g.oy, nx: g.nx, ny: g.ny, dx: g.dx, h: sm };
+    const s = Math.max(1, Math.ceil(Math.max(g.nx, g.ny) / 4096));
+    const w = Math.ceil(g.nx / s), hh = Math.ceil(g.ny / s);
+    const data = new Uint16Array(w * hh);
+    const base = g.minH, toH = THREE.DataUtils.toHalfFloat;
+    for (let j = 0; j < hh; j++) for (let i = 0; i < w; i++) {
+      const v = sm[Math.min(g.ny - 1, j * s) * g.nx + Math.min(g.nx - 1, i * s)];
+      data[j * w + i] = toH(v === v ? v - base : 0);
+    }
+    this.smTex?.dispose();
+    const tex = new THREE.DataTexture(data, w, hh, THREE.RedFormat, THREE.HalfFloatType);
+    tex.magFilter = THREE.LinearFilter; tex.minFilter = THREE.LinearFilter; tex.generateMipmaps = false;
+    tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+    tex.needsUpdate = true;
+    this.smTex = tex;
+    this.u.uSmH.value = tex;
+    this.u.uSmX.value.set(g.ox, g.oy, 1 / (s * g.dx), base);
+    this.u.uSmSize.value.set(w, hh);
+  }
 
   private buildSkirt(locals: LocalMesh[]) {
     const pos: number[] = [], nrm: number[] = [], top: number[] = [], idx: number[] = [], rim: number[] = [];
@@ -513,6 +629,7 @@ ${NOISE_GLSL}`);
     geo.setIndex(new THREE.BufferAttribute(I, 1));
     geo.computeBoundingSphere();
     const m = new THREE.Mesh(geo, this.terrainMat);
+    m.customDepthMaterial = this.depthMat;
     m.name = 'terrain-apron';
     m.receiveShadow = true;
     m.visible = this.driving;
@@ -580,7 +697,8 @@ ${NOISE_GLSL}`);
     this.contact.visible = !on && this.hasData;
     this.ground.visible = this.hasData && !(on && this.apron);
     this.shadowCatcher.visible = this.hasData && !on;
-    this.groundMat.color.copy(on ? pal.c.driveGround : pal.c.backdrop);
+    this.groundMat.color.copy(on ? this.driveCol : this.backdropCol);
+    void pal;
     this.placeGround();
   }
 
@@ -588,21 +706,59 @@ ${NOISE_GLSL}`);
     const u = this.u, c = p.c, d = p.def;
     u.uLow.value.copy(c.tLow); u.uMid.value.copy(c.tMid); u.uHigh.value.copy(c.tHigh);
     u.uBatter.value.copy(c.tBatter); u.uFloor.value.copy(c.tFloor); u.uVeg.value.copy(c.tVeg);
-    u.uInk.value.copy(c.ink); u.uInkAlpha.value = d.inkAlpha;
     u.uGridInk.value.copy(c.gridInk); u.uGrid.value.y = d.gridAlpha;
     u.uTopsoil.value.copy(c.topsoil); u.uWeathered.value.copy(c.weathered);
     u.uRockA.value.copy(c.rockA); u.uRockB.value.copy(c.rockB); u.uCoal.value.copy(c.coal);
-    this.groundMat.color.copy(this.driving ? c.driveGround : c.backdrop);
     this.contactMat.opacity = d.contact;
     this.shadowCatcherMat.opacity = d.contact * 0.5;
-    this.u.uGlowK.value = d.plantGlow * 2.2;
-    this.rimMat.color.set(p.def.stars > 0 ? '#9FB0C8' : '#FFFFFF');
-    this.rimMat.opacity = p.def.stars > 0 ? 0.35 : 0.75;
   }
 
-  setContours(intervalM: number, on: boolean) {
-    this.u.uContour.value.set(Math.max(0.1, intervalM || 5), 5, on ? 1 : 0, 0);
+  /** Shift-clock light: night darkens the ground, lights the faces, flips the contour ink. */
+  setLighting(L: Lighting) {
+    const u = this.u, n = L.env.night;
+    u.uNight.value = n;
+    u.uTerrMul.value = L.terrainMul;
+    u.uInk.value.copy(L.ink);
+    u.uInkAlpha.value = L.inkAlpha;
+    u.uGlowK.value = L.plantGlow * 2.2;
+    this.backdropCol.copy(L.backdrop);
+    this.driveCol.copy(L.driveGround);
+    this.groundMat.color.copy(this.driving ? this.driveCol : this.backdropCol);
+    this.rimMat.color.set(n > 0.5 || L.env.theme === 'dark' ? '#9FB0C8' : '#FFFFFF');
+    this.rimMat.opacity = n > 0.5 ? 0.3 : L.env.theme === 'dark' ? 0.45 : 0.75;
   }
+  private backdropCol = new THREE.Color('#E3E7EB');
+  private driveCol = new THREE.Color('#C9C0B0');
+
+  /** Called when something built off the critical path (near-field gravel) is ready to draw. */
+  onAsyncReady: (() => void) | null = null;
+  private gravelPending = false;
+  /** Near-field gravel texture: generated once, after the first frames (never on the terrain build path). */
+  private ensureGravel() {
+    if (this.gravel || this.gravelPending || typeof document === 'undefined') return;
+    this.gravelPending = true;
+    const run = () => {
+      this.gravelPending = false;
+      if (this.gravel) return;
+      this.gravel = makeGravelTexture(256);
+      this.u.uGravel.value = this.gravel;
+      this.u.uNearK.value = 1;
+      this.owned.push(this.gravel);
+      this.onAsyncReady?.();
+    };
+    const ric = (globalThis as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback;
+    if (ric) ric(run, { timeout: 1200 }); else setTimeout(run, 300);
+  }
+
+  /** Plan view: blend to the Rain Model survey-plot look (0..1). */
+  setPlot(k: number) { this.u.uPlot.value = k; }
+
+  /** Minor interval (m); index contours every 5th (2 → 10 m, 5 → 25 m …). */
+  setContours(intervalM: number, on: boolean) {
+    this.u.uContour.value.set(Math.max(0.1, intervalM || 2), 5, on ? 1 : 0, 0);
+  }
+  get contourMinor(): number { return this.u.uContour.value.x; }
+  get contoursOn(): boolean { return this.u.uContour.value.z > 0.5; }
   setGrid(stepM: number, on: boolean) {
     this.u.uGrid.value.x = stepM;
     this.u.uGrid.value.z = on ? 1 : 0;
@@ -625,6 +781,7 @@ ${NOISE_GLSL}`);
 
   dispose() {
     this.clear();
+    this.smTex?.dispose();
     for (const o of this.owned) o.dispose();
     this.aoTex.dispose();
   }

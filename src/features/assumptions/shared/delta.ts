@@ -42,4 +42,4 @@ export function smartDp(v: number): number {
   if (a >= 1) return 2;
   return 3;
 }
-export const smart = (v: number) => (Number.isFinite(v) ? num(v, smartDp(v)) : '–');
+export const smart = (v: number) => (Number.isFinite(v) ? (v < 0 && num(Math.abs(v), smartDp(v)) !== num(0, smartDp(v)) ? '−' : '') + num(Math.abs(v), smartDp(v)) : '–');

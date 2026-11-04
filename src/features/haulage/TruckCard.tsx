@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 import { simulateShift, truckStatesAt, type ShiftSim, type TruckPhase as EnginePhase, type TruckState as EngineTruckState } from '@/engine';
 import { useApp } from '@/state/store';
 import { useCircuitResult, useResults } from '@/state/derived';
-import { Badge, Button, CardBody, CardHead, Empty, Kpi, Section, cx } from '@/ui';
+import { Badge, Button, CardBody, CardHead, Empty, Kpi, Section, circuitColor, cx } from '@/ui';
 import { clock, num, secs } from '@/core/format';
 import { truckStateAt } from './model';
 import { BackButton } from './parts';
@@ -73,8 +73,8 @@ export function TruckCard({ circuitId, truckIndex }: { circuitId: string; truckI
   return (
     <>
       <CardHead
-        title={<span className={s.headTitle}><BackButton label="Back to circuit" onClick={() => select({ kind: 'circuit', id: c.id })} /><span className={s.cDot} style={{ background: c.color, width: 10, height: 10, flex: 'none' }} /><span>{label} · {c.name}</span></span>}
-        actions={st?.paused ? <Badge tone="warn" icon="pause">{st.pauseLabel ?? 'Paused'}</Badge> : <Badge tone={loaded ? 'info' : 'na'}>{loaded ? 'Loaded' : 'Empty'}</Badge>}
+        title={<span className={s.headTitle}><BackButton label="Back to circuit" onClick={() => select({ kind: 'circuit', id: c.id })} /><span className={s.cDot} style={{ background: circuitColor(c.color), width: 10, height: 10, flex: "none" }} /><span>{label} · {c.name}</span></span>}
+        actions={st?.paused ? <Badge tone="warn" icon="pause">{st.pauseLabel ?? 'Paused'}</Badge> : <Badge tone="na" icon={loaded ? 'truck' : undefined}>{loaded ? 'Loaded' : 'Empty'}</Badge>}
       />
       <CardBody>
         <div className={s.sub}><b>{truck?.name ?? 'Truck'}</b><span className={s.dotSep}>truck {truckIndex + 1} of {c.trucks}</span><span className={s.dotSep}>{clock(scenario.shift.startHour, tMin)} · {playing ? 'playing' : 'paused'}</span></div>

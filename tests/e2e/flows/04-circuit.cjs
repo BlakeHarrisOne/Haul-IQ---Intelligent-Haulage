@@ -112,7 +112,7 @@ module.exports = {
     await t.shot('rimpull');
 
     // accessibility / label activation: the segmented control sits inside <label> (ui Field)
-    const names = await insp.getByRole('tablist').filter({ has: tabBtn('Rimpull') }).first().ariaSnapshot();
+    const names = await insp.getByRole('tablist').filter({ hasText: /^SpreadsheetRimpull$/ }).first().ariaSnapshot();
     t.check(!/tab "Speed model/.test(names), 'speed-model tabs are named by their own text (not the field caption)', names.replace(/\n/g, ' | '));
     await insp.locator('label > span', { hasText: /^Speed model$/ }).click();
     const afterCaption = await L.probe(page, (st, id) => st.scenario.circuits.find(x => x.id === id).params.speedModel, c.id);

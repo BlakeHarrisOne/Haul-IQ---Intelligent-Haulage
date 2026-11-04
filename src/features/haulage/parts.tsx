@@ -49,10 +49,11 @@ export function TruckPips({ assigned, exact, max }: { assigned: number; exact: n
   );
 }
 
+/** Callout. 'bad' (rust) is for faults only; a deliberate choice uses 'warn' (clay) or 'na' (neutral). */
 export function Callout({ tone = 'info', icon, title, children, action }: {
-  tone?: 'info' | 'ok' | 'bad' | 'warn'; icon?: IconName; title: ReactNode; children?: ReactNode; action?: ReactNode;
+  tone?: 'info' | 'ok' | 'bad' | 'warn' | 'na'; icon?: IconName; title: ReactNode; children?: ReactNode; action?: ReactNode;
 }) {
-  const ic: IconName = icon ?? (tone === 'bad' ? 'warning' : tone === 'warn' ? 'warning' : tone === 'ok' ? 'tick' : 'info');
+  const ic: IconName = icon ?? (tone === 'bad' ? 'warning' : tone === 'warn' ? 'info' : tone === 'ok' ? 'tick' : 'info');
   return (
     <div className={cx(s.callout, s[`co-${tone}`])}>
       <Icon name={ic} size={18} />

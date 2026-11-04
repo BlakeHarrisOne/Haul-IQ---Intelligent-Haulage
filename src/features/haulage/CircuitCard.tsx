@@ -5,8 +5,9 @@ import { useApp } from '@/state/store';
 import { useCircuitResult } from '@/state/derived';
 import { computeCircuit, type CircuitParamsExt, type MotionModel, type OutOfRangeMode, type QueueModel } from '@/engine';
 import {
-  Badge, Button, CardBody, CardHead, Ctl, Empty, Field, Icon, Kpi, MenuButton, NumberField, Section, Segmented, Select, cx,
+  Badge, Button, CardBody, CardHead, Ctl, Empty, Field, Icon, Kpi, MenuButton, Section, Segmented, Select, circuitColor, cx,
 } from '@/ui';
+import { NumField } from '@/features/assumptions/shared/NumField';
 import { num } from '@/core/format';
 import { uid } from '@/core/ids';
 import {
@@ -46,7 +47,7 @@ export function CircuitCard({ id }: { id: string }) {
   return (
     <>
       <CardHead
-        title={<span className={s.headTitle}><BackButton label="All circuits" onClick={() => select({ kind: 'none' })} /><span className={s.cDot} style={{ background: c.color, width: 10, height: 10, flex: 'none' }} /><span>{c.name}</span></span>}
+        title={<span className={s.headTitle}><BackButton label="All circuits" onClick={() => select({ kind: 'none' })} /><span className={s.cDot} style={{ background: circuitColor(c.color), width: 10, height: 10, flex: 'none' }} /><span>{c.name}</span></span>}
         actions={
           <>
             {r?.ok ? <StatusBadge status={r.assigned.status} short /> : <Badge tone="na">{c.active ? 'Incomplete' : 'Parked'}</Badge>}
@@ -108,7 +109,7 @@ function FleetChooser({ c, r }: { c: Circuit; r: CircuitResult }) {
   const assign = (n: number) => { if (n !== c.trucks) updateCircuit(c.id, { trucks: n }); };
   return (
     <Section title="Trucks" actions={<span className={s.figLab} style={{ letterSpacing: 0, textTransform: 'none' }}>target {num(c.params.desiredDailyBcm)} bcm/d</span>}>
-      <div className={s.fleet} role="listbox" aria-label="Number of trucks">
+      <div className={s.fleet} role="listbox" aria-label="Number of trucks" style={{ ['--cc' as string]: circuitColor(c.color) }}>
         <div className={s.fHead}>
           <span>n</span><span>Production vs target</span><span>bcm/d</span><span title="Loader PT lost per shift (hang time)">Lost h</span><span title="Truck hours per shift queuing at the loader">Queue h</span><span title="Match factor">MF</span>
         </div>
@@ -116,9 +117,9 @@ function FleetChooser({ c, r }: { c: Circuit; r: CircuitResult }) {
       </div>
       <div className={s.fLegend}>
         <span><i className={s.lgRec} />Recommended</span>
-        <span><i className={s.lgSw} style={{ background: 'var(--c1)' }} />Achieved</span>
+        <span><i className={s.lgSw} style={{ background: circuitColor(c.color) }} />Achieved</span>
         <span><i className={s.lgSw} style={{ background: 'repeating-linear-gradient(135deg, var(--bad) 0 1.5px, transparent 1.5px 4px)', opacity: .7 }} />Shortfall</span>
-        <span><i className={s.lgSw} style={{ background: 'repeating-linear-gradient(135deg, var(--warn) 0 1.5px, transparent 1.5px 4px)', opacity: .7 }} />Idle trucks</span>
+        <span><i className={s.lgSw} style={{ background: 'repeating-linear-gradient(135deg, var(--warn) 0 1.5px, transparent 1.5px 4px)', opacity: .7 }} />Idle capacity</span>
       </div>
       <Callout tone={call.tone} title={call.title}
         action={c.trucks !== rec ? <Button size="sm" onClick={() => assign(rec)}>Use recommended · {rec}</Button> : undefined}>
@@ -135,10 +136,10 @@ function FleetRowView({ row, targetBcm, onClick }: { row: FleetRow; targetBcm: n
   const idle = row.capacity - row.achieved;
   const k = Math.abs(row.delta);
   const title = row.kind === 'recommended'
-    ? `${o.trucks} trucks - recommended: fewest trucks with no loader PT lost`
+    ? `${o.trucks} trucks – recommended: fewest trucks with no loader PT lost`
     : row.kind === 'under'
-      ? `${o.trucks} trucks - deliberately under-truck by ${k}: ${num(o.lostLoaderPtHrsShift, 2)} h/shift loader hang, ${num(Math.max(0, targetBcm - o.bcmPerDay))} bcm/d short`
-      : `${o.trucks} trucks - deliberately over-truck by ${k}: ${num(o.truckQueueHrsShift, 2)} truck-h/shift queuing`;
+      ? `${o.trucks} trucks – deliberately under-truck by ${k}: ${num(o.lostLoaderPtHrsShift, 2)} h/shift loader hang, ${num(Math.max(0, targetBcm - o.bcmPerDay))} bcm/d short`
+      : `${o.trucks} trucks – deliberately over-truck by ${k}: ${num(o.truckQueueHrsShift, 2)} truck-h/shift queuing`;
   return (
     <button type="button" role="option" aria-selected={row.assigned} title={title}
       className={cx(s.fRow, row.assigned && s.fAssigned, row.kind === 'recommended' && s.fRec)} onClick={onClick}>
@@ -258,7 +259,7 @@ function ModelOptions({ c }: { c: Circuit }) {
     <>
       {c.params.speedModel === 'spreadsheet' ? (
         <div className={s.full}>
-          <Field label="Grades steeper than ±16 %" hint={(pe.outOfRange ?? 'drop') === 'drop' ? 'As calc.xlsm: the segment\'s time counts as 0 s.' : 'Timed at the steepest table row (12 / 14 km/h).'}>
+          <Field label="Grades steeper than ±16%" hint={(pe.outOfRange ?? 'drop') === 'drop' ? 'As calc.xlsm: the segment\'s time counts as 0 s.' : 'Timed at the steepest table row (12 / 14 km/h).'}>
             <Segmented<OutOfRangeMode> small value={pe.outOfRange ?? 'drop'} onChange={v => set({ outOfRange: v })}
               options={[{ value: 'drop', label: 'Drop (workbook)' }, { value: 'clamp', label: 'Clamp 12 / 14 km/h' }]} />
           </Field>
@@ -274,7 +275,7 @@ function ModelOptions({ c }: { c: Circuit }) {
       <div className={s.full}>
         <Field label="Production model">
           <Select<QueueModel> value={pe.queueModel ?? 'deterministic'} onChange={v => set({ queueModel: v })}
-            options={[{ value: 'deterministic', label: 'Deterministic - n × PT × productivity (workbook)' }, { value: 'mm1n', label: 'Finite queue M/M/1//N - bunching' }, { value: 'binomial', label: 'Binomial truck-loader match' }]} />
+            options={[{ value: 'deterministic', label: 'Deterministic – n × PT × productivity (workbook)' }, { value: 'mm1n', label: 'Finite queue M/M/1//N – bunching' }, { value: 'binomial', label: 'Binomial truck-loader match' }]} />
         </Field>
       </div>
     </>
@@ -345,7 +346,7 @@ function Assumptions({ c, scenario }: { c: Circuit; scenario: Scenario }) {
                   <span className={cx(ch && s.pChanged)}>{d.label}</span>
                   {(hint || ch) && <span className={s.pHint}>{ch ? `Default ${num(dv, d.dp)}${d.unit ? ` ${d.unit}` : ''}` : hint}</span>}
                 </span>
-                <NumberField small value={v} onChange={nv => updateParams(c.id, { [d.key]: nv } as Partial<CircuitParams>)} unit={d.unit} step={d.step} dp={d.dp} min={d.min} max={d.max} changed={ch} />
+                <NumField small value={v} onChange={nv => updateParams(c.id, { [d.key]: nv } as Partial<CircuitParams>)} unit={d.unit} step={d.step} dp={d.dp} min={d.min} max={d.max} changed={ch} />
               </div>
             );
           })}

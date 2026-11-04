@@ -3,10 +3,11 @@ import { useEffect, useRef, useState, type PointerEvent as RPointerEvent } from 
 import type { AssetRole, BlockProps, DepletionMode, MeshAsset } from '@/core/types';
 import { useApp } from '@/state/store';
 import { useResults } from '@/state/derived';
-import { Badge, CardBody, CardHead, Empty, Field, Icon, Kpi, NumberField, Range, Section, Segmented, Select, Toggle } from '@/ui';
+import { Badge, CardBody, CardHead, Empty, Field, Icon, Kpi, Range, Section, Segmented, Select, Toggle, circuitColor } from '@/ui';
 import { num } from '@/core/format';
 import { circuitsUsingAsset } from './model';
 import { BackButton, StatusBadge } from './parts';
+import { NumField } from '@/features/assumptions/shared/NumField';
 import s from './haulage.module.css';
 
 const ROLES: { value: AssetRole; label: string }[] = [
@@ -100,7 +101,7 @@ function Body({ a }: { a: MeshAsset }) {
                   options={scenario.materials.length ? scenario.materials.map(m => ({ value: m.id, label: m.name })) : [{ value: block.materialId, label: block.materialId }]} />
               </Field>
               <Field label="Planned volume" hint={block.plannedBcm != null ? `Solid ${num(st.volume ?? 0)} bcm` : 'Blank = solid volume'}>
-                <NumberField value={block.plannedBcm ?? null} placeholder={st.volume != null ? num(st.volume) : '—'} unit="bcm" dp={0} step={1000} min={0}
+                <NumField value={block.plannedBcm ?? null} placeholder={st.volume != null ? num(st.volume) : '–'} unit="bcm" dp={0} step={1000} min={0}
                   changed={block.plannedBcm != null} onChange={v => setBlock({ plannedBcm: v })} onClear={() => setBlock({ plannedBcm: undefined })} />
               </Field>
               <div className={s.full}>
@@ -110,7 +111,7 @@ function Body({ a }: { a: MeshAsset }) {
             <div className={s.dialRow}>
               <AzimuthDial deg={block.advanceAzimuthDeg} onChange={v => setBlock({ advanceAzimuthDeg: v })} disabled={block.depletionMode !== 'face-advance'} />
               <Field label={block.depletionMode === 'face-advance' ? 'Face advance azimuth' : 'Azimuth (face advance only)'} hint={compass(block.advanceAzimuthDeg)}>
-                <NumberField value={block.advanceAzimuthDeg} unit="° grid" dp={0} step={5} min={0} max={360} onChange={v => setBlock({ advanceAzimuthDeg: ((v % 360) + 360) % 360 })} />
+                <NumField value={block.advanceAzimuthDeg} unit="° grid" dp={0} step={5} min={0} max={360} onChange={v => setBlock({ advanceAzimuthDeg: ((v % 360) + 360) % 360 })} />
               </Field>
             </div>
           </Section>
@@ -122,7 +123,7 @@ function Body({ a }: { a: MeshAsset }) {
             const r = results[c.id];
             return (
               <button key={c.id} type="button" className={`${s.lRow} ${s.lRowWide}`} onClick={() => select({ kind: 'circuit', id: c.id })}>
-                <span className={s.cDot} style={{ background: c.color, justifySelf: 'center' }} />
+                <span className={s.cDot} style={{ background: circuitColor(c.color), justifySelf: "center" }} />
                 <span className={s.lName}>{c.name}<span className={s.lHint}>{c.digId === a.id ? 'digs here' : 'dumps here'}</span></span>
                 <span className={s.lVal}>{r?.ok ? `${num(r.assigned.bcmPerDay)} bcm/d` : ''}</span>
                 <span>{r?.ok ? <StatusBadge status={r.assigned.status} short /> : null}</span>

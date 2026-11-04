@@ -2,7 +2,8 @@
  * Dev harness: `?scene` in the app (see src/scene/index.tsx) and the standalone page
  * /src/scene/core/harness.html (no app shell; scene modules loaded lazily so a broken module elsewhere cannot blank
  * the view). Params: theme=light|dark, dev=1 (synthetic pit even if the demo exists), cam=orbit|plan|pov|chase,
- * dep=0..1 (force depletion), section=1, view=solids, mods=0 (no actor/tool modules), chrome=0.
+ * dep=0..1 (force depletion), t=minutes into the shift, hz=shift|week|completion (depletion horizon),
+ * ci=contour interval (m), section=1, view=solids, mods=0 (no actor/tool modules), chrome=0.
  */
 import { useApp } from '@/state/store';
 import type { Scenario } from '@/core/types';
@@ -30,6 +31,10 @@ export async function bootHarness() {
     }
     useApp.getState().replaceScenario(sc, { markClean: true });
   }
+  const t = q.get('t'), hz = q.get('hz'), ci = q.get('ci');
+  if (t !== null) useApp.getState().setTimeline({ tMin: Math.max(0, Number(t) || 0) });
+  if (hz === 'shift' || hz === 'week' || hz === 'completion') useApp.getState().setTimeline({ horizon: hz });
+  if (ci !== null && Number(ci) > 0) useApp.getState().commit('Contour interval', d => ({ ...d, settings: { ...d.settings, contourIntervalM: Number(ci) } }));
   const dep = q.get('dep');
   if (dep !== null) sceneApi.setDepletionOverride(Math.max(0, Math.min(1, Number(dep) || 0)));
   const scn = useApp.getState().scenario;

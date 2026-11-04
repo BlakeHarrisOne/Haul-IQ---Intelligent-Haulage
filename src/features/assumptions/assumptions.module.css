@@ -14,7 +14,7 @@
 .m-punc { color: var(--ink-2); }
 .m-text { font-family: var(--font); font-size: 13.5px; color: var(--ink-2); }
 .m-ref {
-  font: 500 11.5px/18px var(--font-mono); font-style: normal; color: var(--accent-ink); background: var(--accent-50);
+  font: 500 11.5px/18px var(--font-mono); font-style: normal; color: var(--ink-2); background: var(--surface-3); box-shadow: inset 0 0 0 1px var(--hair);
   border-radius: 5px; padding: 1px 5px; margin: 0 1px; white-space: nowrap; vertical-align: 1px;
 }
 .math sub { font-size: .68em; vertical-align: -.32em; line-height: 0; font-style: italic; letter-spacing: .01em; }
@@ -53,8 +53,9 @@
 }
 .expBtn:hover { background: var(--hover); color: var(--ink); }
 .expBtn[aria-expanded="true"] { transform: rotate(90deg); color: var(--accent); }
-.key .stepNum { color: var(--accent-ink); }
-.key { box-shadow: inset 3px 0 0 var(--accent); }
+/* headline workbook cells: emphasis by weight and a neutral rule - the accent is for selection / focus only */
+.key .stepNum { color: var(--ink); font-weight: 750; }
+.key { box-shadow: inset 3px 0 0 var(--ink-3); background: color-mix(in srgb, var(--surface-2) 60%, transparent); }
 
 .inputs { grid-column: 2 / -1; margin: 8px 0 4px; border: 1px solid var(--hair); border-radius: 10px; overflow: hidden; background: var(--surface); }
 .inputs table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -117,10 +118,19 @@
 .speedScroll { max-height: 420px; overflow: auto; border: 1px solid var(--hair); border-radius: 10px; }
 .speedScroll .editTable th { position: sticky; top: 0; z-index: 1; }
 
-/* ── shift timeline ────────────────────────────────────────────────────────── */
+/* ── shift timeline (same event language as the Site timeline: src/ui/events.ts) ── */
 .timeline { padding: 6px 16px 4px; }
-.tlTrack { position: relative; height: 34px; border-radius: 8px; background: var(--ok-50); overflow: hidden; }
-.tlEvent { position: absolute; top: 0; bottom: 0; border-left: 2px solid var(--surface); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--ink-inv); overflow: hidden; white-space: nowrap; }
+.tlTrack { position: relative; height: 34px; border-radius: 8px; background: color-mix(in srgb, var(--ok-50) 70%, var(--surface)); box-shadow: inset 0 0 0 1px var(--hair-2); overflow: hidden; }
+.tlEvent {
+  position: absolute; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 0 4px;
+  font-size: 11px; font-weight: 650; overflow: hidden; white-space: nowrap; box-shadow: inset 1px 0 0 var(--surface), inset -1px 0 0 var(--surface);
+}
+.tlEvent svg { flex: none; }
+.tlLegend { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 2px 16px 6px; font-size: 12px; color: var(--ink-2); }
+.tlLegend > span { display: inline-flex; align-items: center; gap: 6px; }
+.tlSw { width: 16px; height: 12px; border-radius: 3px; box-shadow: inset 0 0 0 1px var(--hair); display: inline-flex; align-items: center; justify-content: center; }
+.kindCell { display: inline-flex; align-items: center; gap: 6px; }
+.kindIco { width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
 .tlTicks { position: relative; height: 18px; font-size: 11px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
 .tlTicks span { position: absolute; transform: translateX(-50%); top: 3px; }
 .tlTicks span:first-child { transform: none; }
@@ -158,3 +168,11 @@
 .pInput { display: flex; align-items: center; gap: 2px; }
 .pCell { font: 500 10.5px/14px var(--font-mono); color: var(--ok-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .warnMore { all: unset; cursor: pointer; font-weight: 650; text-decoration: underline; text-underline-offset: 2px; }
+
+/* ── section sub-heading inside the page ─────────────────────────────────────── */
+.subHead { display: flex; align-items: flex-end; gap: 12px 24px; flex-wrap: wrap; margin-top: 12px; }
+.subHeadText { min-width: 0; flex: 1 1 520px; }
+.subTitle { font: 650 20px/26px var(--font-display); letter-spacing: -.012em; color: var(--ink); margin: 0; }
+.subDesc { margin: 2px 0 0; color: var(--ink-2); font-size: 14px; line-height: 20px; max-width: 860px; }
+.sumRow td { background: var(--surface-2); }
+.sumVal { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }

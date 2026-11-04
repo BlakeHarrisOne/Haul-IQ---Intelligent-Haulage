@@ -1,20 +1,25 @@
 /**
  * Strings module: every visible haul string as a road ribbon (grade or circuit colour, white casing, chainage ticks,
- * drifting dig → dump chevrons, ghosted where it runs under the surface), start / end pins in the label layer,
- * stop-sign markers, vertex handles of the selected string, grade chips per grade run on hover / selection,
- * hover highlight (→ store.setHover) and a hover readout for the leg under the cursor.
+ * drifting dig → dump chevrons, ghosted where it runs under the surface) with its carriageway band at the true road
+ * width, start / end pins and grade chips (placed by the scene's shared label placer `ctx.labels` when the core has
+ * it), stop-sign markers, vertex handles of the selected string, hover highlight (→ store.setHover) and a hover card
+ * for the leg under the cursor (above the labels).
+ * In the ride cameras (POV / chase) the ribbons give way to the real 3D haul road (road3d.ts): gravel carriageway,
+ * windrows, delineators.
  * Exposes screen-space picking and path tables to the tools / actors / cockpit modules through the bus.
  */
 import * as THREE from 'three';
-import type { SceneContext, SceneModule } from '../context';
+import type { PlacedLabel, SceneContext, SceneModule } from '../context';
 import type { HaulString, Id, Scenario, StringPoint } from '@/core/types';
 import { useApp, type AppState, type Selection } from '@/state/store';
 import { worldToScene, type Frame } from '@/core/frame';
 import { busOf, type StringHit } from './bus';
 import { buildPath, gradeClassOf, gradeRuns, legGrade, sampleAt, type PathTable } from './path';
 import { buildRibbonGeometry, makeRibbonMaterial, type RibbonUniforms } from './ribbon';
+import { buildRoads, makePostMaterial, makeRoadMaterial, postGeometry, roadDims, writePosts, type RoadDims } from './road3d';
 import { distToSeg2, makeProjector, type Projector } from './screen';
 import { ACCENT, circuitOfString, endNames, gradeHex, hexToRgb, STOP_RED, stringColor } from './palette';
+import { nightOf } from './env';
 import css from './ui.module.css';
 
 interface Entry {
@@ -33,7 +38,11 @@ interface Entry {
   mats: (THREE.ShaderMaterial & { uniforms: RibbonUniforms })[];
   pinStart: HTMLDivElement;
   pinEnd: HTMLDivElement;
+  /** Chip-only pins handed to the shared label placer (ctx.labels). */
+  chipStart: HTMLDivElement;
+  chipEnd: HTMLDivElement;
   pinText: string;
+  dims: RoadDims;
   /** The end sits on a dig / dump block the scene core already labels. */
   startLinked: boolean;
   endLinked: boolean;
@@ -59,10 +68,39 @@ export const stringsModule: SceneModule = (ctx: SceneContext) => {
   ctx.labelLayer.appendChild(root);
   const tagRoot = document.createElement('div');
   root.appendChild(tagRoot);
+  // the hover card sits above every scene label (and stays when labels are off)
+  const cardRoot = document.createElement('div');
+  cardRoot.className = `${css.root} ${css.cardLayer}`;
+  (ctx.hudLayer ?? ctx.labelLayer).appendChild(cardRoot);
   const tip = document.createElement('div');
   tip.className = css.tip;
   tip.style.display = 'none';
-  root.appendChild(tip);
+  cardRoot.appendChild(tip);
+  // labels handed to the shared placer this frame / last frame (removed when they stop showing)
+  let placedIds = new Set<string>();
+  let nextIds = new Set<string>();
+  /** Last value handed to the placer per id (it re-places on every upsert, so only changes are sent). */
+  const sentKey = new Map<string, string>();
+  const svc = () => ctx.labels;
+  let wanted: PlacedLabel[] = [];
+  const share = (id: string, world: [number, number, number], el: HTMLElement, priority: number, leader: boolean) => {
+    nextIds.add(id);
+    wanted.push({ id, world, el, priority, leader });
+  };
+  /** Stale labels first (their elements may be reused by a new id), then only the labels that changed. */
+  const flushShared = () => {
+    const L = svc();
+    if (!L) return;
+    for (const id of placedIds) if (!nextIds.has(id)) { L.remove(id); sentKey.delete(id); }
+    for (const l of wanted) {
+      const k = `${l.world[0].toFixed(2)},${l.world[1].toFixed(2)},${l.world[2].toFixed(2)}|${l.priority}|${l.leader}|${l.el.textContent}`;
+      if (sentKey.get(l.id) === k && placedIds.has(l.id)) continue;
+      sentKey.set(l.id, k);
+      L.upsert(l);
+    }
+    placedIds = nextIds;
+    wanted = [];
+  };
 
   let dirty = true;
   let lastFrameKey = '';
@@ -97,13 +135,25 @@ export const stringsModule: SceneModule = (ctx: SceneContext) => {
     root.appendChild(d);
     return d;
   }
+  /** The pin as a bare chip for the shared placer (it draws the stem / leader and the anchor). */
+  function makeChip(): HTMLDivElement {
+    const d = document.createElement('div');
+    d.className = `${css.pinChip} ${css.placed}`;
+    d.innerHTML = `<span class="${css.pinSwatch}"></span><b></b><i></i>`;
+    d.dataset.dot = '0';
+    d.dataset.place = 'above';
+    d.style.visibility = 'hidden';
+    root.appendChild(d);
+    return d;
+  }
 
   function dispose(e: Entry) {
     ctx.layers.strings.remove(e.group);
     e.road.geometry.dispose();
     for (const m of e.mats) m.dispose();
-    e.pinStart.remove();
-    e.pinEnd.remove();
+    for (const el of [e.pinStart, e.pinEnd, e.chipStart, e.chipEnd]) el.remove();
+    const L = svc();
+    if (L) for (const id of [`pin:${e.id}:0`, `pin:${e.id}:1`]) { L.remove(id); placedIds.delete(id); sentKey.delete(id); }
   }
 
   function sync() {
@@ -145,12 +195,15 @@ export const stringsModule: SceneModule = (ctx: SceneContext) => {
         group.name = `string:${hs.name}`;
         group.add(glow, ghost, road);
         ctx.layers.strings.add(group);
-        e = { id: hs.id, hs, pts, path, scene, color, key, group, road, glow, ghost, mats, pinStart: makePin('start'), pinEnd: makePin('end'), pinText: '', startLinked: false, endLinked: false };
+        e = {
+          id: hs.id, hs, pts, path, scene, color, key, group, road, glow, ghost, mats, pinStart: makePin('start'), pinEnd: makePin('end'),
+          chipStart: makeChip(), chipEnd: makeChip(), pinText: '', startLinked: false, endLinked: false, dims: roadDims(s.scenario, hs),
+        };
         entries.set(hs.id, e);
       } else {
         e.road.geometry.dispose();
         e.road.geometry = geo; e.glow.geometry = geo; e.ghost.geometry = geo;
-        Object.assign(e, { hs, pts, path, scene, color, key });
+        Object.assign(e, { hs, pts, path, scene, color, key, dims: roadDims(s.scenario, hs) });
       }
       const circ = circuitOfString(s.scenario, hs.id);
       const linked = (id: Id | undefined) => !!id && s.scenario.assets.some(a => a.id === id && a.visible !== false);
@@ -160,7 +213,7 @@ export const stringsModule: SceneModule = (ctx: SceneContext) => {
       const text = `${names.start.join('|')}|${names.end.join('|')}|${color}`;
       if (text !== e.pinText) {
         e.pinText = text;
-        for (const [pin, nm] of [[e.pinStart, names.start], [e.pinEnd, names.end]] as const) {
+        for (const [pin, nm] of [[e.pinStart, names.start], [e.pinEnd, names.end], [e.chipStart, names.start], [e.chipEnd, names.end]] as const) {
           (pin.querySelector('b') as HTMLElement).textContent = nm[0];
           (pin.querySelector('i') as HTMLElement).textContent = `· ${nm[1]}`;
           (pin.querySelector(`.${css.pinSwatch}`) as HTMLElement).style.background = color;
@@ -169,6 +222,7 @@ export const stringsModule: SceneModule = (ctx: SceneContext) => {
     });
     for (const [id, e] of entries) if (!seen.has(id)) { dispose(e); entries.delete(id); }
     applyHighlight();
+    roadsDirty = true;
   }
 
   function applyHighlight() {
@@ -182,7 +236,10 @@ export const stringsModule: SceneModule = (ctx: SceneContext) => {
       glow.visible = selected || hovered;
       road.uniforms.uHover.value = hovered ? 1 : 0;
       road.uniforms.uHoverLeg.value = hoverLeg && hoverLeg.id === e.id ? hoverLeg.leg : -10;
-      road.uniforms.uWidthM.value = glow.uniforms.uWidthM.value = ghost.uniforms.uWidthM.value = 10;
+      // the carriageway at its true width: calm grade tint + thin casing lines, stronger on the focused string
+      road.uniforms.uWidthM.value = glow.uniforms.uWidthM.value = ghost.uniforms.uWidthM.value = e.dims.widthM;
+      road.uniforms.uBandA.value = selected ? 0.26 : hovered ? 0.22 : 0.15;
+      road.uniforms.uEdgeA.value = selected ? 0.95 : hovered ? 0.85 : 0.62;
       road.uniforms.uMinPx.value = selected ? 8.5 : 7;
       ghost.uniforms.uMinPx.value = road.uniforms.uMinPx.value;
       glow.uniforms.uMinPx.value = road.uniforms.uMinPx.value;
@@ -260,6 +317,62 @@ export const stringsModule: SceneModule = (ctx: SceneContext) => {
     ctx.requestRender();
   }
 
+  // ── ride cameras: the real 3D haul road (road3d.ts) instead of the ribbons ───────────────────────────────────
+  let roadsDirty = true;
+  let roadsFrame = '';
+  const roads3d = new Map<Id, { mesh: THREE.Mesh; mat: ReturnType<typeof makeRoadMaterial> }>();
+  const postGeo = postGeometry();
+  const postMat = makePostMaterial();
+  let posts: THREE.InstancedMesh | null = null;
+  let rideShown = false;
+
+  function disposeRoads() {
+    for (const r of roads3d.values()) { ctx.layers.strings.remove(r.mesh); r.mesh.geometry.dispose(); r.mat.dispose(); }
+    roads3d.clear();
+    if (posts) { ctx.layers.strings.remove(posts); posts.dispose(); posts = null; }
+  }
+
+  function buildRoads3d() {
+    roadsDirty = false;
+    roadsFrame = frameKey(ctx.frame());
+    disposeRoads();
+    const list = [...entries.values()];
+    const built = buildRoads(list.map(e => ({ id: e.id, path: e.path, dims: e.dims })), ctx.frame(), (e, n) => ctx.heightAt(e, n));
+    const allPosts = [];
+    for (const e of list) {
+      const b = built.get(e.id);
+      if (!b) continue;
+      const mat = makeRoadMaterial(b.dims);
+      const mesh = new THREE.Mesh(b.geometry, mat);
+      mesh.name = `road3d:${e.hs.name}`;
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      mesh.userData.stringId = e.id;
+      ctx.layers.strings.add(mesh);
+      roads3d.set(e.id, { mesh, mat });
+      allPosts.push(...b.posts);
+    }
+    if (allPosts.length) {
+      posts = new THREE.InstancedMesh(postGeo, postMat, allPosts.length);
+      posts.name = 'road3d:delineators';
+      posts.frustumCulled = false;
+      writePosts(posts, allPosts);
+      ctx.layers.strings.add(posts);
+    }
+    ctx.requestRender();
+  }
+
+  /** Ribbons in the map views; the 3D road (built on first use, rebuilt when a string changes) in POV / chase. */
+  function syncRide(ride: boolean) {
+    if (ride && (roadsDirty || roadsFrame !== frameKey(ctx.frame()))) buildRoads3d();
+    if (ride === rideShown && !ride) return;
+    rideShown = ride;
+    for (const e of entries.values()) e.group.visible = !ride;
+    for (const r of roads3d.values()) r.mesh.visible = ride;
+    if (posts) posts.visible = ride;
+    if (ride) postMat.userData.post.uGlow.value = 1.8 * nightOf(ctx);
+  }
+
   // ── per-frame ──────────────────────────────────────────────────────────────────────
   const offFrame = ctx.onFrame((dt) => {
     const size = new THREE.Vector2();
@@ -269,49 +382,108 @@ export const stringsModule: SceneModule = (ctx: SceneContext) => {
     if (dirty || frameKey(ctx.frame()) !== lastFrameKey) sync();
     const s = st();
     if (s.timeline.playing || s.selection.kind === 'string') shared.uTime.value += Math.min(dt, 0.1);
+    syncRide(s.camera === 'pov' || s.camera === 'chase');
+    if (svc()) shareLabels(s);
   });
   const offAlive = ctx.keepAlive(() => {
     const s = st();
     return entries.size > 0 && (s.selection.kind === 'string' || s.timeline.playing);
   });
 
+  /** Which pins show: free ends always; ends on a labelled block only for the focused string (the block label names it). */
+  function pinOn(s: AppState, e: Entry, end: 0 | 1, labelsOn: boolean): boolean {
+    const focus = (s.selection.kind === 'string' && s.selection.id === e.id) || (s.hover.kind === 'string' && s.hover.id === e.id);
+    return labelsOn && (!(end === 0 ? e.startLinked : e.endLinked) || focus);
+  }
+  const isSelected = (s: AppState, id: Id) => (s.selection.kind === 'string' && s.selection.id === id)
+    || (s.selection.kind === 'circuit' && s.scenario.circuits.find(c => c.id === (s.selection as { id: Id }).id)?.haulStringId === id);
+
+  /**
+   * Shared label placer path (ctx.labels): pins (40; the selected string's 100) and the focused string's grade chips (20)
+   * are collision-avoided with the block labels and every other scene label by the core.
+   */
+  function shareLabels(s: AppState) {
+    const L = svc();
+    if (!L) return;
+    const labelsOn = s.layers.labels !== false && s.camera !== 'pov' && s.camera !== 'chase';
+    nextIds = new Set<string>();
+    for (const e of entries.values()) {
+      for (const end of [0, 1] as const) {
+        if (!pinOn(s, e, end, labelsOn)) continue;
+        const i = end === 0 ? 0 : e.path.n - 1;
+        share(`pin:${e.id}:${end}`, [e.path.e[i], e.path.nn[i], e.path.z[i]], end === 0 ? e.chipStart : e.chipEnd, isSelected(s, e.id) ? 100 : 40, true);
+      }
+    }
+    const focusId = s.selection.kind === 'string' ? s.selection.id : s.hover.kind === 'string' ? s.hover.id : undefined;
+    const fe = focusId && labelsOn ? entries.get(focusId) : undefined;
+    let used = 0;
+    if (fe) {
+      const smp = { e: 0, n: 0, z: 0, i: 0, t: 0, heading: 0, grade: 0 };
+      const runs = gradeRuns(fe.path);
+      for (let k = 0; k < runs.length && used < 48; k++) {
+        const r = runs[k];
+        if (r.length < 40) continue;
+        sampleAt(fe.path, (r.s0 + r.s1) / 2, smp);
+        const t = gradeTag(used++, r.grade);
+        share(`grade:${fe.id}:${k}`, [smp.e, smp.n, smp.z], t, 20, false);
+      }
+    }
+    for (let i = used; i < tags.length; i++) { tags[i].style.display = 'none'; }
+    flushShared();
+    // the old self-placed pins stay hidden on this path
+    for (const e of entries.values()) { e.pinStart.style.display = 'none'; e.pinEnd.style.display = 'none'; }
+  }
+
+  function gradeTag(i: number, g: number): HTMLDivElement {
+    let t = tags[i];
+    if (!t) { t = document.createElement('div'); t.className = css.tag; tagRoot.appendChild(t); tags.push(t); }
+    const txt = `${g > 0.0005 ? '▲' : g < -0.0005 ? '▼' : '•'} ${(Math.abs(g) * 100).toFixed(1)} %`;
+    if (t.textContent !== txt) t.textContent = txt;
+    t.style.background = gradeHex(g);
+    t.style.display = '';
+    return t;
+  }
+
   // ── overlay: stop signs, handles, pins, grade chips, hover readout ───────────────────
   const tags: HTMLDivElement[] = [];
   const offOverlay = ctx.onOverlay((g, w, h) => {
     const s = st();
     const P = makeProjector(ctx);
-    // in the driver's seat the screen-space marks would float over the cab: only stop signs stay
-    const pov = s.camera === 'pov';
-    const labelsOn = s.layers.labels !== false && !pov;
+    // in the driver's seat / chase the screen-space marks would float over the cab and the road: only stop signs stay
+    const ride = s.camera === 'pov' || s.camera === 'chase';
+    const labelsOn = s.layers.labels !== false && !ride;
+    const shared_ = !!svc();
     placed.length = 0;
     // strings hauled by a circuit first, so a shared dig / dump shows that circuit's pin
     const ordered = [...entries.values()].sort((a, b) => Number(!!circuitOfString(s.scenario, b.id)) - Number(!!circuitOfString(s.scenario, a.id)));
     for (const e of ordered) {
-      // ends on a labelled block: the core's block label already names it - show ours only for the focused string,
-      // lifted above that label; free ends (drawn strings) always carry their pin
-      const focus = (s.selection.kind === 'string' && s.selection.id === e.id) || (s.hover.kind === 'string' && s.hover.id === e.id);
-      placePin(e.pinStart, P, e, 0, labelsOn && (!e.startLinked || focus), e.startLinked ? 46 : 16);
-      placePin(e.pinEnd, P, e, e.path.n - 1, labelsOn && (!e.endLinked || focus), e.endLinked ? 46 : 16);
-      if (!pov) drawEnds(g, P, e);
+      if (!shared_) {
+        // no shared placer yet: place our own pins, lifted above a block label when the end sits on one
+        placePin(e.pinStart, P, e, 0, pinOn(s, e, 0, labelsOn), e.startLinked ? 46 : 16);
+        placePin(e.pinEnd, P, e, e.path.n - 1, pinOn(s, e, 1, labelsOn), e.endLinked ? 46 : 16);
+      }
+      if (!ride) drawEnds(g, P, e);
       drawStops(g, P, e);
     }
     const sel = s.selection;
     const focusId = sel.kind === 'string' ? sel.id : s.hover.kind === 'string' ? s.hover.id : undefined;
-    // grade chips along the focused string
-    let used = 0;
-    if (focusId && labelsOn) {
-      const e = entries.get(focusId);
-      if (e) used = placeGradeTags(e, P);
+    if (!shared_) {
+      // grade chips along the focused string
+      let used = 0;
+      if (focusId && labelsOn) {
+        const e = entries.get(focusId);
+        if (e) used = placeGradeTags(e, P);
+      }
+      for (let i = used; i < tags.length; i++) tags[i].style.display = 'none';
     }
-    for (let i = used; i < tags.length; i++) tags[i].style.display = 'none';
     // handles of the selected string
-    if (sel.kind === 'string') {
+    if (sel.kind === 'string' && !ride) {
       const e = entries.get(sel.id);
       if (e) drawHandles(g, P, e, sel.pointIndex, s.tool === 'edit');
     }
     // a hovered vertex (from the 3D view, the point table or the profile strip): HRL halo ring, any string
     const hv = s.hover;
-    if (hv.kind === 'string' && hv.pointIndex !== undefined && !(sel.kind === 'string' && sel.id === hv.id)) {
+    if (!ride && hv.kind === 'string' && hv.pointIndex !== undefined && !(sel.kind === 'string' && sel.id === hv.id)) {
       const e = entries.get(hv.id);
       const p = e?.pts[hv.pointIndex];
       if (p) {
@@ -390,13 +562,7 @@ export const stringsModule: SceneModule = (ctx: SceneContext) => {
       const sm = worldToScene(f, smp.e, smp.n, smp.z);
       if (!P.project(sm[0], sm[1], sm[2], tmp)) continue;
       if (tmp[0] < 0 || tmp[1] < 0 || tmp[0] > P.w || tmp[1] > P.h) continue;
-      let t = tags[used];
-      if (!t) { t = document.createElement('div'); t.className = css.tag; tagRoot.appendChild(t); tags.push(t); }
-      const g = r.grade;
-      const txt = `${g > 0.0005 ? '▲' : g < -0.0005 ? '▼' : '•'} ${(Math.abs(g) * 100).toFixed(1)} %`;
-      if (t.textContent !== txt) t.textContent = txt;
-      t.style.background = gradeHex(g);
-      t.style.display = '';
+      const t = gradeTag(used, r.grade);
       t.style.transform = `translate(${tmp[0].toFixed(1)}px, ${(tmp[1] - 16).toFixed(1)}px) translate(-50%, -50%)`;
       used++;
     }
@@ -426,11 +592,17 @@ export const stringsModule: SceneModule = (ctx: SceneContext) => {
   return () => {
     unsub(); offPointer(); offFrame(); offAlive(); offOverlay();
     bus.listeners.delete(onBus);
+    const L = svc();
+    if (L) for (const id of placedIds) L.remove(id);
+    placedIds.clear();
     for (const e of entries.values()) dispose(e);
     entries.clear();
+    disposeRoads();
+    postGeo.dispose(); postMat.dispose();
     bus.pickString = undefined;
     bus.pathOf = undefined;
     root.remove();
+    cardRoot.remove();
   };
 };
 

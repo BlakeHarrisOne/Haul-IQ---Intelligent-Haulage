@@ -141,9 +141,9 @@ export function PointTable({ hs, defaults, index, onPaste }: PointTableProps) {
           <span>{n} points</span>
           {view === 'points'
             ? <span><span className={s.snapDot} style={{ display: 'inline-block', marginRight: 6 }} />{snapped} snapped</span>
-            : <span title="Blank override cells use the circuit default">Blank = {num(defaults.speedLimitKmh)} km/h · {num(defaults.rrPct, 1)} %</span>}
+            : <span title="Blank override cells use the circuit default">Blank = {num(defaults.speedLimitKmh)} km/h · {num(defaults.rrPct, 1)}%</span>}
           <span className={s.gap} />
-          {dropped > 0 && <span className={s.tBad} style={{ fontWeight: 600 }}><Icon name="warning" size={13} style={{ display: 'inline', verticalAlign: -2, marginRight: 4 }} />{dropped} over ±16 %</span>}
+          {dropped > 0 && <span className={s.tBad} style={{ fontWeight: 600 }}><Icon name="warning" size={13} style={{ display: 'inline', verticalAlign: -2, marginRight: 4 }} />{dropped} over ±16%</span>}
           {virtual && <span>virtualised</span>}
         </div>
       </div>
@@ -178,7 +178,7 @@ const PointRow = memo(function PointRow(props: RowProps) {
   const { i, p, seg, view, cols, last, sel, hov, defaults, locked, canDelete } = props;
   const eff = effectiveSeg(p, defaults);
   const dropTitle = seg?.dropped
-    ? `Grade ${(seg.grade * 100).toFixed(1)} % rounds past ±16 %: the spreadsheet's speed table has no row for it, so calc.xlsm silently counts this segment as 0 s (distance kept, time dropped). Spreadsheet mode replicates that unless the circuit clamps steep grades to 12/14 km/h; the rimpull model times it with physics.`
+    ? `Grade ${(seg.grade * 100).toFixed(1)}% rounds past ±16%: the spreadsheet's speed table has no row for it, so calc.xlsm silently counts this segment as 0 s (distance kept, time dropped). Spreadsheet mode replicates that unless the circuit clamps steep grades to 12/14 km/h; the rimpull model times it with physics.`
     : undefined;
   return (
     <div className={cx(s.tRow, sel && s.tSel, hov && !sel && s.tHov, seg?.dropped && s.tDrop)} style={{ gridTemplateColumns: cols }}
@@ -206,9 +206,9 @@ const PointRow = memo(function PointRow(props: RowProps) {
           <CellNum value={p.seg?.rrPct ?? null} placeholder={num(defaults.rrPct, 1)} dp={1} step={0.5} min={0} max={30} title={`Segment ${i + 1} rolling resistance (blank = circuit default)`}
             changed={eff.overridden.rr} disabled={locked} onChange={v => props.onSeg(i, { rrPct: v })} onClear={() => props.onSeg(i, { rrPct: null })} />
           <Select<string> small value={p.seg?.zone ?? ''} onChange={v => props.onSeg(i, { zone: v ? (v as SegmentZone) : null })}
-            options={[{ value: '', label: '—' }, ...ZONES.map(z => ({ value: z, label: z[0].toUpperCase() + z.slice(1) }))]} />
+            options={[{ value: '', label: '–' }, ...ZONES.map(z => ({ value: z, label: z[0].toUpperCase() + z.slice(1) }))]} />
           <span className={s.c}>
-            <button type="button" className={cx(s.stopBtn, p.stop && s.stopOn)} disabled={locked} title={p.stop ? 'Stop sign (both directions) - click to remove' : 'Add a stop sign at this point'}
+            <button type="button" className={cx(s.stopBtn, p.stop && s.stopOn)} disabled={locked} title={p.stop ? 'Stop sign (both directions) – click to remove' : 'Add a stop sign at this point'}
               onClick={() => props.onStop(i, !p.stop)}>
               <Icon name="stop" size={16} strokeWidth={p.stop ? 2.2 : 1.7} />
             </button>

@@ -1,5 +1,12 @@
 /* Compare tab. */
-.tableScroll { overflow-x: auto; }
+/* wide table: sticky first column, sideways scroll behind edge fades (#14) */
+.scrollFrame { position: relative; }
+.scrollFrame::before, .scrollFrame::after { content: ''; position: absolute; top: 0; bottom: 0; width: 36px; pointer-events: none; opacity: 0; transition: opacity var(--t-fast) ease-out; z-index: 4; }
+.scrollFrame::after { right: 0; background: linear-gradient(to left, var(--surface), color-mix(in srgb, var(--surface) 0%, transparent)); }
+.scrollFrame::before { left: var(--first-w, 220px); background: linear-gradient(to right, color-mix(in srgb, var(--ink) 9%, transparent), transparent); width: 14px; }
+.fadeR::after, .fadeL::before { opacity: 1; }
+.tableScroll { overflow-x: auto; overscroll-behavior-x: contain; outline: none; }
+.tableScroll:focus-visible { box-shadow: inset 0 0 0 2px var(--accent); }
 .tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; font-variant-numeric: tabular-nums; }
 .tbl th {
   position: sticky; top: 0; z-index: 1; background: var(--surface); text-align: right; font-size: 11.5px; font-weight: 650; color: var(--ink-3);
@@ -14,17 +21,28 @@
 .tbl tbody tr.off td { color: var(--ink-4); }
 .tbl tfoot td { background: var(--surface-2); font-weight: 700; border-top: 1px solid var(--hair); border-bottom: 0; }
 .sepL { border-left: 1px solid var(--hair); }
-.tbl td.first { white-space: normal; min-width: 210px; max-width: 250px; }
+.tbl td.first { white-space: normal; min-width: 220px; max-width: 250px; }
+.tbl .first { position: sticky; left: 0; z-index: 2; background: var(--surface); box-shadow: inset -1px 0 0 var(--hair); }
+.tbl th.first { z-index: 3; }
+.tbl tbody tr:hover td.first { background: color-mix(in srgb, var(--surface-2) 100%, var(--surface)); }
+.tbl tfoot td.first { background: var(--surface-2); }
+.tbl tbody tr.sel td.first { background: color-mix(in srgb, var(--accent) 9%, var(--surface)); }
 .tbl th, .tbl td { padding-left: 8px; padding-right: 8px; }
 .name { display: flex; align-items: center; gap: 8px; font-weight: 650; }
+.name > span { min-width: 0; }
 .meta { font-size: 11.5px; color: var(--ink-3); margin-top: 1px; font-weight: 400; }
+/* below 1440 px the secondary sub-line goes (it stays in the row's tooltip) */
+@media (max-width: 1439px) { .meta { display: none; } .tbl td.first { min-width: 200px; } }
 .bad { color: var(--bad-ink); font-weight: 650; }
 .warn { color: var(--warn-ink); font-weight: 650; }
 .ok { color: var(--ok-ink); }
 .muted { color: var(--ink-3); }
 .small { font-size: 11.5px; color: var(--ink-3); margin-left: 4px; font-weight: 500; }
 
-.chartBox { position: relative; padding: 4px 12px 10px; }
+.chartBox { position: relative; padding: 4px 12px 10px; flex: 1; display: flex; flex-direction: column; }
+/* the three chart cards share one height; legends sit on the bottom line (#31) */
+.chartCol { align-self: stretch; display: flex; flex-direction: column; min-width: 0; }
+.chartCol > section { flex: 1; }
 .svg { display: block; overflow: visible; }
 .tip {
   position: absolute; z-index: 5; pointer-events: none; min-width: 180px; background: var(--surface); border: 1px solid var(--hair);
@@ -34,6 +52,7 @@
 .tipRow { display: flex; justify-content: space-between; gap: 14px; }
 .tipRow b { color: var(--ink); font-variant-numeric: tabular-nums; }
 .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 0 16px 12px; font-size: 12px; color: var(--ink-2); }
+.chartCol .legend { margin-top: auto; flex-wrap: nowrap; gap: 4px 12px; white-space: nowrap; overflow: hidden; padding-left: 4px; padding-right: 4px; }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
 
 /* what-if */

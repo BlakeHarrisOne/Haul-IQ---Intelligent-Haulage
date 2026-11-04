@@ -1,4 +1,4 @@
-/** (c) Scenario vs scenario: the live scenario against up to three saved ones — KPIs with deltas and a per-circuit diff. */
+/** (c) Scenario vs scenario: the live scenario against up to three saved ones – KPIs with deltas and a per-circuit diff. */
 import { useEffect, useMemo, useState } from 'react';
 import type { CircuitResult, Id, Scenario, ScenarioMeta } from '@/core/types';
 import { num } from '@/core/format';
@@ -109,7 +109,7 @@ export function ScenarioCompare({ live, liveResults, onCols }: { live: Scenario;
             </button>
           );
         })}
-        {!metas.length && <span className={s.muted} style={{ fontSize: 13 }}>{busy ? 'Loading saved scenarios…' : 'No saved scenarios yet — save one from the Scenarios page (or tick scenarios there to compare).'}</span>}
+        {!metas.length && <span className={s.muted} style={{ fontSize: 13 }}>{busy ? 'Loading saved scenarios…' : 'No saved scenarios yet – save one from the Scenarios page (or tick scenarios there to compare).'}</span>}
       </div>
       {cols.length < 2 ? (
         <Empty icon="compare" title="Pick saved scenarios to compare">Tick up to {MAX_PICKS} saved scenarios above. Every KPI and circuit is shown against the live scenario with its delta.</Empty>

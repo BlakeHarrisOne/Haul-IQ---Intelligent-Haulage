@@ -8,8 +8,7 @@ import { num } from '@/core/format';
 import { useApp } from '@/state/store';
 import { useResults, useScenario } from '@/state/derived';
 import { computeCircuit } from '@/engine';
-import { Badge, Button, Card, CardHead, Empty, Kpi, MenuButton, Segmented } from '@/ui';
-import { PageHeader } from './shared/PageHeader';
+import { Badge, Button, Card, CardHead, Empty, Kpi, MenuButton, PageHeader, Segmented } from '@/ui';
 import { CircuitPicker } from './shared/CircuitPicker';
 import { downloadCsv, fileSafe } from './shared/csv';
 import p from './shared/page.module.css';
@@ -68,7 +67,7 @@ function Lineage({ scenario, circuit, result }: { scenario: Scenario; circuit: C
     ['# trucks options', `${result.options.length} rows`, 'ActiveRoute row 28 (Macro_1…9)'],
   ];
   return (
-    <Card>
+    <Card className={p.headSafe}>
       <CardHead title="Workbook lineage" sub="where each input lives in calc.xlsm" icon="link" />
       <table className={s.cmpTable}>
         <tbody>
@@ -121,7 +120,7 @@ export function AssumptionsView() {
         eyebrow="Transparency"
         icon="assumptions"
         title="Assumptions & calculations"
-        desc={<>Every number behind <b>{circuit.name}</b>, step by step — formula, numbers substituted, result, and the equivalent cell in the Haulage Calculator workbook. Nothing is hidden: no implicit efficiency factors, every input has a source.</>}
+        desc={<>Every number behind <b>{circuit.name}</b>, step by step – formula, numbers substituted, result, and the equivalent cell in the Haulage Calculator workbook. Nothing is hidden: no implicit efficiency factors, every input has a source.</>}
         actions={<>
           <MenuButton align="right" items={[
             { label: 'Calculation ledger', icon: 'formula', onSelect: exportLedger, hint: 'CSV' },
@@ -143,7 +142,7 @@ export function AssumptionsView() {
           ]} />
           {model !== circuit.params.speedModel
             ? <Button size="sm" variant="ghost" onClick={() => { updateParams(circuit.id, { speedModel: model }); setModelView(undefined); }}>Use {model} for this circuit</Button>
-            : <Badge tone="info">circuit setting</Badge>}
+            : <Badge tone="na">circuit setting</Badge>}
         </span>
       </div>
 
@@ -181,10 +180,10 @@ export function AssumptionsView() {
       {r.ok && <div className={p.grid}><div className={p.s12}><SegmentTable result={r} onExport={exportSegs} /></div></div>}
       <div className={p.grid}><div className={p.s12}><CircuitParamsCard scenario={scenario} circuit={circuit} /></div></div>
 
-      <div className={p.head} style={{ marginTop: 12 }}>
-        <div className={p.headText}>
-          <h2 className={p.title} style={{ fontSize: 20, lineHeight: '26px' }}>Site assumptions</h2>
-          <p className={p.desc} style={{ marginTop: 2 }}>Edit any input — every change is undoable and recalculates all circuits. Highlighted cells differ from the default; the reset arrow restores it.</p>
+      <div className={s.subHead}>
+        <div className={s.subHeadText}>
+          <h2 className={s.subTitle}>Site assumptions</h2>
+          <p className={s.subDesc}>Edit any input – every change is undoable and recalculates all circuits. Highlighted cells differ from the default; the reset arrow restores it.</p>
         </div>
         <ChangedKey />
       </div>

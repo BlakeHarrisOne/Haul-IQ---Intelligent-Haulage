@@ -2,14 +2,13 @@
  * Truck curves tab: rimpull / retarder curves with resistance lines and the circuit's operating points, the workbook
  * grade → speed table against physics, balance-speed table and a provenance-first spec sheet.
  */
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useId, useMemo, useState } from 'react';
 import type { Circuit, CircuitResult, SpeedModel, TruckModel } from '@/core/types';
-import { num } from '@/core/format';
+import { num, signed } from '@/core/format';
 import { useApp } from '@/state/store';
 import { useResults, useScenario } from '@/state/derived';
 import { computeCircuit } from '@/engine';
-import { Badge, Button, Card, CardHead, Empty, MenuButton, Range, Segmented, Select, Tip } from '@/ui';
-import { PageHeader } from '@/features/assumptions/shared/PageHeader';
+import { Badge, Button, Card, CardHead, Empty, MenuButton, PageHeader, Range, Segmented, Select, Tip } from '@/ui';
 import p from '@/features/assumptions/shared/page.module.css';
 import { downloadCsv, fileSafe, type CsvCell } from '@/features/assumptions/shared/csv';
 import { excelRound } from '@/features/assumptions/shared/excel';
@@ -147,11 +146,11 @@ export function CurvesView() {
 
       <div className={p.grid}>
         <div className={`${p.s8} ${p.stack}`}>
-          <Card>
+          <Card className={p.headSafe}>
             <CardHead title="Rimpull & retarder" sub="force at the wheels vs speed" icon="curve" actions={
               <span className={c.provenance}>
                 {estimatedCurves && (
-                  <Tip side="down" text={<>Curves are model estimates (engine power + OEM gear speeds, spec 04 §G.2).<br />Only gear speeds{/789c/i.test(prim.model) ? ' and stall rimpull' : ''} are OEM — calibrate with OEM charts / site GPS.</>}>
+                  <Tip side="down" text={<>Curves are model estimates (engine power + OEM gear speeds, spec 04 §G.2).<br />Only gear speeds{/789c/i.test(prim.model) ? ' and stall rimpull' : ''} are OEM – calibrate with OEM charts / site GPS.</>}>
                     <Badge tone="warn" icon="warning">Estimated curves</Badge>
                   </Tip>
                 )}
@@ -160,11 +159,11 @@ export function CurvesView() {
             <div className={c.controls}>
               <span className={c.ctrlLabel}>Effective grade</span>
               <span className={c.chips} role="group" aria-label="Effective grade presets">
-                {GRADE_CHIPS.map(g => <button key={g} type="button" className={c.chip} aria-pressed={effGrade === g} onClick={() => setEffGrade(g)}>{g > 0 ? '+' : ''}{g}%</button>)}
+                {GRADE_CHIPS.map(g => <button key={g} type="button" className={c.chip} aria-pressed={effGrade === g} onClick={() => setEffGrade(g)}>{signed(g, 0)}%</button>)}
               </span>
               <span className={c.sliderBox}>
                 <Range value={effGrade} min={-20} max={20} step={0.5} onChange={setEffGrade} title="Effective grade (grade + RR), %" />
-                <span className={c.sliderVal}>{effGrade > 0 ? '+' : ''}{num(effGrade, 1)} %</span>
+                <span className={c.sliderVal}>{signed(effGrade, 1)}%</span>
               </span>
               <span className={c.ctrlLabel}>Points</span>
               <Select small value={circ?.id ?? 'none'} onChange={setCircuitId} title="Operating points of a circuit using this truck"
@@ -178,7 +177,7 @@ export function CurvesView() {
             <RimpullChart series={series} effGradePct={effGrade} onGrade={setEffGrade} massLoaded={mL} massEmpty={mE} points={points}
               speedLimit={limit} circuitLabel={circ ? `${circ.name} (${result?.speedModel})` : undefined} />
           </Card>
-          <Card>
+          <Card className={p.headSafe}>
             <CardHead title="Balance speeds" sub={`by effective grade · loaded ${num(mL, 0)} t / empty ${num(mE, 0)} t · click a row to plot it`} icon="table" />
             <div style={{ overflowX: 'auto' }}>
               <table className={c.balTable}>
@@ -195,15 +194,15 @@ export function CurvesView() {
                 <tbody>
                   {balRows.map(g => (
                     <tr key={g} className={g === effGrade ? c.sel : undefined} onClick={() => setEffGrade(g)}>
-                      <td className={c.l}><b>{g > 0 ? '+' : ''}{g} %</b> <span className={c.lim}>{g < 0 ? 'retarding' : g === 0 ? 'level, no RR' : 'propelling'}</span></td>
+                      <td className={c.l}><b>{signed(g, 0)}%</b> <span className={c.lim}>{g < 0 ? 'retarding' : g === 0 ? 'level, no RR' : 'propelling'}</span></td>
                       {series.map(s => {
                         const ml = s.t.emptyMassT + payloadT(s.t), me = s.t.emptyMassT;
                         const fl = effGradeForce(ml, g);
                         const bl = balanceAt(s.t, ml, g / 100, limit), be = balanceAt(s.t, me, g / 100, limit);
                         return [
-                          <td key={s.t.id + 'l'} className={c.sepL}>{bl.kmh > 0 ? num(bl.kmh, 1) : '—'}<span className={c.lim}>{limitShort(bl)}</span></td>,
+                          <td key={s.t.id + 'l'} className={c.sepL}>{bl.kmh > 0 ? num(bl.kmh, 1) : '–'}<span className={c.lim}>{limitShort(bl)}</span></td>,
                           <td key={s.t.id + 'f'} style={{ color: 'var(--ink-3)' }}>{num(Math.abs(fl), 0)}</td>,
-                          <td key={s.t.id + 'e'}>{be.kmh > 0 ? num(be.kmh, 1) : '—'}<span className={c.lim}>{limitShort(be)}</span></td>,
+                          <td key={s.t.id + 'e'}>{be.kmh > 0 ? num(be.kmh, 1) : '–'}<span className={c.lim}>{limitShort(be)}</span></td>,
                         ];
                       })}
                     </tr>
@@ -220,19 +219,19 @@ export function CurvesView() {
         <div className={p.s4}><SpecSheet t={prim} color={series[0].color} /></div>
 
         <div className={p.s12}>
-          <Card>
+          <Card className={p.headSafe}>
             <CardHead title="Speed vs grade" sub="workbook table vs physics, same truck" icon="speed" actions={
               <span className={c.provenance}>
                 <span className={c.ctrlLabel}>RR</span>
                 <span className={c.sliderBox} style={{ minWidth: 180 }}>
                   <Range value={rr} min={0} max={8} step={0.5} onChange={setRr} title="Rolling resistance, %" />
-                  <span className={c.sliderVal}>{num(rr, 1)} %</span>
+                  <span className={c.sliderVal}>{num(rr, 1)}%</span>
                 </span>
                 <span className={c.ctrlLabel}>Payload</span>
                 <Select small value={payloadMode} onChange={setPayloadMode} options={[
                   { value: 'nominal', label: `Nominal ${num(prim.payloadT, 0)} t` },
                   { value: 'site', label: `Site load${circ ? ` ${num(sitePayload(scenario, circ) ?? 0, 0)} t` : ' (pick a circuit)'}`, disabled: !circ },
-                  { value: 'p110', label: `110 % ${num(prim.payloadT * 1.1, 0)} t` },
+                  { value: 'p110', label: `110% ${num(prim.payloadT * 1.1, 0)} t` },
                   { value: 'gmw', label: `To GMW ${num(prim.gvwT - prim.emptyMassT, 0)} t` },
                 ]} />
               </span>
@@ -242,7 +241,7 @@ export function CurvesView() {
               <LegendKey line="var(--ink-2)" label="Workbook table (Travel Time!P3:T35)" />
               {series.map(s => <LegendKey key={s.t.id} line={s.color} label={`${s.t.name} physics`} w={s === series[0] ? 2.5 : 1.75} />)}
               <LegendKey fill="var(--bad-100)" label="Table optimistic (too fast → too few trucks)" />
-              <LegendKey fill="var(--warn-100)" label="Table pessimistic (too slow → too many trucks)" />
+              <LegendKey hatch label="Table pessimistic (too slow → too many trucks)" />
               <LegendKey fill="var(--surface-3)" label="Outside table: workbook drops segment time" />
             </div>
           </Card>
@@ -253,11 +252,18 @@ export function CurvesView() {
   );
 }
 
-function LegendKey({ line, fill, label, w = 2 }: { line?: string; fill?: string; label: string; w?: number }) {
+function LegendKey({ line, fill, hatch, label, w = 2 }: { line?: string; fill?: string; hatch?: boolean; label: string; w?: number }) {
+  const id = `lk${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   return (
     <span className={c.legItem} style={{ cursor: 'default' }}>
       <svg width="18" height="10" aria-hidden>
-        {fill ? <rect x="1" y="1" width="16" height="8" rx="2" fill={fill} /> : <line x1="1" x2="17" y1="5" y2="5" stroke={line} strokeWidth={w} strokeLinecap="round" />}
+        {hatch && (
+          <defs><pattern id={id} width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <rect width="4" height="4" fill="color-mix(in srgb, var(--na) 10%, transparent)" /><line x1="0" y1="0" x2="0" y2="4" stroke="var(--ink-3)" strokeWidth="1.2" strokeOpacity=".6" />
+          </pattern></defs>
+        )}
+        {hatch ? <rect x="1" y="1" width="16" height="8" rx="2" fill={`url(#${id})`} stroke="var(--hair)" />
+          : fill ? <rect x="1" y="1" width="16" height="8" rx="2" fill={fill} /> : <line x1="1" x2="17" y1="5" y2="5" stroke={line} strokeWidth={w} strokeLinecap="round" />}
       </svg>
       {label}
     </span>

@@ -78,14 +78,31 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function open(page, query = '') {
   if (page.__nav) page.__nav.expected++;
   await page.goto(URL + '/' + query, { waitUntil: 'load', timeout: 90_000 });
-  await page.waitForSelector('#root > *', { timeout: 60_000 });
+  await waitBoot(page);
+}
+
+/** The shell is up (welcome card or 3D canvas); a boot crash (e.g. a source file mid-edit) fails fast with its error. */
+async function waitBoot(page, timeout = 120_000) {
+  const errs = [];
+  const onErr = e => errs.push(String(e && e.message || e).slice(0, 200));
+  page.on('pageerror', onErr);
+  try {
+    const t0 = Date.now();
+    while (Date.now() - t0 < timeout) {
+      const st = await page.evaluate(() => ({ kids: (document.getElementById('root') || { children: [] }).children.length, canvas: !!document.querySelector('canvas'), welcome: !!document.querySelector('[aria-label="Start a scenario"]') })).catch(() => ({ kids: 0 }));
+      if (st.kids > 0 && (st.canvas || st.welcome)) return;
+      if (st.kids === 0 && errs.length && Date.now() - t0 > 4000) throw new Error(`app failed to boot: ${errs[0]}`);
+      await sleep(400);
+    }
+    throw new Error(`app failed to boot within ${timeout / 1000} s${errs.length ? `: ${errs[0]}` : ''}`);
+  } finally { page.off('pageerror', onErr); }
 }
 
 /** Reload the page on purpose (counted as an expected navigation). */
 async function reload(page) {
   if (page.__nav) page.__nav.expected++;
   await page.reload({ waitUntil: 'load', timeout: 90_000 });
-  await page.waitForSelector('#root > *', { timeout: 60_000 });
+  await waitBoot(page);
 }
 
 /** True when the dev server reloaded the page behind the flow's back (source edited during the run). */
@@ -285,26 +302,24 @@ async function imageDiff(page, a, b, threshold = 24) {
   }, [a.toString('base64'), b.toString('base64'), threshold]);
 }
 
-/** Bounding boxes of visible floating chrome, for overlap checks. */
+/** Bounding boxes of visible floating chrome (HUD children, scene chrome, sheet), for overlap checks. */
 async function chromeBoxes(page) {
   return page.evaluate(() => {
-    const pick = (sel, name) => [...document.querySelectorAll(sel)].map(el => {
+    const nameOf = el => el.getAttribute('aria-label') || String(el.className || '').split(/\s+/).map(c => c.replace(/^_([A-Za-z0-9]+)_[A-Za-z0-9]+_\d+$/, '$1')).filter(Boolean).join('.') || el.tagName.toLowerCase();
+    const box = (el, name) => {
       const r = el.getBoundingClientRect();
       const cs = getComputedStyle(el);
-      if (!r.width || !r.height || cs.visibility === 'hidden' || cs.display === 'none' || Number(cs.opacity) === 0) return null;
-      return { name, x: r.left, y: r.top, w: r.width, h: r.height, r: r.right, b: r.bottom };
-    }).filter(Boolean);
-    const hud = document.querySelector('[data-hud]');
-    const kids = hud ? [...hud.children] : [];
+      if (!r.width || !r.height || cs.visibility === 'hidden' || cs.display === 'none' || Number(cs.opacity) < 0.05) return null;
+      return { name: name || nameOf(el), x: r.left, y: r.top, w: r.width, h: r.height, r: r.right, b: r.bottom };
+    };
     const out = [];
-    kids.forEach((el, i) => {
-      const r = el.getBoundingClientRect();
-      const cs = getComputedStyle(el);
-      if (!r.width || !r.height || cs.display === 'none' || Number(cs.opacity) === 0) return;
-      const label = el.getAttribute('aria-label') || (el.className || '').toString().split(' ')[0].replace(/^_?([a-zA-Z]+).*$/, '$1') || `hud${i}`;
-      out.push({ name: label, x: r.left, y: r.top, w: r.width, h: r.height, r: r.right, b: r.bottom });
-    });
-    return out.concat(pick('[role="region"]', 'sheet'));
+    const hud = document.querySelector('[data-hud]');
+    if (hud) for (const el of hud.children) { if (el.getAttribute('aria-hidden') === 'true') continue; const b = box(el); if (b) out.push(b); }
+    // scene chrome (compass / scale bar) is the viewport's last child
+    const cv = document.querySelector('canvas');
+    const vp = cv && cv.parentElement && cv.parentElement.parentElement;
+    if (vp) for (const el of vp.children) { if (el.contains(cv)) continue; const b = box(el, 'sceneChrome.' + nameOf(el)); if (b && b.w < innerWidth * 0.9) out.push(b); }
+    return out;
   });
 }
 

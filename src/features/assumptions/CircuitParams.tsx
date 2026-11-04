@@ -4,9 +4,11 @@ import type { Circuit, CircuitParams, Scenario } from '@/core/types';
 import { num } from '@/core/format';
 import { useApp } from '@/state/store';
 import { KINEMATIC_DEFAULTS } from '@/engine';
-import { Card, CardHead, Icon, NumberField, Segmented, Tip } from '@/ui';
+import { Card, CardHead, Icon, Segmented, Tip } from '@/ui';
+import { NumField } from './shared/NumField';
 import { defaultCircuitParams } from '@/data';
 import { same } from './defaults';
+import pg from './shared/page.module.css';
 import s from './assumptions.module.css';
 
 type NumKey = { [K in keyof CircuitParams]-?: CircuitParams[K] extends number | undefined ? K : never }[keyof CircuitParams];
@@ -35,7 +37,7 @@ export function CircuitParamsCard({ scenario, circuit }: { scenario: Scenario; c
     { k: 'truckPtHrsPerDay', label: 'Truck PT', unit: 'h/day', dp: 1, step: 0.5, min: 0, max: 24, cell: 'ActiveRoute!C22', def: d.truckPtHrsPerDay },
     { k: 'desiredDailyBcm', label: 'Desired daily volume', unit: 'bcm', dp: 0, step: 500, min: 0, cell: 'ActiveRoute!C20', def: d.desiredDailyBcm, hint: 'The workbook macro overwrites C20 when a # trucks button is pressed' },
     { k: 'shiftsPerDay', label: 'Shifts per day', dp: 0, step: 1, min: 1, max: 4, cell: 'ActiveRoute!C28 (÷ 2)', def: d.shiftsPerDay },
-    { k: 'loaderPtHrsPerDay', label: 'Loader PT target', unit: 'h/day', dp: 1, step: 0.5, min: 0, max: 24, cell: 'ActiveRoute!C19 (× I34)', def: p.truckPtHrsPerDay, hint: 'Defaults to truck PT — the workbook\'s I34 feeds both C19 and C22' },
+    { k: 'loaderPtHrsPerDay', label: 'Loader PT target', unit: 'h/day', dp: 1, step: 0.5, min: 0, max: 24, cell: 'ActiveRoute!C19 (× I34)', def: p.truckPtHrsPerDay, hint: 'Defaults to truck PT – the workbook\'s I34 feeds both C19 and C22' },
   ];
   const physics: F[] = [
     { k: 'rrPct', label: 'Rolling resistance', unit: '%', dp: 1, step: 0.5, min: 0, max: 15, def: d.rrPct, hint: '2.0 main haul road · 2.5 ramp / bench · 3.0 around the loader (spec 04 §B.10)' },
@@ -57,7 +59,7 @@ export function CircuitParamsCard({ scenario, circuit }: { scenario: Scenario; c
           {f.hint && <Tip text={f.hint} side="up"><span className={s.pInfo} tabIndex={0} aria-label={f.hint}><Icon name="info" size={13} /></span></Tip>}
         </div>
         <div className={s.pInput}>
-          <NumberField small value={val} onChange={x => set({ [f.k]: x } as Partial<CircuitParams>)} unit={f.unit} dp={f.dp} step={f.step} min={f.min} max={f.max} changed={changed} disabled={disabled} width="100%"
+          <NumField small value={val} onChange={x => set({ [f.k]: x } as Partial<CircuitParams>)} unit={f.unit} dp={f.dp} step={f.step} min={f.min} max={f.max} changed={changed} disabled={disabled} width="100%"
             title={changed ? `Changed from default ${num(f.def!, f.dp)}` : undefined} />
           {changed
             ? <button type="button" className={s.resetBtn} onClick={() => set({ [f.k]: f.k === 'loaderPtHrsPerDay' || f.k.endsWith('Ms2') || f.k === 'tractionCoeff' || f.k === 'stopDwellS' ? undefined : f.def } as Partial<CircuitParams>)} aria-label={`Reset ${f.label}`} title={`Reset to ${num(f.def!, f.dp)}`}><Icon name="reset" size={14} /></button>
@@ -71,19 +73,19 @@ export function CircuitParamsCard({ scenario, circuit }: { scenario: Scenario; c
     <div className={s.pField}><div className={s.pLabel}><span>{label}</span></div>{node}{note && <div className={s.pCell}>{note}</div>}</div>
   );
   return (
-    <Card>
+    <Card className={pg.headSafe}>
       <CardHead title="Circuit assumptions" sub={`${circuit.name} · every input the calculation uses`} icon="sliders" />
       <div className={s.pSection}>Workbook inputs</div>
       <div className={s.pGrid}>{workbook.map(f => field(f))}</div>
       <div className={s.pSection}>Model options</div>
       <div className={s.pGrid}>
         {choice('Out-of-range grades (spreadsheet)', <Segmented small value={p.outOfRange ?? 'drop'} onChange={v => set({ outOfRange: v })} options={[
-          { value: 'drop', label: 'Drop (Excel)', title: 'Excel behaviour: |ROUND(grade,2)| > 16 % → segment time 0' },
+          { value: 'drop', label: 'Drop (Excel)', title: 'Excel behaviour: |ROUND(grade,2)| > 16% → segment time 0' },
           { value: 'clamp', label: '12/14 km/h', title: 'Time steep segments at the steepest table row' },
         ]} />, 'Travel Time!C:C VLOOKUP → ""')}
         {choice('Motion (rimpull)', <Segmented small value={p.motion ?? 'kinematic'} onChange={v => set({ motion: v })} options={[
           { value: 'kinematic', label: 'Accel / decel', title: 'Forward–backward pass with acceleration, braking and real stops' },
-          { value: 'steady', label: 'Steady speed', title: 'Balance speed per segment (no acceleration) — closest to the lookup table' },
+          { value: 'steady', label: 'Steady speed', title: 'Balance speed per segment (no acceleration) – closest to the lookup table' },
         ]} />)}
         {choice('Production model', <Segmented small value={p.queueModel ?? 'deterministic'} onChange={v => set({ queueModel: v })} options={[
           { value: 'deterministic', label: 'Workbook', title: 'n × PT × productivity, capped by the plan (no bunching)' },

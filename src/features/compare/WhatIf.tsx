@@ -4,7 +4,7 @@ import type { CircuitResult, Id, Scenario } from '@/core/types';
 import { num } from '@/core/format';
 import { useApp } from '@/state/store';
 import { computeCircuit } from '@/engine';
-import { Button, Card, CardHead, Dot, Icon, Select } from '@/ui';
+import { Button, Card, CardHead, Dot, Icon, Select, circuitColor } from '@/ui';
 import { delta, deltaTone, fmtDelta, type Better } from '@/features/assumptions/shared/delta';
 import { circuitRow, totals, MIN_PT_HRS_DAY, type CircuitRow } from './compareData';
 import { StatusBadge } from './CircuitsCompare';
@@ -84,7 +84,7 @@ export function WhatIf({ scenario, results, rows, focus, onFocus }: {
               const n = nOf(c.id);
               return (
                 <tr key={c.id} className={fc?.id === c.id ? s.sel : undefined} onClick={() => onFocus(c.id)}>
-                  <td className={s.l}><div className={s.name}><Dot color={c.color} />{c.name}</div><div className={s.meta}>currently {c.trucks} trucks</div></td>
+                  <td className={s.l}><div className={s.name}><Dot color={circuitColor(c.color)} />{c.name}</div><div className={s.meta}>currently {c.trucks} trucks</div></td>
                   <td>{num(a.exact, 2)}<span className={s.small}>rec. {num(a.recommended, 0)}</span></td>
                   <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
                     <Stepper value={n} onChange={v => setTrucks(t => ({ ...t, [c.id]: v }))} changed={n !== c.trucks} label={c.name} min={0} max={Math.max(20, a.recommended + 6)} />
@@ -93,7 +93,7 @@ export function WhatIf({ scenario, results, rows, focus, onFocus }: {
                   <td className={b.loaderPtHrsDay < MIN_PT_HRS_DAY - 1e-9 ? s.bad : undefined}>{num(b.loaderPtHrsDay, 1)}<Delta a={a.loaderPtHrsDay} b={b.loaderPtHrsDay} dp={1} better="up" /></td>
                   <td className={b.lostPtShift > 0.005 ? s.bad : s.muted}>{num(b.lostPtShift, 2)}<Delta a={a.lostPtShift} b={b.lostPtShift} dp={2} better="down" /></td>
                   <td className={b.queueHrsShift > 0.005 ? s.warn : s.muted}>{num(b.queueHrsShift, 2)}<Delta a={a.queueHrsShift} b={b.queueHrsShift} dp={2} better="down" /></td>
-                  <td className={s.l}>{b.ok ? <StatusBadge st={b.status} /> : '—'}</td>
+                  <td className={s.l}>{b.ok ? <StatusBadge st={b.status} /> : '–'}</td>
                 </tr>
               );
             })}
@@ -113,7 +113,7 @@ export function WhatIf({ scenario, results, rows, focus, onFocus }: {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px 0', borderTop: '1px solid var(--hair-2)' }}>
             <span style={{ fontWeight: 650 }}>Truck-count curve</span>
             <Select small value={fc.id} onChange={onFocus} options={active.map(c => ({ value: c.id, label: c.name }))} />
-            <span className={s.muted} style={{ fontSize: 12.5 }}>production and losses by number of trucks — the workbook's row-28 buttons, all at once</span>
+            <span className={s.muted} style={{ fontSize: 12.5 }}>production and losses by number of trucks – the workbook's row-28 buttons, all at once</span>
           </div>
           <TruckCountChart options={fr.options} current={fc.trucks} whatIf={nOf(fc.id)} target={fc.params.desiredDailyBcm} recommended={fr.trucksRecommended} />
         </>

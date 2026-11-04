@@ -19,10 +19,13 @@ import { buildPath, legAt, legGrade, sampleAt, type PathTable } from '../strings
 import { makeProjector } from '../strings/screen';
 import { ACCENT, literalColor, materialColor } from '../strings/palette';
 import css from '../strings/ui.module.css';
-import { buildPlan, presentEngineState, truckStateAt, type CircuitPlan, type EngineTruckState, type TruckSimState } from './sim';
+import { buildPlan, isParkUp, presentEngineState, truckStateAt, LANE_M, PARK_M, type CircuitPlan, type EngineTruckState, type PauseInfo, type TruckSimState } from './sim';
 import { poseOnPath, wrapAngle, type Pose } from './pose';
 import { buildTruck, type TruckGeoms } from './vehicle';
 import { machineMaterial } from './kit';
+import { CabMirrors } from './mirror';
+import { NightLamps } from './lamps';
+import { nightOf } from '../strings/env';
 import {
   applyExcavatorPose, buildDozer, buildExcavator, buildWheelLoader, excavatorPass, idleExcavatorPose, paintForMake,
   type DozerRig, type ExcavatorRig, type LoaderRig,
@@ -103,12 +106,16 @@ export const actorsModule: SceneModule = (ctx: SceneContext) => {
   let engineWarned = false;
   /** The followed truck seen from the seat: body without the cab exterior + cab interior + tray + heap (count-1 instances). */
   let pov: { modelId: Id; meshes: THREE.InstancedMesh[] } | null = null;
+  /** Live rear-view mirrors in the seat; night running lights for every truck (+ the followed truck's headlights). */
+  const mirrors = new CabMirrors(group, ctx.renderer);
+  const lamps = new NightLamps(group, ctx.scene);
+  const drawSize = new THREE.Vector2();
   const st = () => useApp.getState();
 
-  // label DOM: selected truck card
+  // selected truck card: above every scene label (z --z-card), kept when labels are off
   const root = document.createElement('div');
-  root.className = css.root;
-  ctx.labelLayer.appendChild(root);
+  root.className = `${css.root} ${css.cardLayer}`;
+  (ctx.hudLayer ?? ctx.labelLayer).appendChild(root);
   const card = document.createElement('div');
   card.className = css.card;
   card.style.display = 'none';
@@ -208,10 +215,14 @@ export const actorsModule: SceneModule = (ctx: SceneContext) => {
       const stops: { s: number; oneWay?: 'loaded' | 'empty' }[] = [];
       for (let i = 0; i < path.n; i++) { const sp = hs.points[path.src[i]]; if (sp.stop) stops.push({ s: path.s[i], oneWay: sp.stopOneWay }); }
       const loader = s.fleet.loaders.find(l => l.id === c.loaderModelId);
+      // lanes follow the carriageway: keep-left lane centres at a quarter of the road width, stopped trucks on the shoulder
+      const roadW = Math.max(8, hs.roadWidthM ?? 30), tw = Math.max(2, model.dims.width);
+      const laneM = Math.max(Math.min(LANE_M, roadW / 2 - tw / 2), Math.min(roadW / 4, 9));
+      const shoulderM = Math.max(laneM, Math.min(laneM + PARK_M, roadW / 2 - tw / 2 - 0.8));
       const plan = buildPlan({
         trucks: c.trucks, spotS: p.spotS, loadS: p.loadS, dumpS: p.dumpS, haulEff: p.haulEff, stopsS: result.stopsS,
         segments: result.segments.map(g => ({ len: g.dist3dM * scale, loadedS: g.timeLoadedS, emptyS: g.timeEmptyS, speedLoadedKmh: g.speedLoadedKmh, speedEmptyKmh: g.speedEmptyKmh })),
-        stops, loaderCycleS: loader?.cycleS ?? 30, events: s.shift.events,
+        stops, loaderCycleS: loader?.cycleS ?? 30, events: s.shift.events, laneM, shoulderM, parkGapM: Math.max(10, model.dims.length * 1.35),
       });
       const res = modelRes(model, need.get(model.id) ?? c.trucks);
       const pool = unitPool.get(model.id) ?? [];
@@ -292,13 +303,42 @@ export const actorsModule: SceneModule = (ctx: SceneContext) => {
       const scale = c.result.lengthM > 0 ? c.path.length / c.result.lengthM : 1;
       es.sort((a, b) => a.truckIndex - b.truckIndex);
       for (const e of es) {
-        c.states.push(presentEngineState(e, tMin, c.path.length, scale, c.plan));
+        const pause = e.paused ? pauseInfo(c, e, tMin) : undefined;
+        const ps = presentEngineState(e, tMin, c.path.length, scale, c.plan, pause);
+        c.states.push(ps);
         if (e.unitId) c.units[e.truckIndex] = e.unitId;
-        c.pause[c.states.length - 1] = e.paused ? e.pauseLabel ?? 'Paused' : undefined;
+        c.pause[c.states.length - 1] = e.paused ? (pause?.parkUp && ps.phase !== 'parked' ? 'To park-up' : e.pauseLabel ?? 'Paused') : undefined;
       }
       return;
     }
     for (let k = 0; k < c.plan.N; k++) { c.states.push(truckStateAt(c.plan, k, tMin)); c.pause[k] = undefined; }
+  }
+
+  /**
+   * The shift event pausing a truck and when the truck's own pause began (the engine lets a truck finish spotting /
+   * loading first). Found once per truck and event by bisecting the engine's states, then cached.
+   */
+  const pauseStarts = new Map<string, number>();
+  let pauseFor: Scenario | null = null;
+  function pauseInfo(c: CircuitRt, e: EngineTruckState, tMin: number): PauseInfo | undefined {
+    const s = st().scenario;
+    if (pauseFor !== s) { pauseStarts.clear(); pauseFor = s; }
+    const evs = s.shift.events.filter(ev => ev.fleetStopFraction > 0 && tMin >= ev.startMin - 1e-6 && tMin <= ev.startMin + ev.durMin + 1e-6);
+    const ev = evs.find(x => x.label === e.pauseLabel) ?? evs[0];
+    if (!ev) return undefined;
+    const key = `${c.circuit.id}|${e.truckIndex}|${ev.id}`;
+    let start = pauseStarts.get(key);
+    if (start === undefined) {
+      let lo = ev.startMin, hi = tMin;
+      const pausedAt = (t: number) => {
+        try { return !!(truckStatesAt(s, resultsFor(s), c.circuit.id, t) as EngineTruckState[]).find(x => x.truckIndex === e.truckIndex)?.paused; } catch { return true; }
+      };
+      if (!pausedAt(lo)) for (let i = 0; i < 12 && hi - lo > 1 / 120; i++) { const mid = (lo + hi) / 2; if (pausedAt(mid)) hi = mid; else lo = mid; }
+      else hi = lo;
+      start = hi;
+      pauseStarts.set(key, start);
+    }
+    return { startMin: start, endMin: ev.startMin + ev.durMin, parkUp: isParkUp(ev) };
   }
 
   // ── per-frame update ───────────────────────────────────────────────────────────────
@@ -321,6 +361,10 @@ export const actorsModule: SceneModule = (ctx: SceneContext) => {
     const followSel = followTarget(s);
     for (const r of models.values()) { r.n = 0; r.nHi = 0; r.nLo = 0; }
     const tmp = new Float64Array(3);
+    const night = nightOf(ctx);
+    const ride = s.camera === 'pov' || s.camera === 'chase';
+    lamps.begin(circuits.reduce((a, c) => a + c.plan.N, 0));
+    let followM: { M: THREE.Matrix4; g: TruckGeoms } | null = null;
     for (const c of circuits) {
       statesFor(c, tMin);
       c.poses.length = 0; c.scales.length = 0;
@@ -338,8 +382,14 @@ export const actorsModule: SceneModule = (ctx: SceneContext) => {
           scale = Math.min(5, Math.max(1, (22 * mpp) / g.L));
         }
         c.scales.push(scale);
-        // in POV the driver sits inside the followed truck: the cockpit overlay draws it, the 3D model is hidden
-        writeInstances(c, k, ts, pose, sp, followed && s.camera === 'pov' ? 0 : scale, camPos);
+        // in POV the driver sits inside the followed truck: its seat view (placePov) replaces the body; wheels stay
+        writeInstances(c, k, ts, pose, sp, scale, camPos, !!followed && s.camera === 'pov');
+        if (night > 0.02 && visible) {
+          // the followed truck in POV / chase lights the road with a real spot light instead of the painted pool
+          const lit = !!followed && ride;
+          lamps.add(M, g, scale, !lit);
+          if (lit) followM = { M: M.clone(), g };
+        }
       }
     }
     for (const r of models.values()) {
@@ -350,17 +400,27 @@ export const actorsModule: SceneModule = (ctx: SceneContext) => {
         if (im.instanceColor) im.instanceColor.needsUpdate = true;
       }
     }
-    placePov(s, followSel);
+    placePov(s, followSel, now);
+    ctx.renderer.getDrawingBufferSize(drawSize);
+    lamps.end(visible ? night : 0, followM, drawSize.y || 800);
     animateLoaders(dt, now);
     animateDozers(tMin);
     publishFollow(s, followSel);
   });
 
-  function writeInstances(c: CircuitRt, k: number, ts: TruckSimState, pose: Pose, sp: [number, number, number], scale: number, camPos: THREE.Vector3) {
+  const ZERO = new THREE.Matrix4().makeScale(0, 0, 0);
+  /** `hideBody`: the driver's own truck in POV - body, tray and heap come from the seat view; the wheels stay. */
+  function writeInstances(c: CircuitRt, k: number, ts: TruckSimState, pose: Pose, sp: [number, number, number], scale: number, camPos: THREE.Vector3, hideBody = false) {
     const r = c.res, g = r.geoms, i = r.n++;
     EUL.set(0, pose.heading, pose.pitch, 'YZX');
     Q.setFromEuler(EUL);
     M.compose(V.set(sp[0], sp[1], sp[2]), Q, S.set(scale, scale, scale));
+    if (hideBody) {
+      r.body.setMatrixAt(i, ZERO); r.tray.setMatrixAt(i, ZERO); r.load.setMatrixAt(i, ZERO);
+      r.body.setColorAt(i, c.bodyColor); r.tray.setColorAt(i, c.bodyColor); r.load.setColorAt(i, c.matColor);
+      writeWheels(r, g, ts, scale, sp, camPos);
+      return;
+    }
     r.body.setMatrixAt(i, M);
     r.body.setColorAt(i, c.bodyColor);
     // tray about the rear hinge
@@ -375,7 +435,11 @@ export const actorsModule: SceneModule = (ctx: SceneContext) => {
     else MW.makeScale(0, 0, 0);
     r.load.setMatrixAt(i, MW);
     r.load.setColorAt(i, c.matColor);
-    // wheels: LOD by distance
+    writeWheels(r, g, ts, scale, sp, camPos);
+  }
+
+  /** Wheels (LOD by distance) for the truck whose pose is in `M`. */
+  function writeWheels(r: ModelRes, g: TruckGeoms, ts: TruckSimState, scale: number, sp: [number, number, number], camPos: THREE.Vector3) {
     const dist = camPos.distanceTo(V.set(sp[0], sp[1], sp[2]));
     const hi = dist < 220 * Math.max(scale, 1);
     const im = hi ? r.wheelHi : r.wheelLo;
@@ -390,8 +454,8 @@ export const actorsModule: SceneModule = (ctx: SceneContext) => {
     }
   }
 
-  function placePov(s: AppState, sel: { c: CircuitRt; k: number } | null) {
-    if (s.camera !== 'pov' || !sel || !sel.c.poses[sel.k]) { if (pov) for (const im of pov.meshes) im.visible = false; return; }
+  function placePov(s: AppState, sel: { c: CircuitRt; k: number } | null, now: number) {
+    if (s.camera !== 'pov' || !sel || !sel.c.poses[sel.k] || s.layers.trucks === false) { if (pov) for (const im of pov.meshes) im.visible = false; mirrors.hide(); return; }
     const { c, k } = sel, g = c.res.geoms, ts = c.states[k], pose = c.poses[k], f = ctx.frame();
     const [body, cab, tray, load] = povFor(c.res);
     const sp = worldToScene(f, pose.e, pose.n, pose.z);
@@ -407,6 +471,11 @@ export const actorsModule: SceneModule = (ctx: SceneContext) => {
     load.setMatrixAt(0, MW);
     body.setColorAt(0, c.bodyColor); cab.setColorAt(0, c.bodyColor); tray.setColorAt(0, c.bodyColor); load.setColorAt(0, c.matColor);
     for (const im of [body, cab, tray, load]) { im.visible = true; im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true; }
+    // live mirrors: the seat view's glass shows the flank and the road behind (needs the pose matrix again)
+    EUL.set(0, pose.heading, pose.pitch, 'YZX');
+    Q.setFromEuler(EUL);
+    M.compose(V.set(sp[0], sp[1], sp[2]), Q, S.set(1, 1, 1));
+    mirrors.update(M, g, ctx.scene, now);
   }
 
   const SC = new THREE.Matrix4(), SC2 = new THREE.Matrix4();
@@ -617,6 +686,8 @@ export const actorsModule: SceneModule = (ctx: SceneContext) => {
     if (lastFollow) ctx.setFollowTarget(null);
     bus.followed = null;
     disposePov();
+    mirrors.dispose();
+    lamps.dispose();
     bus.pickTruck = undefined;
     disposeMachines();
     for (const r of [...models.values()]) disposeModel(r);

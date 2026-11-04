@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildPlan, cycleState, presentEngineState, queuePos, truckStateAt, LANE_M, QUEUE_FRONT_M, type EngineTruckState, type PlanInput } from './sim';
+import { buildPlan, cycleState, isParkUp, parkSlot, presentEngineState, queuePos, truckStateAt, LANE_M, QUEUE_FRONT_M, type EngineTruckState, type PlanInput } from './sim';
 import { buildPath } from '../strings/path';
 import { poseOnPath, truckProportions, wrapAngle, lerpAngle } from './pose';
 
@@ -171,5 +171,48 @@ describe('presentEngineState', () => {
     expect(p.phase).toBe('parked');
     expect(p.speedKmh).toBe(0);
     expect(p.s).toBeCloseTo(500);
+  });
+
+  it('a paused truck out on the road pulls over to the shoulder and back out before the event ends', () => {
+    const wide = buildPlan(base({ laneM: 7.5, shoulderM: 10.5 }));
+    const pause = { startMin: 11, endMin: 13, parkUp: false };
+    const mid = presentEngineState(es({ paused: true, pauseLabel: 'Crib' }), 12, 1500, 1, wide, pause);
+    expect(mid.lateral).toBeCloseTo(-10.5);
+    expect(mid.s).toBeCloseTo(500);
+    const atStart = presentEngineState(es({ paused: true }), 11, 1500, 1, wide, pause);
+    expect(atStart.lateral).toBeCloseTo(-7.5);
+    // at the loader it waits in place
+    const ld = presentEngineState(es({ phase: 'load', chainageM: 0, paused: true }), 12, 1500, 1, wide, pause);
+    expect(ld.lateral).toBe(0);
+  });
+
+  it('end-of-shift park-up: trucks drive to the park-up line near the loader instead of stopping on the road', () => {
+    expect(isParkUp({ kind: 'changeover', label: 'End-of-shift park-up' })).toBe(true);
+    expect(isParkUp({ kind: 'crib', label: 'Crib 1' })).toBe(false);
+    const p = buildPlan(base({ laneM: 7.5, shoulderM: 10.5, parkGapM: 17 }));
+    const pause = { startMin: 705, endMin: 720, parkUp: true };
+    const slot = parkSlot(p, 2);
+    expect(slot.s).toBeCloseTo(QUEUE_FRONT_M - 6 + 34);
+    // a loaded truck 900 m out at the start of the event
+    const t0 = presentEngineState(es({ truckIndex: 2, chainageM: 900, paused: true, pauseLabel: 'End-of-shift park-up' }), 705, 1500, 1, p, pause);
+    expect(t0.s).toBeCloseTo(900);
+    const tm = presentEngineState(es({ truckIndex: 2, chainageM: 900, paused: true }), 706, 1500, 1, p, pause);
+    expect(tm.phase).toBe('return');
+    expect(tm.s).toBeLessThan(900);
+    expect(tm.s).toBeGreaterThan(slot.s);
+    expect(tm.speedKmh).toBeGreaterThan(5);
+    const end = presentEngineState(es({ truckIndex: 2, chainageM: 900, paused: true }), 719, 1500, 1, p, pause);
+    expect(end.phase).toBe('parked');
+    expect(end.s).toBeCloseTo(slot.s);
+    expect(end.lateral).toBeCloseTo(slot.lateral);
+    expect(end.rev).toBeCloseTo(1);
+    expect(end.speedKmh).toBe(0);
+    // chainage is continuous through the drive
+    let prev = 900;
+    for (let t = 705; t <= 720; t += 0.02) {
+      const x = presentEngineState(es({ truckIndex: 2, chainageM: 900, paused: true }), t, 1500, 1, p, pause).s;
+      expect(Math.abs(x - prev)).toBeLessThan(25);
+      prev = x;
+    }
   });
 });
