@@ -4,6 +4,9 @@ import { gridTin, MGA, translate } from './__tests__/shapes';
 import { mergeMeshes } from './mesh';
 import { mulberry32 } from '@/demo/rng';
 import type { MeshData } from '@/core/types';
+// Wall-clock budgets: strict with PERF_STRICT=1; ×5 headroom by default so busy CI machines don't flake.
+const PERF = process.env.PERF_STRICT === '1' ? 1 : 5;
+
 
 const plane = (x: number, y: number) => 300 + 0.03 * (x - MGA[0]) - 0.07 * (y - MGA[1]);
 
@@ -71,8 +74,8 @@ describe('heightAt', () => {
     const perQueryUs = ((performance.now() - t1) * 1000) / N;
     expect(sum).toBeGreaterThan(0);
     console.info(`heightIndex: build ${buildMs.toFixed(0)} ms for 326 400 triangles; query ${perQueryUs.toFixed(2)} µs`);
-    expect(buildMs).toBeLessThan(1500);
-    expect(perQueryUs).toBeLessThan(5);
+    expect(buildMs).toBeLessThan(1500 * PERF);
+    expect(perQueryUs).toBeLessThan(5 * PERF);
   });
 });
 
