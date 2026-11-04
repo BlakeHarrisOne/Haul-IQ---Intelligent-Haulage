@@ -22,6 +22,8 @@
 }
 .link:hover { text-decoration: underline; text-underline-offset: 3px; }
 .actions { display: flex; flex-wrap: wrap; gap: 6px; padding: var(--s2) var(--s4) 0; }
+.actionGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; padding: 4px var(--s4) 0; }
+.actionGrid > button { justify-content: flex-start; }
 .foot { display: flex; align-items: center; gap: var(--s2); padding: var(--s3) var(--s4) 0; }
 .gap { flex: 1; }
 .colorInput {

@@ -155,11 +155,11 @@ function Editor({ hs, scenario }: { hs: HaulString; scenario: Scenario }) {
         </Section>
 
         <Section title="Edit">
-          <div className={s.actions} style={{ paddingTop: 4 }}>
-            <Button size="sm" icon="reverse" onClick={reverse} disabled={hs.locked}>Reverse</Button>
+          <div className={s.actionGrid}>
+            <Button size="sm" icon="reverse" onClick={reverse} disabled={hs.locked} title="Swap dig and dump ends">Reverse</Button>
             <Button size="sm" icon="snap" onClick={resnap} disabled={hs.locked || !index} title={index ? 'Set every RL from the topo surface' : 'No topo surface loaded'}>Re-snap</Button>
-            <Button size="sm" icon="insert" onClick={densify25} disabled={hs.locked}>Densify 25 m</Button>
-            <Button size="sm" icon="vertex" onClick={simplify} disabled={hs.locked}>Simplify</Button>
+            <Button size="sm" icon="insert" onClick={densify25} disabled={hs.locked} title="Add points so no segment is longer than 25 m">Densify 25 m</Button>
+            <Button size="sm" icon="vertex" onClick={simplify} disabled={hs.locked} title="Remove points within 0.25 m (3D Douglas–Peucker)">Simplify 0.25 m</Button>
           </div>
           <PointTable hs={hs} defaults={defaults} index={index} onPaste={() => setPasting(true)} />
         </Section>

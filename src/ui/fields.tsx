@@ -22,6 +22,8 @@ export interface NumberFieldProps {
   max?: number;
   /** Decimal places shown when not editing. */
   dp?: number;
+  /** Always show exactly `dp` decimals when not editing (keeps table columns aligned). */
+  fixed?: boolean;
   small?: boolean;
   bare?: boolean;
   /** Highlight as user-changed vs default. */
@@ -34,12 +36,12 @@ export interface NumberFieldProps {
   onClear?: () => void;
 }
 
-export function NumberField({ value, onChange, unit, step = 1, min, max, dp = 2, small, bare, changed, placeholder, width, disabled, title, onClear }: NumberFieldProps) {
-  const show = (v: number | null | undefined) => (v == null || !Number.isFinite(v) ? '' : String(+v.toFixed(dp)));
+export function NumberField({ value, onChange, unit, step = 1, min, max, dp = 2, fixed, small, bare, changed, placeholder, width, disabled, title, onClear }: NumberFieldProps) {
+  const show = (v: number | null | undefined) => (v == null || !Number.isFinite(v) ? '' : fixed ? v.toFixed(dp) : String(+v.toFixed(dp)));
   const [draft, setDraft] = useState(show(value));
   const [focus, setFocus] = useState(false);
   const ref = useRef<HTMLInputElement>(null);
-  useEffect(() => { if (!focus) setDraft(show(value)); }, [value, focus, dp]);
+  useEffect(() => { if (!focus) setDraft(show(value)); }, [value, focus, dp, fixed]);
   const parsed = draft.trim() === '' ? NaN : Number(draft.replace(/,/g, ''));
   const invalid = draft.trim() !== '' && (!Number.isFinite(parsed) || (min != null && parsed < min) || (max != null && parsed > max));
   const commit = () => {

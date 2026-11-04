@@ -225,6 +225,25 @@ export interface CircuitParams {
   speedLimitKmh: number;         // global speed cap
   speedModel: SpeedModel;
   shiftsPerDay: number;          // 2
+
+  // ── optional engine options (defaults in parentheses) ──
+  /** Spreadsheet mode, |ROUND(grade,2)| > 0.16: 'drop' = Excel behaviour, segment time 0 ('drop'); 'clamp' = steepest row. */
+  outOfRange?: 'drop' | 'clamp';
+  /** Rimpull mode: kinematic forward–backward accel/decel pass with real stops, or steady balance speed ('kinematic'). */
+  motion?: 'kinematic' | 'steady';
+  /** Production model per truck count: workbook deterministic, finite-source M/M/1//N, or binomial ('deterministic'). */
+  queueModel?: 'deterministic' | 'mm1n' | 'binomial';
+  /** Loader target PT h/day (defaults to truckPtHrsPerDay - the workbook's I34 feeds both). */
+  loaderPtHrsPerDay?: number;
+  /** Kinematic: max operator acceleration, m/s² (0.6). */
+  accelMaxMs2?: number;
+  /** Kinematic: planning deceleration loaded / empty, m/s² (0.6 / 0.8). */
+  decelLoadedMs2?: number;
+  decelEmptyMs2?: number;
+  /** Kinematic: tyre–road traction coefficient μ (0.5). */
+  tractionCoeff?: number;
+  /** Kinematic: dwell at a modelled stop sign, s (5). */
+  stopDwellS?: number;
 }
 
 export interface Circuit {
