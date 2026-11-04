@@ -39,7 +39,8 @@ export interface Timeline {
   speed: number;
 }
 
-export interface Toast { id: Id; kind: 'info' | 'ok' | 'warn' | 'error'; text: string; at: number }
+/** A transient message; `action` renders a ghost button (e.g. "Deleted · Undo"). */
+export interface Toast { id: Id; kind: 'info' | 'ok' | 'warn' | 'error'; text: string; at: number; action?: { label: string; run: () => void } }
 
 interface HistoryEntry { label: string; scenario: Scenario }
 
@@ -73,7 +74,8 @@ export interface AppState {
   replaceScenario: (s: Scenario, opts?: { markClean?: boolean }) => void;
   undo: () => void;
   redo: () => void;
-  markSaved: () => void;
+  /** Mark the current scenario as saved (at = its stored save time, e.g. when opening from the library). */
+  markSaved: (at?: string) => void;
 
   // convenience edits (all go through commit)
   addAsset: (a: MeshAsset) => void;
@@ -98,7 +100,7 @@ export interface AppState {
   setTimeline: (patch: Partial<Timeline>) => void;
   toggleLayer: (k: string, on?: boolean) => void;
   togglePanel: (k: keyof AppState['panels'], on?: boolean) => void;
-  toast: (kind: Toast['kind'], text: string) => void;
+  toast: (kind: Toast['kind'], text: string, action?: Toast['action']) => void;
   dismissToast: (id: Id) => void;
 }
 
@@ -185,7 +187,7 @@ export const useApp = create<AppState>()((set, get) => ({
     set(st => ({ scenario: nxt.scenario, past: [...past, { label: nxt.label, scenario }], future: future.slice(1), revision: st.revision + 1, dirty: nxt.scenario !== st.cleanRef }));
     get().toast('info', `Redid: ${nxt.label}`);
   },
-  markSaved: () => set(st => ({ dirty: false, lastSavedAt: nowIso(), cleanRef: st.scenario })),
+  markSaved: at => set(st => ({ dirty: false, lastSavedAt: at ?? nowIso(), cleanRef: st.scenario })),
 
   addAsset: a => get().commit(`Import ${a.name}`, s => ({ ...s, assets: [...s.assets, a] })),
   updateAsset: (id, patch) => get().commit('Edit surface', s => ({ ...s, assets: mapById(s.assets, id, a => ({ ...a, ...patch })) })),
@@ -216,11 +218,12 @@ export const useApp = create<AppState>()((set, get) => ({
   setTimeline: patch => set(st => ({ timeline: { ...st.timeline, ...patch } })),
   toggleLayer: (k, on) => set(st => ({ layers: { ...st.layers, [k]: on ?? !st.layers[k] } })),
   togglePanel: (k, on) => set(st => ({ panels: { ...st.panels, [k]: on ?? !st.panels[k] } })),
-  toast: (kind, text) => {
-    const t: Toast = { id: uid('t'), kind, text, at: Date.now() };
+  toast: (kind, text, action) => {
+    const t: Toast = { id: uid('t'), kind, text, at: Date.now(), action };
     set(st => ({ toasts: [...st.toasts.slice(-3), t] }));
-    setTimeout(() => get().dismissToast(t.id), kind === 'error' ? 7000 : 3800);
+    setTimeout(() => get().dismissToast(t.id), action ? 8000 : kind === 'error' ? 7000 : 3800);
   },
+
   dismissToast: id => set(st => ({ toasts: st.toasts.filter(t => t.id !== id) })),
 }));
 

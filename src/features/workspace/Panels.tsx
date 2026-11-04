@@ -8,7 +8,7 @@ import { CompareView } from '@/features/compare';
 import { ManningView } from '@/features/manning';
 import { PriorityView } from '@/features/priority';
 import { ScenariosView } from '@/features/scenarios';
-import { Ctl, Icon, Segmented, StatusGlyph, cx } from '@/ui';
+import { Button, Ctl, Icon, Segmented, StatusGlyph, cx } from '@/ui';
 import { VIEWS } from './defs';
 import { useShellUi, ui } from './uiStore';
 import s from './shell.module.css';
@@ -114,6 +114,7 @@ export function Toasts() {
             ? <Icon name="info" size={20} style={{ color: 'var(--accent)' }} />
             : <StatusGlyph kind={t.kind === 'ok' ? 'ok' : t.kind === 'error' ? 'fail' : 'warn'} />}
           <span>{t.text}</span>
+          {t.action && <Button variant="ghost" size="sm" onClick={() => { t.action!.run(); dismiss(t.id); }}>{t.action.label}</Button>}
           <Ctl icon="x" small tip="Dismiss" tipSide="up" onClick={() => dismiss(t.id)} />
         </div>
       ))}
