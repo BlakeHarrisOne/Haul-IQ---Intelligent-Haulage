@@ -64,6 +64,12 @@ module.exports = {
     const usable = scr.filter(p => p.x != null && p.x > 70 && p.x < box.width - 440 && p.y > 80 && p.y < box.height - 120);
     t.check(usable.length === 4, 'draw points project onto the visible terrain', scr.map(p => [Math.round(p.x), Math.round(p.y)]));
     for (const p of usable) { await page.mouse.click(p.x, p.y); await L.sleep(250); }
+    await L.sleep(500);
+    // the tool hint chip offers Finish once there are ≥ 2 points - it must be reachable
+    const finishCover = await L.coveredBy(page, () => document.querySelector('button[data-act="finish"]'));
+    t.check(Array.isArray(finishCover) && finishCover.length === 0, 'draw hint "Finish" button visible and clickable (not under the inspector / timeline)', { coveredBy: finishCover });
+    const followCover = await L.coveredBy(page, () => document.querySelector('button[data-act="densify"]'));
+    t.check(Array.isArray(followCover) && followCover.length === 0, 'draw hint "Follow surface" toggle not covered', { coveredBy: followCover });
     await t.shot('draw_rubberband');
     await page.keyboard.press('Enter');
     await L.waitStore(page, (st, n) => st.scenario.strings.length === n + 2, s0.strings);

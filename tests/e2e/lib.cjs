@@ -324,6 +324,32 @@ async function chromeBoxes(page) {
   });
 }
 
+/**
+ * What covers an element: hit-tests its corners and centre (the element chain is made hittable for the test, since
+ * scene tooltips use pointer-events: none). Returns the aria-label / tag of each covering element ([] = fully visible),
+ * or null when finderSrc (a function source returning the element) finds nothing.
+ */
+async function coveredBy(page, finder) {
+  return page.evaluate(src => {
+    const el = (0, eval)('(' + src + ')')();
+    if (!el) return null;
+    const saved = [];
+    for (let n = el; n && n !== document.body; n = n.parentElement) { saved.push([n, n.style.pointerEvents]); n.style.pointerEvents = 'auto'; }
+    for (const n of el.querySelectorAll('*')) { saved.push([n, n.style.pointerEvents]); n.style.pointerEvents = 'auto'; }
+    const r = el.getBoundingClientRect();
+    const pts = [[r.left + 4, r.top + 4], [r.right - 4, r.top + 4], [r.left + 4, r.bottom - 4], [r.right - 4, r.bottom - 4], [(r.left + r.right) / 2, (r.top + r.bottom) / 2]];
+    const out = pts.map(([x, y]) => {
+      if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) return 'off-screen';
+      const h = document.elementFromPoint(x, y);
+      if (!h || el.contains(h)) return null;
+      const c = h.closest('[aria-label]');
+      return c ? c.getAttribute('aria-label') : `${h.tagName}.${String(h.className).slice(0, 24)}`;
+    }).filter(Boolean);
+    for (const [n, v] of saved) n.style.pointerEvents = v;
+    return out;
+  }, finder.toString());
+}
+
 function overlaps(boxes, tol = 1) {
   const out = [];
   for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
@@ -337,5 +363,5 @@ function overlaps(boxes, tol = 1) {
 module.exports = {
   ROOT, URL, OUT, FIX, launch, newSession, open, reload, unexpectedReload, waitScene, probe, waitStore, MODULE_IMPORT, summary, circuitResults, shot, sleep,
   loadDemoViaWelcome, startWithDemo, canvasBox, inspector, key, writeStringFixture, dropFiles, numIn, kpiValue,
-  imageDiff, chromeBoxes, overlaps, isNoise, shotStalls,
+  imageDiff, chromeBoxes, overlaps, coveredBy, isNoise, shotStalls,
 };

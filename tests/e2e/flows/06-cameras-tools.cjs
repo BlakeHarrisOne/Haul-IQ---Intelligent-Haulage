@@ -84,13 +84,24 @@ module.exports = {
     t.check(/A|B/.test(ptxt), 'section panel labelled', ptxt.replace(/\n/g, ' · ').slice(0, 140));
     await t.shot('section');
 
-    // ── measure (M, three clicks, Enter)
+    // ── measure (M, three clicks, Enter) - with the section dock closed, on points the 3D view actually receives
+    const closeSec = panel.getByRole('button', { name: /Close section/ });
+    if (await closeSec.count()) { await closeSec.first().click(); await L.waitStore(page, st => !st.section); }
     await offScene();
     await L.key(page, 'm');
     t.check((await L.summary(page)).tool === 'measure', 'M selects the measure tool');
-    const mw = [[236200, 7051350], [236400, 7051380], [236550, 7051500]];
-    const mp = await project(page, mw);
-    t.check(mp.every(Boolean), 'measure points on screen', mp);
+    const cands = [];
+    for (let e = 236150; e <= 236900; e += 75) for (let n = 7051300; n <= 7052100; n += 75) cands.push([e, n]);
+    const hits = await page.evaluate(ws => {
+      const core = window.__haiulScene.core, ctx = core.ctx;
+      const ok = el => el && (el.tagName === 'CANVAS' || el === core.hudLayer || el === core.labelLayer || el === core.container);
+      return ws.map(([e, n]) => { const z = ctx.heightAt(e, n); const p = z == null ? null : ctx.project([e, n, z]); if (!p) return null; const x = p[0] ?? p.x, y = p[1] ?? p.y; return ok(document.elementFromPoint(x, y)) && ok(document.elementFromPoint(x + 16, y + 16)) ? { e, n, x, y } : null; }).filter(Boolean);
+    }, cands);
+    // three points ~150-250 m apart, well inside the view
+    const pick3 = [];
+    for (const h of hits) { if (!pick3.length || Math.hypot(h.e - pick3[pick3.length - 1].e, h.n - pick3[pick3.length - 1].n) > 140) pick3.push(h); if (pick3.length === 3) break; }
+    const mp = pick3.map(h => [h.x, h.y]);
+    t.check(mp.length === 3, 'measure points on screen (not under chrome)', mp);
     const picked = [];
     for (const p of mp) {
       picked.push(await page.evaluate(([x, y]) => window.__haiulScene.core.ctx.pickTerrain(x, y), p));
@@ -102,11 +113,13 @@ module.exports = {
     await L.sleep(800);
     // the smallest visible element holding the readout (the tool tip next to the cursor)
     const tip = await page.evaluate(() => {
-      const els = [...document.querySelectorAll('div')].filter(d => /Max leg grade/.test(d.innerText || '') && d.offsetParent !== null);
+      const els = [...document.querySelectorAll('div')].filter(d => /Max leg grade/.test(d.innerText || '') && /Plan/.test(d.innerText || '') && d.offsetParent !== null);
       els.sort((a, b) => a.innerText.length - b.innerText.length);
       return els[0] ? els[0].innerText : null;
     });
     t.check(!!tip, 'measure readout shown', tip && tip.replace(/\n/g, ' · '));
+    const covered = await L.coveredBy(page, () => { const els = [...document.querySelectorAll('div')].filter(d => /Max leg grade/.test(d.innerText || '') && /Plan/.test(d.innerText || '') && d.offsetParent !== null); els.sort((a, b) => a.innerText.length - b.innerText.length); return els[0]; });
+    t.check(Array.isArray(covered) && covered.length === 0, 'measure readout is not covered by other chrome', { coveredBy: covered });
     let plan = 0, d3 = 0;
     for (let i = 1; i < picked.length; i++) { const [a, b] = [picked[i - 1], picked[i]]; plan += Math.hypot(b[0] - a[0], b[1] - a[1]); d3 += Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]); }
     const shownPlan = tip ? L.numIn((tip.match(/Plan\s+([\d,.]+)/) || [])[1]) : NaN;
@@ -115,5 +128,23 @@ module.exports = {
     t.check(Math.abs(shownLen - d3) / d3 < 0.01, `3D length ${shownLen} m ≈ picked ${d3.toFixed(1)} m`);
     t.check(/3 points/.test(tip || ''), 'readout counts 3 points');
     await t.shot('measure');
+
+    // readout next to the docked long section: measure just above the dock (a circuit selected opens it)
+    await page.keyboard.press('Escape');
+    await L.key(page, 'v');
+    await L.inspector(page).locator('button', { hasText: 'EX09 OB → S51 West lift' }).first().click();
+    const dock = page.locator('section[aria-label="Long section"]');
+    await dock.waitFor({ timeout: 120_000 });
+    await L.sleep(1000);
+    const db = await dock.boundingBox();
+    await offScene();
+    await L.key(page, 'm');
+    const yA = db.y - 40, xs = [db.x + db.width * 0.35, db.x + db.width * 0.55];
+    for (const x of xs) { await page.mouse.click(x, yA); await L.sleep(300); }
+    await page.mouse.move(xs[1] + 2, yA + 1);
+    await L.sleep(800);
+    const coveredNearDock = await L.coveredBy(page, () => { const els = [...document.querySelectorAll('div')].filter(d => /Max leg grade/.test(d.innerText || '') && /Plan/.test(d.innerText || '') && d.offsetParent !== null); els.sort((a, b) => a.innerText.length - b.innerText.length); return els[0]; });
+    t.check(Array.isArray(coveredNearDock) && coveredNearDock.length === 0, 'measure readout near the long-section dock stays visible', { coveredBy: coveredNearDock });
+    await t.shot('measure_near_dock');
   },
 };
