@@ -106,8 +106,8 @@ export class TerrainLayer {
       uNight: { value: 0 },
       uTerrMul: { value: 1 },
       uPlot: { value: 0 },
-      uPlotLo: { value: new THREE.Color('#CCC2B0') },
-      uPlotHi: { value: new THREE.Color('#F7F1E3') },
+      uPlotLo: { value: new THREE.Color('#B9B5AC') },
+      uPlotHi: { value: new THREE.Color('#F3EFE6') },
       uNearK: { value: 0 },
       uGravel: { value: this.aoTex },
       uCutCol: { value: new THREE.Color('#4A82BF') },
@@ -226,17 +226,22 @@ float hk_tanS; float hk_rl; float hk_fw; vec2 hk_pw; float hk_bh;`);
     float farK = smoothstep(0.6, 3.0, hk_fw);
     base *= 1.0 + uDetail * g * (1.0 - 0.6 * farK);
     base = mix(base, base * vec3(1.03, 1.0, 0.95), clamp(g * 1.5, -0.5, 0.5) * (1.0 - farK));
-    // near field (≲150 m from the eye): tiled gravel, two rotated scales, triplanar on faces
+    // near field (≲110 m from the eye): tiled gravel, two rotated scales, triplanar on faces. The UVs and their
+    // derivatives are taken in uniform control flow and sampled with textureGrad: an implicit-LOD lookup inside the
+    // branch has an undefined mip level (SwiftShader takes level 0 → salt-and-pepper ground)
     float vd = length(vViewPosition);
-    float nearK = uNearK * (1.0 - smoothstep(70.0, 160.0, vd));
+    float nearK = uNearK * (1.0 - smoothstep(35.0, 110.0, vd)) * (1.0 - smoothstep(0.03, 0.12, hk_fw));
+    float onFace = step(0.5, wv);
+    vec2 qFace = mix(vec2(vLoc.x, hk_rl), vec2(vLoc.z, hk_rl), step(0.5, bx));
+    vec2 qa = mix(hk_pw, qFace, onFace) / 2.4;
+    vec2 qb = (mat2(0.8, -0.6, 0.6, 0.8) * mix(hk_pw, qFace.yx, onFace)) / 0.83 + 0.37;
+    vec2 qaX = dFdx(qa), qaY = dFdy(qa), qbX = dFdx(qb), qbY = dFdy(qb);
     if (nearK > 0.002) {
-      vec2 qa = hk_pw, qb = mat2(0.8, -0.6, 0.6, 0.8) * hk_pw;
-      if (wv > 0.5) { qa = mix(vec2(vLoc.x, hk_rl), vec2(vLoc.z, hk_rl), step(0.5, bx)); qb = qa.yx * vec2(1.0, -1.0); }
-      vec4 g1 = texture2D(uGravel, qa / 2.4);
-      vec4 g2 = texture2D(uGravel, qb / 0.83 + 0.37);
+      vec4 g1 = textureGrad(uGravel, qa, qaX, qaY);
+      vec4 g2 = textureGrad(uGravel, qb, qbX, qbY);
       float alb = mix(g1.r, g2.r, 0.38) * 1.594;
-      base *= mix(1.0, alb, nearK * 0.85);
-      hk_bh += ((g1.g - 0.5) * 0.05 + (g2.g - 0.5) * 0.02) * nearK;
+      base *= mix(1.0, alb, nearK * 0.6);
+      hk_bh += ((g1.g - 0.5) * 0.04 + (g2.g - 0.5) * 0.015) * nearK;
     }
     // baked curvature: crests a touch brighter, toes darker (bench lines read at any distance)
     {
@@ -253,8 +258,8 @@ float hk_tanS; float hk_rl; float hk_fw; vec2 hk_pw; float hk_bh;`);
     if (uPlot > 0.0) {
       float gray = clamp((hs - 0.15) / 0.85, 0.0, 1.0);
       vec3 tint = mix(uPlotLo, uPlotHi, t);
-      vec3 plot = 0.78 * vec3(gray * gray) * vec3(1.0, 0.97, 0.91) + 0.22 * tint;
-      plot *= 1.0 + 0.5 * uDetail * g * (1.0 - farK);
+      vec3 plot = 0.78 * vec3(gray) * vec3(0.975, 0.98, 0.985) + 0.22 * tint;
+      plot *= 1.0 + 0.4 * uDetail * g * (1.0 - farK);
       base = mix(base, plot, uPlot);
     }
     if (uSlopeOn > 0.5) {
@@ -270,8 +275,10 @@ float hk_tanS; float hk_rl; float hk_fw; vec2 hk_pw; float hk_bh;`);
     float cutK = smoothstep(0.05, 0.9, vCF.x);
     if (cutK > 0.0) {
       // walls of the cut darker than its floor so a carved trench reads as a hole, not a raised box
+      // and deeper cut darker (bathymetric), so walls grade from the rim down into the hole
       float wall = smoothstep(0.35, 1.3, hk_tanS);
-      base = mix(base, mix(uCutCol, uCutFresh, vCF.z) * (0.55 + 0.75 * hs) * mix(1.0, 0.62, wall), cutK * 0.9);
+      float deep = smoothstep(0.5, 14.0, vCF.x);
+      base = mix(base, mix(uCutCol, uCutFresh, vCF.z) * (0.55 + 0.75 * hs) * mix(1.0, 0.7, wall) * mix(1.12, 0.66, deep), cutK * 0.9);
     }
     float fillK = smoothstep(0.05, 0.9, vCF.y);
     if (fillK > 0.0) base = mix(base, uFillCol * (0.55 + 0.75 * hs), fillK * 0.8);
@@ -294,6 +301,12 @@ float hk_tanS; float hk_rl; float hk_fw; vec2 hk_pw; float hk_bh;`);
   }`, 'replace');
       f = patch(f, 'opaque_fragment', /* glsl */ `
   {
+    // plan: the survey plot is unlit (4-light hillshade + baked AO carry the relief, like Rain Model's 2D map)
+    if (uPlot > 0.0) {
+      vec2 aoUVp = vec2(((vLoc.x - uAOX.x) * uAOX.z + 0.5) / uAOSize.x, ((-vLoc.z - uAOX.y) * uAOX.z + 0.5) / uAOSize.y);
+      float aoP = mix(1.0, texture2D(uAO, aoUVp).r, 0.55 * (1.0 - vCarve));
+      outgoingLight = mix(outgoingLight, diffuseColor.rgb * aoP * 1.06, uPlot);
+    }
     // night: warm pools from lighting plants at the working faces
     if (uGlowK > 0.0) {
       float gsum = 0.0;
@@ -332,12 +345,12 @@ float hk_tanS; float hk_rl; float hk_fw; vec2 hk_pw; float hk_bh;`);
       float l2 = (1.0 - smoothstep(0.6, 1.4, d2)) * smoothstep(1.6, 3.6, J / fz);
       float flatK = smoothstep(0.0008, 0.004, hk_tanS);
       float a = max(l1 * 0.36, l2 * 0.64) * flatK * uInkAlpha;
-      outgoingLight = mix(outgoingLight, uInk * mix(0.2, 0.55, uNight) + outgoingLight * 0.12, clamp(a, 0.0, 1.0));
+      outgoingLight = mix(outgoingLight, uInk * mix(0.2, 0.3, uNight) + outgoingLight * 0.12, clamp(a * mix(1.0, 0.7, uNight), 0.0, 1.0));
     }
   }`, 'before');
       sh.fragmentShader = f;
     };
-    m.customProgramCacheKey = () => 'hk-terrain-v7';
+    m.customProgramCacheKey = () => 'hk-terrain-v9';
     return m;
   }
 

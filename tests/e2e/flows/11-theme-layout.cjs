@@ -41,11 +41,12 @@ module.exports = {
     t.check(dark.insp.l < 0.3, `inspector surface dark (${dark.insp.css})`);
     const inkL = await textColorLum(page, 'aside[aria-label="Inspector"] header');
     t.check(inkL > 0.6, `inspector text light on dark (luminance ${inkL.toFixed(2)})`);
-    t.check(dark.sky.l < light.sky.l - 0.1, `3D scene follows the theme (sky luminance ${light.sky.toFixed ? '' : ''}${light.sky.toFixed(2)} → ${dark.sky.toFixed(2)})`);
+    t.check(dark.sky < light.sky - 0.1, `3D scene follows the theme (sky luminance ${light.sky.toFixed(2)} → ${dark.sky.toFixed(2)})`);
     const pref = await page.evaluate(() => JSON.parse(localStorage.getItem('haiul-sim.ui') || '{}').theme);
     t.check(pref === 'dark', 'theme preference remembered');
     await t.shot('dark_site');
-    await insp.locator('button', { hasText: /EX09/ }).first().click();
+    t.check(!(await L.summary(page)).dirty, 'switching theme does not dirty the document');
+    await insp.locator('button', { hasText: 'EX09 OB → S51 West lift' }).first().click(); // overview row
     await L.sleep(1200);
     await t.shot('dark_circuit');
     const ib = await insp.boundingBox();
@@ -79,7 +80,10 @@ module.exports = {
     await check('overview');
     await t.shot('1366_overview');
     // circuit selected → the long-section dock opens above the timeline
-    await insp.locator('button', { hasText: /EX09/ }).first().click().catch(() => undefined);
+    t.check(!(await L.summary(page)).dirty, 'theme + resize leave the document clean');
+    const back = insp.getByRole('button', { name: 'All circuits' });
+    if (await back.count()) await back.click();
+    await insp.locator('button', { hasText: 'EX09 OB → S51 West lift' }).first().click();
     await L.sleep(1500);
     const b2 = await check('circuit + profile dock');
     t.check(b2.some(b => /Long section|dockPanel/.test(b.name)), 'profile dock visible at 1366×768', b2.map(b => b.name));
@@ -97,8 +101,11 @@ module.exports = {
     await L.sleep(1200);
     const sheetOverflow = await page.evaluate(() => {
       const r = document.querySelector('[role="region"][aria-label="Assumptions"]');
-      const wide = [...r.querySelectorAll('*')].filter(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.right > innerWidth + 1; }).slice(0, 5).map(e => `${e.tagName}.${String(e.className).slice(0, 30)} r=${Math.round(e.getBoundingClientRect().right)}`);
-      return wide;
+      // visible content only (hover tooltips are opacity 0 until hovered); plus any horizontal scroll inside the sheet
+      const shown = e => { for (let n = e; n && n !== r; n = n.parentElement) { const cs = getComputedStyle(n); if (n.getAttribute('role') === 'tooltip' || cs.visibility === 'hidden' || cs.display === 'none' || Number(cs.opacity) === 0) return false; } return true; };
+      const wide = [...r.querySelectorAll('*')].filter(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.right > innerWidth + 1 && shown(e); }).slice(0, 5).map(e => `${e.tagName}.${String(e.className).slice(0, 30)} r=${Math.round(e.getBoundingClientRect().right)}`);
+      const scrollers = [r, ...r.querySelectorAll('*')].filter(e => { const cs = getComputedStyle(e); return /auto|scroll/.test(cs.overflowX) && e.scrollWidth > e.clientWidth + 1 && e.clientWidth > 600; }).map(e => `scroll-x ${e.tagName}.${String(e.className).slice(0, 30)} ${e.scrollWidth}>${e.clientWidth}`);
+      return wide.concat(scrollers);
     });
     t.check(sheetOverflow.length === 0, 'Assumptions sheet fits 1366 px (nothing past the right edge)', sheetOverflow);
     await t.shot('1366_assumptions');

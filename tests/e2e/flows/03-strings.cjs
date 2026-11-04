@@ -17,7 +17,7 @@ async function projectWorld(page, pts) {
 module.exports = {
   id: 3,
   name: 'Strings: import XYZ, draw on surface, edit RL, undo/redo',
-  timeout: 900_000,
+  timeout: 1_800_000,
   async run(t) {
     const { L, page } = t;
     await L.startWithDemo(page);

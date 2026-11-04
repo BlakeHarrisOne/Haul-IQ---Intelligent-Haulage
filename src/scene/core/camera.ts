@@ -106,7 +106,7 @@ export class CameraRig {
     const r = this.v2.set(ca, 0, sa);
     const u = this.v3.crossVectors(r, f);
     out.pos.copy(p.target).addScaledVector(f, -p.dist);
-    this.m1.makeBasis(r, u, f.clone().negate());
+    this.m1.makeBasis(r, u, this.lb.copy(f).negate());
     out.quat.setFromRotationMatrix(this.m1);
     out.fov = p.fov;
     return out;
@@ -351,19 +351,21 @@ export class CameraRig {
   }
 
   private lookAtQuat(f: THREE.Vector3, out: THREE.Quaternion) {
-    const up = new THREE.Vector3(0, 1, 0);
-    const r = new THREE.Vector3().crossVectors(f, up);
+    const r = this.lr.crossVectors(f, this.lup);
     if (r.lengthSq() < 1e-8) r.set(1, 0, 0);
     r.normalize();
-    const u = new THREE.Vector3().crossVectors(r, f).normalize();
-    this.m1.makeBasis(r, u, f.clone().negate());
+    const u = this.lu.crossVectors(r, f).normalize();
+    this.m1.makeBasis(r, u, this.lb.copy(f).negate());
     out.setFromRotationMatrix(this.m1);
   }
+  private lr = new THREE.Vector3(); private lu = new THREE.Vector3(); private lb = new THREE.Vector3(); private lup = new THREE.Vector3(0, 1, 0);
+  private prevPos = new THREE.Vector3(); private prevQ = new THREE.Quaternion();
+  private rv1 = new THREE.Vector3(); private rv2 = new THREE.Vector3(); private rv3 = new THREE.Vector3(); private ndc2 = new THREE.Vector2();
 
   // ─────────────────────────────────────────────────────────── input
 
   private rayAt(x: number, y: number) {
-    this.ray.setFromCamera(new THREE.Vector2((x / this.w) * 2 - 1, -(y / this.h) * 2 + 1), this.active);
+    this.ray.setFromCamera(this.ndc2.set((x / this.w) * 2 - 1, -(y / this.h) * 2 + 1), this.active);
     return this.ray.ray;
   }
 
@@ -440,12 +442,12 @@ export class CameraRig {
     const el1 = Math.min(EL_MAX, Math.max(EL_MIN, p.el + dEl));
     const dE = el1 - p.el;
     const az1 = p.az + dAz;
-    const eye = this.eyeOf(p, new THREE.Vector3());
-    const qy = this.q1.setFromAxisAngle(new THREE.Vector3(0, 1, 0), -dAz);
-    const r = new THREE.Vector3(Math.cos(az1), 0, Math.sin(az1));
+    const eye = this.eyeOf(p, this.rv1);
+    const qy = this.q1.setFromAxisAngle(this.lup, -dAz);
+    const r = this.rv2.set(Math.cos(az1), 0, Math.sin(az1));
     const qp = this.q2.setFromAxisAngle(r, -dE);
     const q = qp.multiply(qy);
-    const ct = p.target.clone().sub(P).applyQuaternion(q).add(P);
+    const ct = this.rv3.copy(p.target).sub(P).applyQuaternion(q).add(P);
     eye.sub(P).applyQuaternion(q).add(P);
     p.target.copy(ct);
     p.az = az1; p.el = el1;
@@ -619,8 +621,8 @@ export class CameraRig {
     } else if (this.mode === 'pov' || this.mode === 'chase') {
       const fp = this.followPose(this.mode, pose, dt);
       if (fp) {
-        const prevPos = this.persp.position.clone();
-        const prevQ = this.persp.quaternion.clone();
+        const prevPos = this.prevPos.copy(this.persp.position);
+        const prevQ = this.prevQ.copy(this.persp.quaternion);
         if (prevPos.distanceToSquared(pose.pos) > 1e-6 || Math.abs(prevQ.dot(pose.quat)) < 0.9999999) moving = true;
       } else {
         pose.pos.copy(this.persp.position); pose.quat.copy(this.persp.quaternion); pose.fov = this.persp.fov;

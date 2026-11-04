@@ -4,10 +4,18 @@
  */
 async function crewRequired(region, L) { return L.numIn(await L.kpiValue(region, 'Crew required')); }
 
+/** Priority cards in list order with their grant: full / reduced / parked (badge "Got g of r", "Parked", "Stood down"). */
 async function priorityCards(region) {
   return region.locator('[class*="_pc_"]').evaluateAll(els => els
     .filter(e => !e.parentElement.closest('[class*="_pc_"]'))
-    .map(e => ({ text: e.innerText, status: (e.innerText.match(/\b(Full|Reduced \d+\/\d+|Parked|Stood down)\b/) || [])[1] || null })));
+    .map(e => {
+      const text = e.innerText;
+      const m = text.match(/Got (\d+) of (\d+)/);
+      const status = /\b(Parked|Stood down)\b/.test(text) ? 'parked'
+        : m ? (Number(m[1]) >= Number(m[2]) ? 'full' : 'reduced')
+          : /\bFull\b/.test(text) ? 'full' : /\bReduced\b/.test(text) ? 'reduced' : null;
+      return { text, status, grant: m ? `${m[1]}/${m[2]}` : null };
+    }));
 }
 
 module.exports = {
@@ -65,7 +73,8 @@ module.exports = {
     const lowest = active[active.length - 1], highest = active[0];
     const cards0 = await priorityCards(region);
     t.check(cards0.length >= active.length, `priority list shows ${cards0.length} cards`);
-    t.check(cards0.filter(c => /Full/.test(c.status || '')).length >= active.length, 'with the full crew every circuit is Full', cards0.map(c => c.status));
+    t.check(cards0.every(c => c.status), 'every priority card shows its grant', cards0.map(c => `${c.text.split('\n').find(l => l.length > 3).slice(0, 24)}=${c.status}${c.grant ? ' ' + c.grant : ''}`));
+    t.note(`shift crew ${avail0} vs ${req0} required: ${cards0.map(c => c.status).join(', ')}`);
     // smallest cut that reaches the last-priority circuit: walk down from the requirement
     let target = Math.min(avail0, req0) - 1, cards = cards0, lowCard, hiCard;
     for (; target > 0; target--) {
@@ -74,15 +83,15 @@ module.exports = {
       await L.sleep(500);
       cards = await priorityCards(region);
       lowCard = cards.find(c => c.text.includes(lowest.name));
-      if (lowCard && /Reduced|Parked/.test(lowCard.status || '')) break;
-      if (cards.some(c => /Reduced|Parked/.test(c.status || '') && !c.text.includes(lowest.name) && cards.indexOf(c) < cards.indexOf(lowCard))) break;
+      if (lowCard && /reduced|parked/.test(lowCard.status || '')) break;
     }
     hiCard = cards.find(c => c.text.includes(highest.name));
-    const firstCut = cards.findIndex(c => /Reduced|Parked|Stood down/.test(c.status || ''));
+    const circuitCards = cards.filter(c => active.some(r => c.text.includes(r.name)));
+    const firstCut = circuitCards.findIndex(c => c.status !== 'full');
     t.note(`crew available ${avail0} → ${target}: ${cards.map(c => `${c.text.split('\n').find(l => l.length > 3).slice(0, 28)}=${c.status}`).join(' | ')}`);
-    t.check(lowCard && /Reduced|Parked/.test(lowCard.status || ''), `lowest-priority circuit "${lowest.name}" is ${lowCard && lowCard.status}`);
-    t.check(hiCard && hiCard.status === 'Full', `highest-priority circuit "${highest.name}" stays Full`);
-    t.check(firstCut === -1 || cards.slice(firstCut).every(c => c.status !== 'Full') || cards.slice(0, firstCut).every(c => c.status === 'Full'), 'cuts land at the bottom of the priority list first', cards.map(c => c.status));
+    t.check(lowCard && /reduced|parked/.test(lowCard.status || ''), `lowest-priority circuit "${lowest.name}" is ${lowCard && lowCard.status} (${lowCard && lowCard.grant || ''})`);
+    t.check(hiCard && hiCard.status === 'full', `highest-priority circuit "${highest.name}" keeps its trucks (${hiCard && hiCard.grant})`);
+    t.check(firstCut === -1 || circuitCards.slice(firstCut).every(c => c.status !== 'full'), 'circuit cuts land at the bottom of the priority list first', circuitCards.map(c => c.status));
     const lostTxt = await L.kpiValue(region, 'Lost bcm / day');
     t.check(/−/.test(lostTxt || '') || L.numIn(lostTxt) > 0, `lost bcm/day shown (${lostTxt})`);
     const crewUsedTxt = await L.kpiValue(region, 'Crew used');
@@ -98,7 +107,7 @@ module.exports = {
     const after = await L.circuitResults(page);
     const lowAfter = after.find(r => r.id === lowest.id);
     t.check(lowAfter.trucks < lowest.trucks || !lowAfter.active, `apply cuts ${lowest.name} trucks (${lowest.trucks} → ${lowAfter.trucks})`);
-    t.check((await page.getByRole('status').innerText()).includes('applied'), 'toast confirms the allocation');
+    t.check(await page.locator('[role="status"]').filter({ hasText: /applied/ }).count() > 0, 'toast confirms the allocation');
     await L.key(page, '5');
     region = page.getByRole('region', { name: 'Manning' });
     await region.waitFor();

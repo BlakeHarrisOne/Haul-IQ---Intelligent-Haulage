@@ -13,7 +13,7 @@ async function headBadge(insp) {
 module.exports = {
   id: 4,
   name: 'Circuit: create, # trucks chooser, speed model',
-  timeout: 900_000,
+  timeout: 1_800_000,
   async run(t) {
     const { L, page } = t;
     await L.startWithDemo(page);

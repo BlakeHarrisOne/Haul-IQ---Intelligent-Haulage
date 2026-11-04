@@ -38,19 +38,24 @@ void main() {
   gl_FragColor = vec4(vC * (halo + core * 1.4) * uAmt * vK, 1.0);
 }`;
 
-function poolTexture(): THREE.CanvasTexture {
-  const c = document.createElement('canvas');
-  c.width = 64; c.height = 128;
-  const g = c.getContext('2d')!;
-  // a long soft cone: brightest a little ahead of the bumper, fading to the far end
-  const grd = g.createRadialGradient(32, 30, 2, 32, 46, 66);
-  grd.addColorStop(0, 'rgba(255,236,200,0.9)');
-  grd.addColorStop(0.45, 'rgba(255,226,180,0.42)');
-  grd.addColorStop(1, 'rgba(255,220,170,0)');
-  g.fillStyle = grd;
-  g.fillRect(0, 0, 64, 128);
-  const t = new THREE.CanvasTexture(c);
+/** A headlight beam on the ground: zero on every edge of its quad, brightest a few metres ahead, widening with distance. */
+function poolTexture(): THREE.DataTexture {
+  const W = 64, H = 128, d = new Uint8Array(W * H * 4);
+  for (let y = 0; y < H; y++) {
+    const a = 1 - y / (H - 1);                               // texture v = 1 sits at the bumper, v = 0 at the far end
+    const along = Math.min(1, a / 0.08) ** 2 * (1 - a) ** 1.7;
+    const w = 0.32 + 0.68 * Math.sqrt(a);                    // beam half-width (of the quad) grows with distance
+    for (let x = 0; x < W; x++) {
+      const u = (2 * x) / (W - 1) - 1;
+      const across = Math.max(0, 1 - (u / w) ** 2) ** 1.5;
+      const k = (y * W + x) * 4, v = along * across;
+      d[k] = 255; d[k + 1] = 236; d[k + 2] = 200; d[k + 3] = Math.round(255 * Math.min(1, v * 1.6));
+    }
+  }
+  const t = new THREE.DataTexture(d, W, H, THREE.RGBAFormat);
   t.colorSpace = THREE.SRGBColorSpace;
+  t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearFilter;
+  t.needsUpdate = true;
   return t;
 }
 
@@ -95,7 +100,7 @@ export class NightLamps {
     this.pools.count = 0;
     this.pools.renderOrder = 7;
     this.root.add(this.pools);
-    this.spot = new THREE.SpotLight(0xfff0d4, 0, 320, 0.52, 0.55, 1.6);
+    this.spot = new THREE.SpotLight(0xfff0d4, 0, 320, 0.5, 0.55, 1.4);
     this.spot.name = 'headlights';
     this.spot.castShadow = false;
   }
@@ -162,7 +167,7 @@ export class NightLamps {
       this.v.set(g.frontX + 36, 0, 0).applyMatrix4(follow.M);
       this.spot.target.position.copy(this.v);
       this.spot.target.updateMatrixWorld();
-      this.spot.intensity = 520 * amount;
+      this.spot.intensity = 380 * amount;
     }
   }
 

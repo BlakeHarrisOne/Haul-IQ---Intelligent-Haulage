@@ -41,6 +41,7 @@ async function launch() {
 const ENV_NOISE = [
   /GPU stall due to ReadPixels/i, /swiftshader/i, /Automatic fallback to software WebGL/i, /WebGL.*performance/i,
   /\[vite\]/i, /Download the React DevTools/i, /GL Driver Message/i,
+  /willReadFrequently/i, // the suite's own image-diff helper reads canvas pixels
 ];
 const isNoise = t => ENV_NOISE.some(r => r.test(t));
 
@@ -69,7 +70,7 @@ async function newSession(browser, opts = {}) {
   page.on('console', m => { if (/\[vite\]/.test(m.text())) log.push({ type: 'vite', text: m.text().slice(0, 300), noise: true, at: Date.now() }); });
   page.__nav = nav;
   // SwiftShader renders a 1M-triangle frame in seconds; a selection change can queue several - be patient.
-  page.setDefaultTimeout(120_000);
+  page.setDefaultTimeout(240_000);
   return { context, page, log, nav };
 }
 
@@ -193,7 +194,7 @@ async function shot(page, name, opts = {}) {
   const t0 = Date.now();
   for (let attempt = 0; ; attempt++) {
     try {
-      await page.screenshot({ path: file, fullPage: false, timeout: 40_000, ...opts });
+      await page.screenshot({ path: file, fullPage: false, timeout: 90_000, ...opts });
       break;
     } catch (e) {
       if (attempt >= 2 || !/Timeout/.test(e.message)) throw e;

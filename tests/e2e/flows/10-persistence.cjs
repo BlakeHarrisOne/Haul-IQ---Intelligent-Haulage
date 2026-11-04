@@ -48,7 +48,7 @@ module.exports = {
     await L.key(page, 'Control+s');
     await L.waitStore(page, st => !st.dirty && !!st.lastSavedAt, undefined, 120_000);
     await page.getByRole('status').getByText(/Saved “/).first().waitFor({ timeout: 60_000 });
-    const docState = await page.locator('button[title$="click to rename"]').innerText();
+    const docState = await page.getByRole('button', { name: /click to rename/ }).innerText();
     t.check(/Saved/.test(docState), `title bar reads saved (${docState.replace(/\n/g, ' · ')})`);
     await t.shot('saved');
 

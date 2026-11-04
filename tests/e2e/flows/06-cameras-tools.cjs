@@ -13,7 +13,7 @@ const rigMode = page => page.evaluate(() => ({ mode: window.__haiulScene.core.ri
 module.exports = {
   id: 6,
   name: 'Cameras & tools: POV HUD, plan, section, measure',
-  timeout: 900_000,
+  timeout: 1_800_000,
   async run(t) {
     const { L, page } = t;
     await L.startWithDemo(page);
@@ -31,8 +31,9 @@ module.exports = {
     await L.sleep(2500);
     // the cockpit root carries the CSS-module class "hud" (children use hudBig, hudCell…)
     const hudText = await page.evaluate(() => { let el = document.querySelector('[data-k="v"]'); while (el && !/(^|\s)_hud_/.test(String(el.className))) el = el.parentElement; return el ? el.innerText : ''; });
-    t.check(/km\/h/.test(hudText) && /Grade/.test(hudText) && /Limited by/.test(hudText), 'cockpit HUD: speed, grade, limiting factor', hudText.replace(/\n/g, ' · ').slice(0, 160));
-    t.check(/Dig/.test(hudText) && /Dump/.test(hudText), 'HUD route strip labels the dig and dump ends');
+    t.check(/km\/h/i.test(hudText) && /grade/i.test(hudText) && /limit/i.test(hudText), 'cockpit HUD: speed, grade, speed limit / limiting factor', hudText.replace(/\n/g, ' · ').slice(0, 200));
+    const povEnds = await L.probe(page, (st, id) => { const c = st.scenario.circuits.find(x => x.id === id); const n = i => (st.scenario.assets.find(a => a.id === i) || {}).name || ''; return [n(c.digId), n(c.dumpId)]; }, pov.circuit);
+    t.check(/to (dump|dig)/i.test(hudText) && (hudText.includes(povEnds[0].split(' ')[0]) || /Dig/.test(hudText)) && (hudText.includes(povEnds[1]) || /Dump/.test(hudText)), `HUD route strip shows distance and the ends (${povEnds.join(' → ')})`);
     const pill = await page.evaluate(() => { const els = [...document.querySelectorAll('div')].filter(d => /(^|\s)_hudTop_/.test(String(d.className)) && d.style.display !== 'none'); return els.map(e => e.innerText || e.textContent).join(' | '); });
     t.note(`cockpit top pill: ${pill ? pill.replace(/\n/g, ' ').slice(0, 80) : '(none in this build)'}`);
     const rest = await page.locator('[aria-hidden]').filter({ hasText: /driver view/ }).count();

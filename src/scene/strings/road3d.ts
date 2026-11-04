@@ -245,7 +245,9 @@ function buildOne(r: RoadInput, c: Centre, ri: number, roads: RoadInput[], idx: 
       const rx = c.ty[i], ry = -c.tx[i];
       const lm = side * (hwS[si][i] + run + CREST / 2);
       const o = idx.near(c.e[i] + rx * lm, c.n[i] + ry * lm, 80, t => t !== ri);
-      const blocked = (o.tag >= 0 && o.d < halfOf(o.tag) + run + 2) || cut[si][i] || bundM <= 0.05;
+      // open only where the windrow would stand inside another carriageway (a junction); a road sharing the same
+      // corridor keeps it (its own windrow stands in the same place)
+      const blocked = (o.tag >= 0 && o.d < halfOf(o.tag) - 0.5) || cut[si][i] || bundM <= 0.05;
       raw.push(blocked ? 0 : smooth(18, 48, c.s[i]) * smooth(18, 48, L - c.s[i]));
     }
     // taper the openings over ~20 m
@@ -316,6 +318,9 @@ function buildOne(r: RoadInput, c: Centre, ri: number, roads: RoadInput[], idx: 
       const e0 = c.e[i] + (c.e[i + 1] - c.e[i]) * t, n0 = c.n[i] + (c.n[i + 1] - c.n[i]) * t;
       const rx = c.ty[i], ry = -c.tx[i];
       const lat = side * (hwS[si][i] + 0.5);
+      // a later road sharing an earlier road's corridor leaves the posts to that road
+      const earlier = idx.near(e0 + rx * lat, n0 + ry * lat, 60, tg => tg < ri);
+      if (earlier.tag >= 0 && earlier.d < halfOf(earlier.tag) + 4) continue;
       const ze = edgeZ[si][i] + (edgeZ[si][i + 1] - edgeZ[si][i]) * t;
       const p = S(e0 + rx * lat, n0 + ry * lat, ze + (0.5 / run) * bundM * f[si][i] - 0.05);
       posts.push({ x: p[0], y: p[1], z: p[2], yaw: Math.atan2(c.ty[i], c.tx[i]), side });

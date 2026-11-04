@@ -106,20 +106,28 @@ export class LabelService implements LabelServiceApi {
   upsert(l: PlacedLabel): void {
     let it = this.byId.get(l.id);
     if (it && it.el !== l.el) { this.detach(it); it = undefined; }
+    let changed = false;
     if (!it) {
       it = makeLabelItem(l.id, l.el);
       it.world = true;
       if (l.el.parentElement !== this.layer) this.layer.appendChild(l.el);
       this.attach(it);
+      changed = true;
     }
+    const ds = l.el.dataset;
+    const color = ds.dot === '0' ? '' : ds.color || '';
+    const tag = ds.place === 'center' || (ds.place !== 'above' && l.priority < 30);
+    const leaderOk = l.leader !== false;
+    if (changed || it.wx !== l.world[0] || it.wy !== l.world[1] || it.wz !== l.world[2] || it.priority !== l.priority
+      || it.leaderOk !== leaderOk || it.color !== color || it.tag !== tag || !it.enabled) changed = true;
     it.wx = l.world[0]; it.wy = l.world[1]; it.wz = l.world[2];
     it.priority = l.priority;
-    it.leaderOk = l.leader !== false;
+    it.leaderOk = leaderOk;
     it.enabled = true;
-    const ds = l.el.dataset;
-    it.color = ds.dot === '0' ? '' : ds.color || '';
-    it.tag = ds.place === 'center' || (ds.place !== 'above' && l.priority < 30);
-    this.onChange();
+    it.color = color;
+    it.tag = tag;
+    // only a real change asks for a frame (a module may upsert every frame without keeping the loop awake)
+    if (changed) this.onChange();
   }
 
   remove(id: string): void {
