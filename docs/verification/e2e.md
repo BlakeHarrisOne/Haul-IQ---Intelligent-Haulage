@@ -119,3 +119,18 @@ Line numbers are as of this run; `src/` was being edited by other agents during 
 - Chromium uses SwiftShader WebGL with `--disable-gpu-compositing`. GPU compositing over SwiftShader stalled the first screenshot after each change for 20–120 s.
 - Timeouts are generous: this run shared 4 cores with about 6 other agents' browsers, vitest and tsc (load average 15–45). The final run took about 35 minutes; flow 3 alone took 20 minutes because of D8.
 
+
+## Final status (after fixes)
+
+All 11 flows pass against the current code (`node tests/e2e/run.cjs --isolated`): flows 1–4 and 6–11 in the full
+run, flow 5 in its re-run after the keyboard fix below. 0 page errors, 0 console errors.
+
+| Defect | Fix |
+|---|---|
+| D1 tool shortcuts eaten by camera keys | camera keyboard keeps arrows / +− / PgUp-PgDn only; Shift+←/→ orbit (letters are tool shortcuts; `,` `.` step the timeline) |
+| D2 / D5 hint chip and readouts under the inspector / dock | hint centred over the visible map above the timeline or open dock (`--hud-bottom`), click-through except its controls; cursor readouts clamp above docked chrome |
+| D3 caption clicks activate controls | `Field`: single controls keep `<label>` but swallow caption clicks; segmented controls are a labelled `role=group` so each tab keeps its own name |
+| D4 Insights apply ignores task caps | applies the whole plan (trucks + `crew.taskCaps`), same as the Priority view |
+| D6 no error boundary | region boundaries (3D view, sheets, inspector, insights, app root) with "Try again" |
+| D7 playback speed follows frame rate | dt cap raised to 1 s (positions come from the deterministic simulation) |
+| D8 extra renders on selection | not changed (low impact) |

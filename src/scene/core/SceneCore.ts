@@ -729,9 +729,10 @@ export class SceneCore {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       if (e.code === 'KeyF') { this.fitAll(); e.preventDefault(); return; }
       if (e.code === 'KeyN') { this.rig.faceNorth(); this.requestRender(); return; }
-      if (this.rig.controlsEnabled && this.rig.keyDown(e.code)) { e.preventDefault(); this.cameraTouched = true; this.requestRender(); }
+      const code = e.shiftKey && e.code === 'ArrowLeft' ? 'OrbitL' : e.shiftKey && e.code === 'ArrowRight' ? 'OrbitR' : e.code;
+      if (this.rig.controlsEnabled && this.rig.keyDown(code)) { e.preventDefault(); this.cameraTouched = true; this.requestRender(); }
     };
-    const ku = (e: KeyboardEvent) => { this.rig.keyUp(e.code); };
+    const ku = (e: KeyboardEvent) => { this.rig.keyUp(e.code); if (e.code === 'ArrowLeft') this.rig.keyUp('OrbitL'); if (e.code === 'ArrowRight') this.rig.keyUp('OrbitR'); };
     const blur = () => this.rig.clearKeys();
     window.addEventListener('keydown', kd);
     window.addEventListener('keyup', ku);

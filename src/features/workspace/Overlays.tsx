@@ -116,7 +116,7 @@ export function ShortcutsSheet() {
       <div className={p.mouse}>
         <b>Mouse.</b> Left-drag to orbit, right-drag to pan, wheel to zoom towards the cursor. In Draw, click to add points on the surface and
         double-click or press Enter to finish. In Edit, drag a point to move it; click a segment to insert one.
-        <b> Keys.</b> Arrows pan, <b>,</b> and <b>.</b> orbit, + and − zoom, F fits the site, N faces north.
+        <b> Keys.</b> Arrows pan, Shift+←/→ orbit, + and − zoom, F fits the site, N faces north.
       </div>
     </Modal>
   );

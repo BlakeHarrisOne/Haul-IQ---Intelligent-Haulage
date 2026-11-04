@@ -494,8 +494,8 @@ export class CameraRig {
   }
 
   keyDown(code: string): boolean {
-    // Letter keys belong to the app's tool shortcuts (V/D/E/R/X/M/S, P, …) - the camera keeps arrows, +/− and PgUp/PgDn.
-    const known = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Comma', 'Period', 'Equal', 'Minus', 'NumpadAdd', 'NumpadSubtract', 'PageUp', 'PageDown'];
+    // Letters are tool shortcuts and , / . step the timeline: the camera keeps arrows (Shift+←/→ orbit = OrbitL/R), +/−, PgUp/PgDn.
+    const known = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'OrbitL', 'OrbitR', 'Equal', 'Minus', 'NumpadAdd', 'NumpadSubtract', 'PageUp', 'PageDown'];
     if (!known.includes(code)) return false;
     if (this.mode === 'pov' || this.mode === 'chase') return false;
     this.keys.add(code);
@@ -528,7 +528,7 @@ export class CameraRig {
       const k = (c: string) => (this.keys.has(c) ? 1 : 0);
       const fwd = k('ArrowUp') + k('KeyW') - k('ArrowDown') - k('KeyS');
       const side = k('ArrowRight') + k('KeyD') - k('ArrowLeft') - k('KeyA');
-      const rot = k('Period') - k('Comma'); // , and . orbit (letters are tool shortcuts)
+      const rot = k('OrbitR') - k('OrbitL'); // Shift+←/→ orbit (letters are tool shortcuts, , / . step time)
       const zoom = k('Minus') + k('NumpadSubtract') - k('Equal') - k('NumpadAdd');
       const tilt = k('PageUp') - k('PageDown');
       const speed = (this.mode === 'plan' ? p.dist * Math.tan((p.fov * D2R) / 2) * 1.2 : p.dist * 0.7) * dt;
