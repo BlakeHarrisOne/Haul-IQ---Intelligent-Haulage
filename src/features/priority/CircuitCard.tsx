@@ -4,7 +4,7 @@ import type { Circuit, CircuitResult, PriorityAllocation, Scenario } from '@/cor
 import { num, signed } from '@/core/format';
 import { computeCircuit, type CrewRuleExt, type PriorityTask } from '@/engine';
 import { ROLE_META } from '@/features/manning/roles';
-import { Badge, Button, Ctl, Icon, MenuButton } from '@/ui';
+import { Badge, Button, Ctl, Icon, MenuButton, circuitColor } from '@/ui';
 import { deliberateNote, isDeliberate, potentialBcm, trucksForPotential } from '@/features/insights/engine';
 import css from './priority.module.css';
 
@@ -13,6 +13,25 @@ const REASONS = {
   over: ['absorbs bunching', 'covers a truck breakdown', 'protects coal feed to the CHPP', 'long-haul surge'],
   under: ['trucks prioritised elsewhere', 'dig block running out', 'crew limited', 'scheduled hang time'],
 };
+
+/**
+ * What the plan granted vs what was requested, in one vocabulary across the sheet: "Got 5 of 5". Green (tick) only when
+ * nothing was cut AND the grant runs at full rate (`fullRate`, circuits); a cut that costs production is caution, a cut
+ * that costs nothing (idle trucks released) is neutral, nothing granted is parked / stood down.
+ */
+export function GrantBadge({ got, req, lost = 0, fullRate, unit = 'trucks' }: { got: number; req: number; lost?: number; fullRate?: number; unit?: 'trucks' | 'people' }) {
+  const label = `Got ${got} of ${req}`;
+  const noun = unit === 'people' ? 'people' : 'trucks';
+  if (req > 0 && got <= 0) return <Badge tone="bad" icon="pause" title={`0 of ${req} ${noun} granted`}>{unit === 'people' ? 'Stood down' : 'Parked'}</Badge>;
+  if (got < req) {
+    return <Badge tone={lost > 0.5 ? 'warn' : 'na'} icon="minus" title={lost > 0.5 ? `${req - got} ${noun} cut: −${num(lost, 0)} bcm/day` : `${req - got} idle ${noun} released: no production lost`}>{label}</Badge>;
+  }
+  const atRate = fullRate == null || got === fullRate;
+  return (
+    <Badge tone={atRate ? 'ok' : 'na'} icon={atRate ? 'tick' : undefined}
+      title={atRate ? `All ${req} ${noun} granted${fullRate != null ? ', at full rate' : ''}` : `All ${req} granted; full rate needs ${fullRate}`}>{label}</Badge>
+  );
+}
 
 export interface CircuitCardProps {
   scenario: Scenario;
@@ -68,23 +87,30 @@ export function CircuitCard(p: CircuitCardProps) {
   }, [s, c, r, a, allocated, achieved]);
   const altsOpen = showAlts ?? (status !== 'full' || p.isLast);
 
-  const statusBadge = status === 'full' ? <Badge tone="ok" icon="tick">Full</Badge>
-    : status === 'reduced' ? <Badge tone="warn" icon="minus">Reduced {allocated}/{a?.requestedTrucks}</Badge>
-      : <Badge tone="bad" icon="pause">Parked</Badge>;
+  const statusBadge = <GrantBadge got={allocated} req={a?.requestedTrucks ?? c.trucks} lost={lost} fullRate={r?.ok ? nFull : undefined} />;
 
-  // trucking annotation (deliberate over/under-trucking)
+  // trucking annotation, computed against what the plan GRANTED (not the request): a circuit trimmed 3 → 2 that runs at
+  // its full rate of 2 is not over-trucked; one cut below full rate by the crew is under-trucked by the plan, not by choice
+  const atAlloc = useMemo(() => {
+    if (!r?.ok || allocated <= 0) return undefined;
+    if (allocated === c.trucks) return r.assigned;
+    return r.options[allocated - 1]?.trucks === allocated ? r.options[allocated - 1] : computeCircuit(s, c, { trucks: allocated }).assigned;
+  }, [s, c, r, allocated]);
+  const cutByPlan = allocated < c.trucks;
   let annot: { kind: 'over' | 'under'; text: ReactNode } | null = null;
-  if (r?.ok && c.trucks > 0 && c.trucks !== nFull) {
-    if (c.trucks > nFull) {
-      const extra = c.trucks - nFull;
+  if (r?.ok && atAlloc && allocated !== nFull) {
+    if (allocated > nFull) {
+      const extra = allocated - nFull;
       annot = { kind: 'over', text: deliberate
-        ? <><b>{c.loaderUnitId} deliberately over-trucked +{extra}</b>: {why ?? 'absorbs bunching'} · {num(r.assigned.truckQueueHrsShift, 2)} truck-h/shift queuing</>
-        : <><b>Over-trucked +{extra}</b> vs {nFull} for full rate: trucks queue {num(r.assigned.truckQueueHrsShift, 2)} h/shift, no extra bcm</> };
+        ? <><b>{c.loaderUnitId} deliberately over-trucked +{extra}</b>: {why ?? 'absorbs bunching'} · {num(atAlloc.truckQueueHrsShift, 2)} truck-h/shift queuing</>
+        : <><b>Over-trucked +{extra}</b> vs {nFull} for full rate: trucks queue {num(atAlloc.truckQueueHrsShift, 2)} h/shift, no extra bcm</> };
     } else {
-      const k = nFull - c.trucks;
-      annot = { kind: 'under', text: deliberate
-        ? <><b>{c.loaderUnitId} deliberately under-trucked −{k}</b>: {why ?? 'trucks prioritised elsewhere'} · loader hangs {num(r.assigned.lostLoaderPtHrsShift, 2)} h/shift</>
-        : <><b>Under-trucked −{k}</b> vs {nFull} for full rate: loader hangs {num(r.assigned.lostLoaderPtHrsShift, 2)} h/shift, −{kb(pot - r.assigned.bcmPerDay)} bcm/day</> };
+      const k = nFull - allocated;
+      annot = { kind: 'under', text: cutByPlan
+        ? <><b>Under-trucked −{k}</b> at the {allocated} granted ({c.trucks} requested; cut by the plan) vs {nFull} for full rate: loader hangs {num(atAlloc.lostLoaderPtHrsShift, 2)} h/shift, −{kb(pot - atAlloc.bcmPerDay)} bcm/day</>
+        : deliberate
+          ? <><b>{c.loaderUnitId} deliberately under-trucked −{k}</b>: {why ?? 'trucks prioritised elsewhere'} · loader hangs {num(atAlloc.lostLoaderPtHrsShift, 2)} h/shift</>
+          : <><b>Under-trucked −{k}</b> vs {nFull} for full rate: loader hangs {num(atAlloc.lostLoaderPtHrsShift, 2)} h/shift, −{kb(pot - atAlloc.bcmPerDay)} bcm/day</> };
     }
   }
   const setDeliberate = (reason: string | null) => {
@@ -100,14 +126,14 @@ export function CircuitCard(p: CircuitCardProps) {
       onDragOver={e => { e.preventDefault(); p.onDragOver(); }}
       onDrop={e => { e.preventDefault(); p.onDrop(); }}
       onDragEnd={() => { setArmed(false); p.onDragEnd(); }}>
-      <span className={css.pcStripe} style={{ background: c.color }} />
+      <span className={css.pcStripe} style={{ background: circuitColor(c.color) }} />
       <div className={css.pcHead}>
         <span className={css.pcDrag} title="Drag to change priority" onMouseDown={() => setArmed(true)} onMouseUp={() => setArmed(false)}><Icon name="drag" size={20} /></span>
         <span className={css.pcRank}><small>P</small>{p.rank}</span>
         <div style={{ minWidth: 0 }}>
           <div className={css.pcTitle}>
             {c.name}
-            {p.isLast && <span className={css.lastTag}><Icon name="warning" size={13} />Last priority - gives first</span>}
+            {p.isLast && <span className={css.lastTag}><Icon name="warning" size={13} />Last priority – gives first</span>}
           </div>
           <div className={css.pcSub}>{[mat?.name, loader?.name, `${truck?.name ?? c.truckModelId}`, r?.ok ? `${num(r.lengthM / 1000, 2)} km · ${num(r.cycleMin, 1)} min cycle` : r?.error].filter(Boolean).join(' · ')}</div>
         </div>
@@ -134,14 +160,14 @@ export function CircuitCard(p: CircuitCardProps) {
             </span>
           </span>
           <span className={css.pcSub} style={{ marginTop: 0 }}>
-            got <b className={allocated < c.trucks ? css.bad : undefined}>{allocated}</b> · full rate {nFull}
+            got <b className={allocated < c.trucks && lost > 0.5 ? css.bad : undefined}>{allocated}</b> · full rate {nFull}
           </span>
         </div>
         <div className={css.stat}>
           <span className={css.statLab}>bcm / day</span>
           <span className={css.statVal}>{kb(achieved)}<small>/ {kb(planned)} planned</small></span>
           <span className={css.mini} title={`Achieved ${num(achieved, 0)} · planned ${num(planned, 0)} · loader potential ${num(pot, 0)}`}>
-            <span style={{ width: `${(achieved / Math.max(pot, planned, 1)) * 100}%`, background: c.color }} />
+            <span style={{ width: `${(achieved / Math.max(pot, planned, 1)) * 100}%`, background: circuitColor(c.color) }} />
             {lost > 0 && <i style={{ left: `${(achieved / Math.max(pot, planned, 1)) * 100}%`, width: `${(lost / Math.max(pot, planned, 1)) * 100}%` }} />}
           </span>
         </div>
@@ -161,7 +187,7 @@ export function CircuitCard(p: CircuitCardProps) {
         <div className={`${css.annot} ${annot.kind === 'over' ? css.annotOver : css.annotUnder}`}>
           <Icon name={annot.kind === 'over' ? 'plus' : 'minus'} size={18} strokeWidth={2.2} style={{ color: annot.kind === 'over' ? 'var(--warn)' : 'var(--bad)' }} />
           <span className={css.annotText}>{annot.text}</span>
-          {deliberate
+          {cutByPlan ? null : deliberate
             ? <Button size="sm" variant="ghost" icon="x" onClick={() => setDeliberate(null)}>Not deliberate</Button>
             : (
               <MenuButton align="right" items={[{ header: true, label: `Deliberately ${annot.kind}-trucked because…` }, ...REASONS[annot.kind].map(t => ({ label: t, onSelect: () => setDeliberate(t) }))]}>
@@ -196,7 +222,7 @@ export function CircuitCard(p: CircuitCardProps) {
                 <span className={css.altNum}>{x.need}</span>
                 <span className={css.altNum}>{kb(x.bcm)}</span>
                 <span className={`${css.altNum} ${x.delta > 0.5 ? css.ok : x.delta < -0.5 ? css.bad : ''}`} style={{ fontWeight: 650 }}>{signed(x.delta, 0)}</span>
-                <Button size="sm" variant={x.delta > 0 ? 'primary' : 'secondary'} disabled={!x.ok} onClick={() => p.onUseOption(x.id, x.name)}>Use this option</Button>
+                <Button size="sm" disabled={!x.ok} onClick={() => p.onUseOption(x.id, x.name)}>Use this option</Button>
               </div>
             ))}
           </>}
@@ -214,7 +240,6 @@ export function TaskCard({ rule, task, rank, isLast, dragging, over, onDragStart
   const [armed, setArmed] = useState(false);
   const req = task?.requested ?? 0, got = task?.allocated ?? req;
   const per = rule.bcmPerUnitDay ?? 0;
-  const status = got >= req ? 'full' : got > 0 ? 'reduced' : 'parked';
   return (
     <div className={`${css.pc} ${isLast ? css.pcLast : ''} ${dragging ? css.pcDragging : ''} ${over ? css.pcOver : ''}`}
       draggable={armed}
@@ -228,11 +253,11 @@ export function TaskCard({ rule, task, rank, isLast, dragging, over, onDragStart
         <span className={css.pcRank}><small>P</small>{rank}</span>
         <div style={{ minWidth: 0 }}>
           <div className={css.pcTitle}><Icon name={ROLE_META[rule.role].icon} size={18} style={{ color: 'var(--ink-2)' }} />{rule.name}
-            {isLast && <span className={css.lastTag}><Icon name="warning" size={13} />Last priority - gives first</span>}</div>
+            {isLast && <span className={css.lastTag}><Icon name="warning" size={13} />Last priority – gives first</span>}</div>
           <div className={css.pcSub}>Site task · {ROLE_META[rule.role].label.toLowerCase()}{per ? ` · ${kb(per)} bcm/day per person` : ''}{rule.sheetRef ? ` · ${rule.sheetRef.replace('Targets & Haulage Priorities!', 'Targets!').split(' ')[0]}` : ''}</div>
         </div>
         <div className={css.pcRight}>
-          {status === 'full' ? <Badge tone="ok" icon="tick">Full</Badge> : status === 'reduced' ? <Badge tone="warn" icon="minus">Reduced {got}/{req}</Badge> : <Badge tone="bad" icon="pause">Stood down</Badge>}
+          <GrantBadge got={got} req={req} lost={task?.bcmDayLost ?? 0} unit="people" />
           <Ctl small icon="edit" tip="Edit rule (Manning)" onClick={onEdit} />
           <MenuButton align="right" items={[
             { label: 'Raise priority', icon: 'up', disabled: rank === 1, onSelect: () => onMove(-1) },

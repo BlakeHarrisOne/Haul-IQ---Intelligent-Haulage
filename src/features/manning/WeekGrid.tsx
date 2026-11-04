@@ -1,7 +1,7 @@
 /** 7-day crew grid mirroring the workbook's crew block (Targets rows 65-88): lines × days, totals with the CF colours. */
 import { Fragment, type ReactNode } from 'react';
 import type { ManningResult, Scenario } from '@/core/types';
-import { Card, CardBody, CardHead, Icon, cx } from '@/ui';
+import { Card, CardBody, CardHead, Icon, circuitColor, cx } from '@/ui';
 import { ROLE_META } from './roles';
 import { groupLines, lineLabel } from './model';
 import css from './manning.module.css';
@@ -47,7 +47,7 @@ export function WeekGrid({ scenario, manning }: { scenario: Scenario; manning: M
             <tbody>
               {groups.map(g => (
                 <Fragment key={g.key}>
-                  {row(<span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>{g.circuit && <span style={{ width: 8, height: 8, borderRadius: 4, background: g.circuit.color }} />}{g.circuit?.loaderUnitId ?? g.title}</span>, g.total, undefined, css.grp)}
+                  {row(<span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>{g.circuit && <span style={{ width: 8, height: 8, borderRadius: 4, background: circuitColor(g.circuit.color) }} />}{g.circuit?.loaderUnitId ?? g.title}</span>, g.total, undefined, css.grp)}
                   {g.lines.map((l, k) => (
                     <tr key={k}>
                       <td className={css.rowLab} title={l.reason}>

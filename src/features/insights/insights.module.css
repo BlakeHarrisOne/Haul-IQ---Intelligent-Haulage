@@ -25,6 +25,10 @@
 }
 .optBtn:hover { filter: brightness(1.06); }
 .optBtn:active { transform: scale(.985); }
+/* secondary look while the optimiser proposal (and its primary Apply) is showing: one primary visible at a time */
+.optBtnQuiet { background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--hair) inset, var(--shadow-sm); }
+.optBtnQuiet svg { color: var(--accent); }
+.optBtnQuiet:hover { filter: none; background: var(--hover); }
 
 .filters { padding: 10px 12px 4px; position: sticky; top: 0; z-index: 2; background: var(--chrome-strong); }
 

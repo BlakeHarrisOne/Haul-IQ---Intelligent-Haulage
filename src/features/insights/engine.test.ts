@@ -114,7 +114,7 @@ describe('insight engine', () => {
     const drop = ins.find(i => i.id === 'drop-c_ex04')!;
     expect(drop.headline).toMatch(/drop 1 segment \(25\.0 m\)/); // −0.165 → ROUND = −0.17; 0.164 → 0.16 stays
     const steep = ins.find(i => i.id === 'steep-c_ex04')!;
-    expect(steep.headline).toMatch(/50 m .* steeper than 10 %/);
+    expect(steep.headline).toMatch(/50 m .* steeper than 10%/);
     expect(steep.actions[0]).toMatchObject({ kind: 'show', target: { kind: 'string', id: 'hs_ex04' } });
   });
 
@@ -122,7 +122,7 @@ describe('insight engine', () => {
     const { s, results } = setup();
     const ins = generateInsights({ scenario: s, results });
     const pt = ins.find(i => i.id === 'pt-c_ex09')!;
-    expect(pt.headline).toMatch(/16\.7 h\/day - below the 18 h minimum/);
+    expect(pt.headline).toMatch(/16\.7 h\/day – below the 18 h minimum/);
     expect(ins.find(i => i.id === 'pt-c_ex04')).toBeUndefined();
   });
 

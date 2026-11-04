@@ -3,7 +3,7 @@ import { Fragment, useMemo, useState } from 'react';
 import type { FleetUnit, ManningResult, Scenario } from '@/core/types';
 import { num } from '@/core/format';
 import { useApp } from '@/state/store';
-import { Badge, Button, Card, CardBody, CardHead, Dot, Icon, NumberField, Segmented, Toggle, type IconName } from '@/ui';
+import { Badge, Button, Card, CardBody, CardHead, Dot, Icon, NumberField, Segmented, Toggle, circuitColor, type IconName } from '@/ui';
 import { assignUnits, type Machine } from './model';
 import { unitActive, unitMachine, unitModelName, type UnitWithActive } from './roles';
 import css from './manning.module.css';
@@ -112,12 +112,12 @@ export function Equipment({ scenario, manning }: { scenario: Scenario; manning: 
                             {t?.state === 'working' ? (
                               <button type="button" className={css.task} style={{ border: 0, background: 'none', padding: 0, cursor: c ? 'pointer' : 'default', color: 'var(--ink)' }}
                                 onClick={() => c && select({ kind: 'circuit', id: c.id })} title={c ? `Select ${c.name}` : undefined}>
-                                {c && <Dot color={c.color} />}{t.task}
+                                {c && <Dot color={circuitColor(c.color)} />}{t.task}
                               </button>
-                            ) : t?.state === 'parked' ? <Badge tone="na">Parked</Badge> : <Badge tone="warn">{t?.task ?? 'Spare'}</Badge>}
+                            ) : t?.state === 'parked' ? <Badge tone="na" icon="pause">Parked</Badge> : <Badge tone="na">{t?.task ?? 'Spare'}</Badge>}
                             {u.notes && <span style={{ color: 'var(--ink-3)', marginLeft: 8, fontSize: 12.5 }}>{u.notes}</span>}
                           </td>
-                          <td><Toggle on={on} onChange={v => toggleUnit(u, v)} title={on ? 'Active - click to park' : 'Parked - click to activate'} /></td>
+                          <td className={css.quiet}><Toggle on={on} onChange={v => toggleUnit(u, v)} title={on ? 'Active – click to park' : 'Parked – click to activate'} /></td>
                         </tr>
                       );
                     })}

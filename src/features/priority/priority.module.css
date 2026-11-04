@@ -1,8 +1,15 @@
 /* Fleet & task priority sheet. */
 
 /* ── controls strip ────────────────────────────────────────────────────────── */
-.controls { display: grid; grid-template-columns: minmax(280px, 1.25fr) minmax(220px, .8fr) repeat(4, minmax(120px, .6fr)); align-items: stretch; }
-@media (max-width: 1200px) { .controls { grid-template-columns: 1fr 1fr 1fr; } }
+/* the bcm/day cell is wider: its foot names the production scope (incl. push dozers · haul = the Compare figure) */
+.controls { display: grid; grid-template-columns: minmax(260px, 1.15fr) minmax(210px, .75fr) minmax(112px, .5fr) minmax(112px, .5fr) minmax(190px, .85fr) minmax(120px, .55fr); align-items: stretch; }
+/* reflow on the card's own width (the sheet narrows when Insights is open), not the viewport */
+.controlsHost { container-type: inline-size; }
+@container (max-width: 1080px) {
+  .controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .controls > .ctlCell:nth-child(3n + 1) { border-left: 0; }
+  .controls > .ctlCell:nth-child(n + 4) { border-top: 1px solid var(--hair-2); }
+}
 .ctlCell { padding: 14px 18px; border-left: 1px solid var(--hair-2); display: flex; flex-direction: column; gap: 8px; min-width: 0; justify-content: center; }
 .ctlCell:first-child { border-left: 0; }
 .ctlLab { font-size: 12px; font-weight: 600; color: var(--ink-3); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
@@ -10,6 +17,10 @@
 .linkBtn { border: 0; background: none; padding: 0; font: 600 12px/16px var(--font); color: var(--accent-ink); cursor: pointer; white-space: nowrap; }
 .linkBtn:hover { text-decoration: underline; }
 .stepper { display: inline-flex; align-items: center; gap: 2px; }
+
+/* ── verdict (first line of the sheet: the answer, then the evidence below) ── */
+.verdict { display: flex; align-items: flex-start; gap: 10px; margin: 0; font: 600 16px/23px var(--font); color: var(--ink); max-width: 1100px; }
+.verdict > svg { margin-top: 1.5px; }
 
 /* ── budget bars ───────────────────────────────────────────────────────────── */
 .budget { padding: 18px 20px 12px; display: grid; gap: 14px; }
@@ -20,15 +31,19 @@
 .bTrackThin { height: 14px; }
 .seg {
   position: absolute; top: 0; bottom: 0; border-radius: 4px; overflow: hidden; display: flex; align-items: center;
-  padding-left: 7px; font: 650 11.5px/1 var(--font); color: #fff; white-space: nowrap; cursor: default;
+  padding-left: 7px; font: 650 11.5px/1 var(--font); color: var(--ink); white-space: nowrap; cursor: default;
   transition: left var(--t-med) var(--ease), width var(--t-med) var(--ease), filter var(--t-fast);
 }
 .seg:hover { filter: brightness(1.08) saturate(1.05); }
 .segCut {
-  background-image: repeating-linear-gradient(135deg, rgba(255,255,255,.55) 0 3px, transparent 3px 7px) !important;
+  background-image: repeating-linear-gradient(135deg, color-mix(in srgb, var(--surface) 70%, transparent) 0 3px, transparent 3px 7px) !important;
   opacity: .55;
 }
-.segSite { background: var(--ink-4); }
+/* requested but not granted (trucks the plan released or cut): same tint, hatched and faded like the beyond-cut part */
+.segGhost {
+  background-image: repeating-linear-gradient(135deg, color-mix(in srgb, var(--surface) 70%, transparent) 0 3px, transparent 3px 7px) !important;
+  opacity: .6;
+}
 .cutLine { position: absolute; top: -12px; bottom: -8px; width: 2px; margin-left: -1px; background: var(--ink); border-radius: 1px; z-index: 2; pointer-events: none; }
 .cutTag {
   position: absolute; top: -30px; transform: translateX(-50%); z-index: 3; white-space: nowrap;
@@ -53,7 +68,7 @@
 .pc {
   background: var(--surface); border: 1px solid var(--hair); border-radius: var(--r-card); box-shadow: var(--shadow-sm);
   transition: box-shadow var(--t-fast), border-color var(--t-fast), transform var(--t-fast), opacity var(--t-fast);
-  position: relative; overflow: hidden;
+  position: relative; overflow: hidden; container-type: inline-size;
 }
 .pc:hover { box-shadow: var(--shadow); }
 .pcLast { border-color: var(--warn); box-shadow: 0 0 0 3px var(--warn-50), var(--shadow-sm); }
@@ -76,7 +91,7 @@
   font: 650 11.5px/16px var(--font); white-space: nowrap;
 }
 .pcGrid { display: grid; grid-template-columns: 1.15fr 1.4fr 1fr 1fr; gap: 0; padding: 4px 14px 12px 88px; }
-@media (max-width: 1250px) { .pcGrid { grid-template-columns: 1fr 1fr; row-gap: 10px; } }
+@container (max-width: 760px) { .pcGrid { grid-template-columns: 1fr 1fr; row-gap: 10px; } }
 .stat { display: flex; flex-direction: column; gap: 4px; padding-right: 14px; min-width: 0; }
 .statLab { font-size: 11.5px; font-weight: 600; color: var(--ink-3); white-space: nowrap; letter-spacing: .02em; }
 .statVal { font: 650 15px/20px var(--font); color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; display: flex; align-items: baseline; gap: 5px; }

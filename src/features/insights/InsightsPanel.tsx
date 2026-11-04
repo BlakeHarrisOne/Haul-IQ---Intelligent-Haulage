@@ -9,7 +9,7 @@ import { sceneApi } from '@/scene';
 import { useManning, useResults, useScenario } from '@/state/derived';
 import { useApp } from '@/state/store';
 import { usePriorityPlan } from '@/features/priority/usePlan';
-import { Badge, Button, Ctl, Dot, Icon, Segmented, StatusGlyph, Toggle } from '@/ui';
+import { Badge, Button, Ctl, Dot, Icon, Segmented, StatusGlyph, Toggle, circuitColor } from '@/ui';
 import { generateInsights, SEVERITY_ORDER, type Insight, type InsightAction, type InsightTarget, type Severity } from './engine';
 import { applyAllocation, optimiseFleet, type WeightMode } from './optimise';
 import css from './insights.module.css';
@@ -87,7 +87,7 @@ export function InsightsPanel() {
   };
 
   if (!active.length) {
-    return <div className={css.empty}><Icon name="sparkle" size={22} style={{ color: 'var(--accent)', margin: '0 auto 8px' }} />Activate a circuit to get insights: under/over-trucking, truck transfers, crew shortfalls, steep or dropped segments and better haul options - each with the numbers behind it.</div>;
+    return <div className={css.empty}><Icon name="sparkle" size={22} style={{ color: 'var(--accent)', margin: '0 auto 8px' }} />Activate a circuit to get insights: under/over-trucking, truck transfers, crew shortfalls, steep or dropped segments and better haul options – each with the numbers behind it.</div>;
   }
 
   const top = insights[0];
@@ -102,7 +102,7 @@ export function InsightsPanel() {
           <span className={css.spark}><Icon name="sparkle" size={20} /></span>
           <div style={{ minWidth: 0 }}>
             <div className={css.heroTitle}>{insights.length} finding{insights.length === 1 ? '' : 's'} on this plan</div>
-            <div className={css.heroSub}>{top ? top.headline : 'Nothing to flag - the plan is balanced.'}</div>
+            <div className={css.heroSub}>{top ? top.headline : 'Nothing to flag – the plan is balanced.'}</div>
           </div>
         </div>
         <div className={css.counts}>
@@ -111,7 +111,8 @@ export function InsightsPanel() {
           {counts.opportunity > 0 && <Badge tone="ok">{counts.opportunity} opportunit{counts.opportunity === 1 ? 'y' : 'ies'}</Badge>}
           {counts.info > 0 && <Badge tone="info">{counts.info} info</Badge>}
         </div>
-        <button type="button" className={css.optBtn} onClick={() => setOptOn(true)} title="Allocate the available trucks to maximise priority-weighted production within the crew available">
+        {/* the one primary action on the panel; it steps back to secondary while the proposal (with its own Apply) is open */}
+        <button type="button" className={`${css.optBtn} ${opt ? css.optBtnQuiet : ''}`} onClick={() => setOptOn(true)} title="Allocate the available trucks to maximise priority-weighted production within the crew available">
           <Icon name="sparkle" size={18} />{optOn ? 'Re-optimise fleet' : 'Optimise fleet'}
         </button>
       </div>
@@ -121,14 +122,14 @@ export function InsightsPanel() {
           <div className={css.optHead}>
             <Icon name="sparkle" size={16} style={{ color: 'var(--accent)' }} />
             <span className={css.optTitle}>Proposed allocation <span style={{ fontWeight: 500, color: 'var(--ink-3)' }}>vs priority plan</span></span>
-            <Badge tone={opt.solution.method === 'branch-and-bound' ? 'info' : 'na'} title={`${num(opt.solution.nodes, 0)} nodes`}>{opt.solution.method === 'branch-and-bound' ? 'Exact' : 'Greedy'}</Badge>
+            <Badge tone="na" title={`${num(opt.solution.nodes, 0)} nodes`}>{opt.solution.method === 'branch-and-bound' ? 'Exact' : 'Greedy'}</Badge>
             <Ctl small icon="x" tip="Dismiss" onClick={() => setOptOn(false)} />
           </div>
           <div className={css.optMeta}>
             Maximises Σ {mode === 'weighted' ? 'priority weight × ' : ''}bcm/day within {opt.problem.trucksAvailable} trucks and {opt.problem.crewAvailable} crew
             {mode === 'weighted' && <> (weight ×0.85 per priority step: {opt.rows.map((r, i) => `${r.circuit.loaderUnitId} ×${num(opt.solution.weights[i], 2)}`).concat(opt.taskRows.map((t, i) => `${t.rule.name.split(' ')[0].toLowerCase()} ×${num(opt.solution.taskWeights[i], 2)}`)).join(', ')})</>}.
             {' '}Site tasks with a priority are sheddable.
-            {' '}{opt.solution.method === 'branch-and-bound' ? `Branch-and-bound, ${num(opt.solution.nodes, 0)} nodes - provably optimal.` : 'Greedy by bcm per operator (more than 8 circuits).'}
+            {' '}{opt.solution.method === 'branch-and-bound' ? `Branch-and-bound, ${num(opt.solution.nodes, 0)} nodes – provably optimal.` : 'Greedy by bcm per operator (more than 8 circuits).'}
           </div>
           <div className={css.optCtl}>
             <Segmented small value={mode} onChange={setMode} options={[{ value: 'weighted', label: 'Priority-weighted' }, { value: 'volume', label: 'Max volume' }]} />
@@ -140,9 +141,9 @@ export function InsightsPanel() {
             const pinned = locks.includes(r.circuit.id);
             return (
               <div key={r.circuit.id} className={css.optRow} title={`${r.circuit.name}: crew ${r.crewNow} → ${r.crewNew}`}>
-                <Dot color={r.circuit.color} />
+                <Dot color={circuitColor(r.circuit.color)} />
                 <span className={css.optName}>P{r.circuit.priority} {r.circuit.loaderUnitId}
-                  <button type="button" className={css.lockBtn} aria-pressed={r.locked} title={r.locked ? (pinned ? 'Unpin - let the optimiser move it' : 'Kept: marked deliberate') : 'Pin at current trucks and re-optimise'}
+                  <button type="button" className={css.lockBtn} aria-pressed={r.locked} title={r.locked ? (pinned ? 'Unpin – let the optimiser move it' : 'Kept: marked deliberate') : 'Pin at current trucks and re-optimise'}
                     onClick={() => setLocks(pinned ? locks.filter(x => x !== r.circuit.id) : [...locks, r.circuit.id])} disabled={r.locked && !pinned}>
                     <Icon name={r.locked ? 'lock' : 'unlock'} size={13} />
                   </button>
@@ -156,7 +157,7 @@ export function InsightsPanel() {
             const d = t.proposed - t.current;
             const db = t.bcmNew - t.bcmNow;
             return (
-              <div key={t.rule.id} className={css.optRow} title={`Site task (P${t.rule.priority}) - people`}>
+              <div key={t.rule.id} className={css.optRow} title={`Site task (P${t.rule.priority}) – people`}>
                 <Dot color="var(--c7)" />
                 <span className={css.optName} title={`${t.rule.name}: people`}>P{t.rule.priority} {t.rule.name}</span>
                 <span className={css.optNum}>{t.current} → <b style={{ color: d > 0 ? 'var(--ok-ink)' : d < 0 ? 'var(--bad-ink)' : undefined }}>{t.proposed}</b></span>
@@ -211,7 +212,7 @@ export function InsightsPanel() {
               )}
               <div className={css.acts}>
                 {i.actions.map((a, k) => (
-                  <Button key={k} size="sm" variant={a.kind === 'apply' ? 'primary' : 'ghost'} icon={a.kind === 'apply' ? 'tick' : a.kind === 'show' ? 'target' : 'right'} onClick={() => run(i, a)}>{a.label}</Button>
+                  <Button key={k} size="sm" variant={a.kind === 'apply' ? 'secondary' : 'ghost'} icon={a.kind === 'apply' ? 'tick' : a.kind === 'show' ? 'target' : 'right'} onClick={() => run(i, a)}>{a.label}</Button>
                 ))}
                 {i.explain.length > 0 && (
                   <Button size="sm" variant="ghost" icon={isOpen ? 'up' : 'formula'} onClick={() => setOpen({ ...open, [i.id]: !isOpen })}>{isOpen ? 'Hide' : 'Explain'}</Button>
@@ -233,7 +234,7 @@ export function InsightsPanel() {
         })}
         {!shown.length && <div className={css.empty}>Nothing in this category.</div>}
       </div>
-      <div className={css.foot}>Deterministic rules over the engine results - every number is reproducible on the Assumptions tab.</div>
+      <div className={css.foot}>Deterministic rules over the engine results – every number is reproducible on the Assumptions tab.</div>
     </div>
   );
 }

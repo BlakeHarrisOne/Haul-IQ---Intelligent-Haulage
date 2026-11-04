@@ -2,6 +2,7 @@
 import { useMemo, useState } from 'react';
 import type { CrewRule, ManningResult, Scenario } from '@/core/types';
 import { uid } from '@/core/ids';
+import { signed } from '@/core/format';
 import { useApp } from '@/state/store';
 import { Badge, Button, Card, CardBody, CardHead, Ctl, Empty, Icon, MenuButton, Modal, Toggle, cx } from '@/ui';
 import { ROLE_META } from './roles';
@@ -65,7 +66,7 @@ export function RuleSet({ scenario, manning }: { scenario: Scenario; manning: Ma
             const meta = ROLE_META[r.role];
             return (
               <div key={r.id} role="listitem"
-                className={cx(css.rule, !r.enabled && css.ruleOff, drag === i && css.ruleDragging, over === i && drag !== null && drag !== i && css.ruleOver)}
+                className={cx(css.rule, css.quiet, !r.enabled && css.ruleOff, drag === i && css.ruleDragging, over === i && drag !== null && drag !== i && css.ruleOver)}
                 draggable onDragStart={e => { setDrag(i); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', String(i)); }}
                 onDragOver={e => { e.preventDefault(); if (over !== i) setOver(i); }}
                 onDragEnd={() => { setDrag(null); setOver(null); }}
@@ -82,15 +83,15 @@ export function RuleSet({ scenario, manning }: { scenario: Scenario; manning: Ma
                   <div className={css.ruleMeta}>
                     <span style={{ fontWeight: 600, color: 'var(--ink-2)' }}>{r.name}</span>
                     <span className={page.chip}>{r.id}</span>
-                    {asExt(r).priority != null && <span className={page.chip} title="Prioritised site task - shed like a circuit when crew is short"><Icon name="priority" size={12} />Task P{asExt(r).priority}</span>}
+                    {asExt(r).priority != null && <span className={page.chip} title="Prioritised site task – shed like a circuit when crew is short"><Icon name="priority" size={12} />Task P{asExt(r).priority}</span>}
                     {r.sheetRef && <span className={page.chip} title={r.sheetRef}><Icon name="table" size={12} />{r.sheetRef.replace('Targets & Haulage Priorities!', 'Targets!')}</span>}
                     {r.note && <span style={{ minWidth: 0 }}>{r.note}</span>}
                   </div>
                 </div>
                 <span className={css.ruleFires}>
-                  {!r.enabled ? <Badge tone="na">Off</Badge>
-                    : f ? <Badge tone="info" title={`Fired ${f.n} time${f.n === 1 ? '' : 's'} in the current plan`}>{f.n > 1 ? `${f.n}× · ` : ''}+{f.people}</Badge>
-                      : <Badge tone="na" title="Condition not met by the current plan">Not firing</Badge>}
+                  {!r.enabled ? <span className={css.roleMeta}>Off</span>
+                    : f ? <Badge tone="na" title={`Fired ${f.n} time${f.n === 1 ? '' : 's'} in the current plan`}>{f.n > 1 ? `${f.n}× · ` : ''}{signed(f.people, 0)}</Badge>
+                      : <span className={css.roleMeta} title="Condition not met by the current plan">Not firing</span>}
                 </span>
                 <span className={css.ruleActs}>
                   <Ctl small icon="edit" tip="Edit rule" onClick={() => setEdit({ rule: r, isNew: false })} />

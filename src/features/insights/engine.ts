@@ -163,7 +163,7 @@ export function generateInsights(input: InsightInput): Insight[] {
       push({
         id: 'spare-trucks', kind: 'spare-trucks', severity: 'opportunity', impactBcmDay: gain,
         headline: `${spare} idle truck${spare > 1 ? 's' : ''}: put to work on ${names} → +${kbcm(gain)} bcm/day`,
-        detail: 'Trucks available exceed trucks assigned (workbook note AJ5: under-trucked plan - prompts a haulage-strategy discussion).',
+        detail: 'Trucks available exceed trucks assigned (workbook note AJ5: under-trucked plan – prompts a haulage-strategy discussion).',
         figures: [{ label: 'Idle trucks', value: String(spare), tone: 'warn' }, { label: 'Gain', value: `+${kbcm(gain)} bcm/d`, tone: 'ok' }],
         explain: lines,
         actions: [{
@@ -174,7 +174,7 @@ export function generateInsights(input: InsightInput): Insight[] {
     } else {
       push({
         id: 'fleet-idle', kind: 'fleet-idle', severity: 'info', impactBcmDay: 0,
-        headline: `${spare} truck${spare > 1 ? 's' : ''} idle - no circuit gains from ${spare > 1 ? 'them' : 'it'}`,
+        headline: `${spare} truck${spare > 1 ? 's' : ''} idle – no circuit gains from ${spare > 1 ? 'them' : 'it'}`,
         detail: 'Every active circuit is at its loader limit. Consider starting a parked circuit or a long-haul option.',
         figures: [{ label: 'Idle trucks', value: String(spare) }], explain: [], actions: [{ kind: 'view', label: 'Open priority plan', view: 'priority' }],
       });
@@ -254,7 +254,7 @@ export function generateInsights(input: InsightInput): Insight[] {
       push({
         id: `pt-${c.id}`, kind: 'pt-below-min', circuitId: c.id, severity: 'warning',
         impactBcmDay: (o.minPtHrsDay - a.loaderPtHrsDay) * c.params.plannedRateBcmPerPtHr,
-        headline: `${short(c)} loader PT ${num(a.loaderPtHrsDay, 1)} h/day - below the ${o.minPtHrsDay} h minimum`,
+        headline: `${short(c)} loader PT ${num(a.loaderPtHrsDay, 1)} h/day – below the ${o.minPtHrsDay} h minimum`,
         detail: `Rule: prime loaders plan ≥ ${o.minPtHrsDay} PT h/day. Here ${reason}.`,
         figures: [{ label: 'PT/day', value: `${num(a.loaderPtHrsDay, 1)} h`, tone: 'bad' }, { label: 'Minimum', value: `${o.minPtHrsDay} h` },
           ...(fix ? [{ label: 'Trucks for 18 h', value: String(fix.trucks) }] : [])],
@@ -279,9 +279,9 @@ export function generateInsights(input: InsightInput): Insight[] {
       push({
         id: `drop-${c.id}`, kind: 'spreadsheet-drop', circuitId: c.id, severity: dropsLive ? 'warning' : 'info', impactBcmDay: 0,
         headline: `Spreadsheet would drop ${drops.length} segment${drops.length > 1 ? 's' : ''} (${num(m, 1)} m) on ${short(c)}'s haul`,
-        detail: `|ROUND(grade, 2)| > ${Math.round(o.tableMaxGrade * 100)} % is outside the speed table: Excel times it as 0 s (quirk Q3). ${dropsLive ? 'This circuit uses that behaviour now - switch to clamp or rimpull mode.' : 'This circuit clamps or uses physics, so its times are complete.'}`,
+        detail: `|ROUND(grade, 2)| > ${Math.round(o.tableMaxGrade * 100)}% is outside the speed table: Excel times it as 0 s (quirk Q3). ${dropsLive ? 'This circuit uses that behaviour now – switch to clamp or rimpull mode.' : 'This circuit clamps or uses physics, so its times are complete.'}`,
         figures: [{ label: 'Segments', value: String(drops.length), tone: 'warn' }, { label: 'Length', value: `${num(m, 1)} m` },
-          { label: 'Steepest', value: `${num(Math.max(...drops.map(g => Math.abs(g.grade))) * 100, 1)} %`, tone: 'bad' }],
+          { label: 'Steepest', value: `${num(Math.max(...drops.map(g => Math.abs(g.grade))) * 100, 1)}%`, tone: 'bad' }],
         explain: drops.slice(0, 6).map(g => ({ label: `Seg ${g.i + 1} @ ch ${num(g.chainageM, 0)} m`, formula: `ROUND(${num(g.grade, 4)}, 2) = ${num(excelRound2(g.grade), 2)}`, value: `${num(g.dist3dM, 1)} m → 0 s` })),
         actions: [{ kind: 'show', label: 'Show me', target: { kind: 'string', id: hsId, pointIndex: drops[0].i } }],
       });
@@ -291,10 +291,10 @@ export function generateInsights(input: InsightInput): Insight[] {
       const worst = steep.reduce((w, g) => (Math.abs(g.grade) > Math.abs(w.grade) ? g : w), steep[0]);
       push({
         id: `steep-${c.id}`, kind: 'steep-grade', circuitId: c.id, severity: 'warning', impactBcmDay: 0,
-        headline: `${num(m, 0)} m of ${short(c)}'s haul is steeper than ${Math.round(o.maxGrade * 100)} % (max ${num(Math.abs(worst.grade) * 100, 1)} %)`,
-        detail: 'Exceeds the design ramp grade - slower loaded speeds, retarder load and spillage. Check the string or the ramp design.',
+        headline: `${num(m, 0)} m of ${short(c)}'s haul is steeper than ${Math.round(o.maxGrade * 100)}% (max ${num(Math.abs(worst.grade) * 100, 1)}%)`,
+        detail: 'Exceeds the design ramp grade – slower loaded speeds, retarder load and spillage. Check the string or the ramp design.',
         figures: [{ label: 'Segments', value: String(steep.length), tone: 'warn' }, { label: 'Length', value: `${num(m, 0)} m` }],
-        explain: steep.slice(0, 6).map(g => ({ label: `Seg ${g.i + 1} @ ch ${num(g.chainageM, 0)} m`, formula: `ΔZ ÷ L = ${num(g.grade * 100, 1)} %`, value: `${num(g.dist3dM, 1)} m` })),
+        explain: steep.slice(0, 6).map(g => ({ label: `Seg ${g.i + 1} @ ch ${num(g.chainageM, 0)} m`, formula: `ΔZ ÷ L = ${num(g.grade * 100, 1)}%`, value: `${num(g.dist3dM, 1)} m` })),
         actions: [{ kind: 'show', label: 'Show me', target: { kind: 'string', id: hsId, pointIndex: worst.i } }],
       });
     }
@@ -354,7 +354,7 @@ export function generateInsights(input: InsightInput): Insight[] {
     for (const t of cands) {
       if (used.has(t.from.id) || used.has(t.to.id)) continue;
       used.add(t.from.id); used.add(t.to.id);
-      const prioNote = t.from.priority < t.to.priority ? ` - note ${short(t.from)} is higher priority (P${t.from.priority})` : '';
+      const prioNote = t.from.priority < t.to.priority ? ` – note ${short(t.from)} is higher priority (P${t.from.priority})` : '';
       push({
         id: `transfer-${t.from.id}-${t.to.id}`, kind: 'transfer', circuitId: t.to.id, severity: 'opportunity', impactBcmDay: t.net,
         headline: `Move 1 truck ${short(t.from)} → ${short(t.to)}: +${kbcm(t.net)} bcm/day net`,
@@ -414,7 +414,7 @@ export function generateInsights(input: InsightInput): Insight[] {
       push({
         id: 'crew-surplus', kind: 'crew-surplus', severity: 'info', impactBcmDay: 0,
         headline: `${m.surplus} operators spare${shift ? ` on ${shift.name}` : ''}`,
-        detail: 'Enough to start a parked circuit or run an enabling task - check the trucks available first.',
+        detail: 'Enough to start a parked circuit or run an enabling task – check the trucks available first.',
         figures: [{ label: 'Required', value: String(m.total) }, { label: 'Available', value: String(m.available) }, { label: 'Spare', value: String(m.surplus), tone: 'ok' }],
         explain: [], actions: [{ kind: 'view', label: 'Manning', view: 'manning' }],
       });
@@ -465,8 +465,8 @@ export function generateInsights(input: InsightInput): Insight[] {
           id: `${kind}-${c.id}`, kind, circuitId: c.id, severity: 'warning', impactBcmDay: 0,
           headline: `${short(c)}: ${nm} ${what}${t != null ? ` at ${clockAt(t)}` : ' before end of shift'}`,
           detail: kind === 'dig-exhausted' ? 'Plan the relocation (or the next block) before the loader runs out of dig.' : 'Open the next tip head or re-route before the dump fills.',
-          figures: [{ label: kind === 'dig-exhausted' ? 'Dug' : 'Filled', value: `${num(frac * 100, 0)} %`, tone: 'warn' }, ...(t != null ? [{ label: 'At', value: clockAt(t) }] : [])],
-          explain: [{ label: 'Shift volume', formula: `${num(pc.bcmShift, 0)} bcm`, value: `${num(frac * 100, 0)} % of block` }],
+          figures: [{ label: kind === 'dig-exhausted' ? 'Dug' : 'Filled', value: `${num(frac * 100, 0)}%`, tone: 'warn' }, ...(t != null ? [{ label: 'At', value: clockAt(t) }] : [])],
+          explain: [{ label: 'Shift volume', formula: `${num(pc.bcmShift, 0)} bcm`, value: `${num(frac * 100, 0)}% of block` }],
           actions: [{ kind: 'show', label: 'Show me', target: { kind: 'asset', id: assetId } }],
         });
       }

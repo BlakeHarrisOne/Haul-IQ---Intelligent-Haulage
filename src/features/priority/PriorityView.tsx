@@ -1,18 +1,20 @@
 /**
  * Fleet & task priority: crew and trucks go to circuits and site tasks in priority order, so the impact lands on the
  * last-priority fleet/task first - shown before long/short-haul alternatives are considered.
- * (The shell's sheet supplies the page title; this renders a toolbar row + cards.)
+ * Header: the shared PageHeader; then a verdict-first sentence, the controls / KPI strip and the cards.
  */
 import { useMemo, useState } from 'react';
 import type { Circuit, Id } from '@/core/types';
-import { num } from '@/core/format';
+import { num, pct } from '@/core/format';
 import { useManning, useResults, useScenario } from '@/state/derived';
 import { useApp } from '@/state/store';
 import { applyHaulOption } from '@/features/insights/engine';
-import { Badge, Button, Card, CardBody, CardHead, Ctl, Empty, Icon, Kpi, NumberField, Range } from '@/ui';
+import { ROLE_META } from '@/features/manning/roles';
+import { Badge, Button, Card, CardBody, CardHead, Ctl, Empty, Icon, Kpi, NumberField, PageHeader, Range, StatusGlyph, circuitColor } from '@/ui';
 import { CrewBudget } from './CrewBudget';
-import { CircuitCard, TaskCard } from './CircuitCard';
-import { priorityItems, reprioritise, type PItem } from './items';
+import { CircuitCard, GrantBadge, TaskCard } from './CircuitCard';
+import { priorityItems, reprioritise, taskRules, type PItem } from './items';
+import { planVerdict, truckingVsGranted } from './plan';
 import { usePriorityPlan } from './usePlan';
 import page from '../manning/page.module.css';
 import css from './priority.module.css';
@@ -45,8 +47,18 @@ export function PriorityView() {
   const changed = plan.allocations.some(x => x.allocatedTrucks !== x.requestedTrucks) || (plan.tasks ?? []).some(t => t.allocated < t.requested);
   const crewShort = plan.crewRequired - crewAvailable;
   const maxCrew = Math.max(60, plan.crewRequired + 10, crewAvailable + 5);
-  const reduced = plan.allocations.filter(x => x.status === 'reduced').length + plan.tasks.filter(t => t.allocated < t.requested && t.allocated > 0).length;
+  // a cut that costs production is 'reduced'; idle trucks the planner released at no loss are 'released' (same words as the cards)
+  const reduced = plan.allocations.filter(x => x.status === 'reduced' && x.bcmDayLost > 0.5).length + plan.tasks.filter(t => t.allocated < t.requested && t.allocated > 0).length;
+  const released = plan.allocations.filter(x => x.status === 'reduced' && x.bcmDayLost <= 0.5).length;
   const parked = plan.allocations.filter(x => x.status === 'parked').length + plan.tasks.filter(t => t.requested > 0 && t.allocated === 0).length;
+  const verdict = useMemo(() => planVerdict(s, results, plan), [s, results, plan]);
+  const trucksRequested = items.reduce((a, i) => a + (i.kind === 'circuit' ? i.circuit.trucks : 0), 0);
+  // production scope: circuits (the figure Compare shows) + prioritised site tasks with a production rate (push dozers)
+  const haulBcm = plan.allocations.reduce((a, x) => a + x.bcmDayAchieved, 0);
+  const taskBcm = plan.bcmDayAchieved - haulBcm;
+  const taskRoles = [...new Set(taskRules(s).filter(r => (r.bcmPerUnitDay ?? 0) > 0).map(r => r.role))];
+  const taskScope = taskRoles.length === 1 ? ROLE_META[taskRoles[0]].short.toLowerCase() : 'site tasks';
+  const ofPlan = plan.bcmDayPlanned ? plan.bcmDayAchieved / plan.bcmDayPlanned : null;
 
   const order = items.map(i => i.id);
   const moveTo = (from: Id, to: Id) => {
@@ -86,22 +98,21 @@ export function PriorityView() {
 
   return (
     <div className={page.page}>
-      <header className={page.head}>
-        <div className={page.headTitle}>
-          <span className={page.headIco}><Icon name="priority" size={22} /></span>
-          <div>
-            <h1 className={page.h1}>Fleet &amp; task priority</h1>
-            <div className={page.sub}>Drag to re-prioritise circuits and site tasks. Crew and trucks run out at the bottom of the list first - see the impact on the last priority before long or short-haul options.</div>
-          </div>
-        </div>
-        <span className={page.headGap} />
-        <div className={page.headActions}>
+      <PageHeader eyebrow="Planning" icon="priority" title="Fleet & task priority"
+        desc="Drag to re-prioritise circuits and site tasks. Crew and trucks run out at the bottom of the list first – see the impact on the last priority before long or short-haul options."
+        actions={<>
           <Button icon="crew" onClick={() => setView('manning')}>Manning</Button>
           <Button variant="primary" icon="tick" disabled={!changed} onClick={apply} title={changed ? 'Set each circuit’s trucks to the allocated number and stand down the reduced site tasks' : 'Allocation equals the request'}>Apply allocation</Button>
-        </div>
-      </header>
+        </>} />
 
-      <Card>
+      {items.length > 0 && (
+        <p className={css.verdict} role="status">
+          <StatusGlyph kind={verdict.tone === 'bad' ? 'fail' : verdict.tone} size={20} />
+          <span>{verdict.text}</span>
+        </p>
+      )}
+
+      <Card className={css.controlsHost}>
         <div className={css.controls}>
           <div className={css.ctlCell}>
             <span className={css.ctlLab}><Icon name="crew" size={14} />Crew available
@@ -130,20 +141,23 @@ export function PriorityView() {
             <Kpi label="Crew used" value={plan.crewUsed} unit={`/ ${crewAvailable}`} delta={crewShort > 0 ? `${crewShort} short` : `${crewAvailable - plan.crewRequired} spare`} deltaTone={crewShort > 0 ? 'bad' : 'ok'} />
           </div>
           <div className={css.ctlCell}>
-            <Kpi label="Trucks used" value={plan.trucksUsed} unit={`/ ${trucksAvailable}`} delta={`${items.reduce((a, i) => a + (i.kind === 'circuit' ? i.circuit.trucks : 0), 0)} requested`} deltaTone="na" />
+            <Kpi label="Trucks used" value={plan.trucksUsed} unit={`/ ${trucksAvailable}`} delta={`${trucksRequested} requested`} deltaTone="na"
+              title={`${plan.trucksUsed} trucks granted by the plan (the truck bar below) of ${trucksAvailable} available; ${trucksRequested} requested`} />
           </div>
           <div className={css.ctlCell}>
-            <Kpi label="bcm / day" value={kb(plan.bcmDayAchieved)} unit={`/ ${kb(plan.bcmDayPlanned)}`} delta={plan.bcmDayPlanned ? `${num((plan.bcmDayAchieved / plan.bcmDayPlanned) * 100, 0)} % of plan` : undefined} deltaTone={lost > 1 ? 'warn' : 'ok'} />
+            <Kpi label="bcm / day" value={kb(plan.bcmDayAchieved)} unit={`/ ${kb(plan.bcmDayPlanned)}`}
+              delta={taskBcm > 0.5 ? `incl. ${taskScope} · haul ${kb(haulBcm)}` : ofPlan != null ? `${pct(ofPlan, 0)} of plan` : undefined} deltaTone={taskBcm > 0.5 ? 'na' : lost > 1 ? 'warn' : 'ok'}
+              title={`Includes ${taskBcm > 0.5 ? taskScope : 'haul circuits only'}. Haul circuits ${num(haulBcm, 0)} bcm/day (the Compare figure)${taskBcm > 0.5 ? ` + ${taskScope} ${num(taskBcm, 0)}` : ''} = ${num(plan.bcmDayAchieved, 0)} of ${num(plan.bcmDayPlanned, 0)} planned${ofPlan != null ? ` (${pct(ofPlan, 0)})` : ''}`} />
           </div>
           <div className={css.ctlCell}>
             <Kpi label="Lost bcm / day" value={<span className={lost > 0.5 ? css.bad : undefined}>{lost > 0.5 ? `−${kb(lost)}` : '0'}</span>}
-              delta={reduced + parked ? `${reduced ? `${reduced} reduced` : ''}${reduced && parked ? ' · ' : ''}${parked ? `${parked} parked` : ''}` : 'nothing cut'} deltaTone={lost > 0.5 ? 'bad' : 'na'} />
+              delta={[reduced && `${reduced} reduced`, parked && `${parked} parked`, released && `${released} released`].filter(Boolean).join(' · ') || 'nothing cut'} deltaTone={lost > 0.5 ? 'bad' : 'na'} />
           </div>
         </div>
       </Card>
 
       <Card>
-        <CardHead icon="crew" title="Crew budget" sub="Requested in priority order vs the crew available - the cut-off is where crew runs out"
+        <CardHead icon="crew" title="Crew budget" sub="Requested in priority order vs the crew available – the cut-off is where crew runs out"
           actions={crewShort > 0 ? <Badge tone="bad" icon="warning">{crewShort} short</Badge> : <Badge tone="ok" icon="tick">{crewAvailable - plan.crewRequired} spare</Badge>} />
         <CrewBudget scenario={s} manning={manning} plan={plan} crewAvailable={crewAvailable} trucksAvailable={trucksAvailable} />
       </Card>
@@ -171,7 +185,7 @@ export function PriorityView() {
                 <span className={page.note} style={{ alignSelf: 'center', marginRight: 4 }}>Not active:</span>
                 {inactive.map(c => (
                   <span key={c.id} className={css.inChip}>
-                    <span style={{ width: 8, height: 8, borderRadius: 4, background: c.color }} />{c.name}
+                    <span style={{ width: 8, height: 8, borderRadius: 4, background: circuitColor(c.color) }} />{c.name}
                     <Button size="sm" variant="ghost" icon="plus" onClick={() => patch(c.id, { active: true }, `Activate ${c.name}`)}>Activate</Button>
                   </span>
                 ))}
@@ -180,7 +194,7 @@ export function PriorityView() {
           </div>
 
           <div style={{ display: 'grid', gap: 16 }}>
-            {last && <LastImpact item={last} plan={plan} />}
+            {last && <LastImpact item={last} plan={plan} results={results} />}
             <Card>
               <CardHead icon="report" title="How the plan was built" sub={`${plan.narrative.length} steps · engine planner`} />
               <CardBody style={{ padding: 0 }}>
@@ -200,14 +214,14 @@ export function PriorityView() {
   );
 }
 
-function LastImpact({ item, plan }: { item: PItem; plan: ReturnType<typeof usePriorityPlan> }) {
+function LastImpact({ item, plan, results }: { item: PItem; plan: ReturnType<typeof usePriorityPlan>; results: ReturnType<typeof useResults> }) {
   if (item.kind === 'task') {
     const t = plan.tasks.find(x => x.ruleId === item.id);
     if (!t) return null;
     const full = t.allocated >= t.requested;
     return (
       <Card>
-        <CardHead icon="warning" title="Last-priority impact" sub={`P${t.priority} ${t.name}`} actions={full ? <Badge tone="ok" icon="tick">Fully crewed</Badge> : <Badge tone="warn">Reduced</Badge>} />
+        <CardHead icon="warning" title="Last-priority impact" sub={`P${t.priority} ${t.name}`} actions={<GrantBadge got={t.allocated} req={t.requested} lost={t.bcmDayLost} unit="people" />} />
         <div className={css.impact}>
           <div className={`${css.impactBig} ${t.bcmDayLost > 0 ? css.bad : css.ok}`}>{t.bcmDayLost > 0 ? `−${kb(t.bcmDayLost)}` : '0'} <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink-3)' }}>bcm/day lost</span></div>
           <div className={page.note}>{full ? `${t.name} keeps all ${t.requested} operators: the crew covers every priority.` : `${t.name} gives first: ${t.requested - t.allocated} operator${t.requested - t.allocated === 1 ? '' : 's'} stood down before any circuit is cut.`}</div>
@@ -219,18 +233,21 @@ function LastImpact({ item, plan }: { item: PItem; plan: ReturnType<typeof usePr
   const a = plan.allocations.find(x => x.circuitId === item.id);
   if (!a) return null;
   const c = item.circuit;
+  const tr = truckingVsGranted(results, plan).find(x => x.circuitId === c.id);
   const bestAlt = a.alternatives.length ? [...a.alternatives].sort((x, y) => y.deltaBcmDay - x.deltaBcmDay)[0] : undefined;
   return (
     <Card>
       <CardHead icon="warning" title="Last-priority impact" sub={`P${a.priority} ${c.loaderUnitId}`}
-        actions={a.status === 'full' ? <Badge tone="ok" icon="tick">Fully crewed</Badge> : a.status === 'reduced' ? <Badge tone="warn">Reduced</Badge> : <Badge tone="bad">Parked</Badge>} />
+        actions={<GrantBadge got={a.allocatedTrucks} req={a.requestedTrucks} lost={a.bcmDayLost} fullRate={tr?.fullRate} />} />
       <div className={css.impact}>
         <div>
           <div className={`${css.impactBig} ${a.bcmDayLost > 0.5 ? css.bad : css.ok}`}>{a.bcmDayLost > 0.5 ? `−${kb(a.bcmDayLost)}` : '0'} <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink-3)' }}>bcm/day lost</span></div>
           <div className={page.note} style={{ marginTop: 4 }}>
             {a.status === 'full'
               ? `${c.name} gets all ${a.requestedTrucks} trucks: the crew covers every priority.`
-              : `${c.name} absorbs the shortfall: ${a.allocatedTrucks} of ${a.requestedTrucks} trucks; ${a.crewRequested - a.crewAllocated} more operator${a.crewRequested - a.crewAllocated === 1 ? '' : 's'} would crew it fully.`}
+              : a.bcmDayLost <= 0.5 && a.allocatedTrucks > 0
+                ? `${c.name} releases ${a.requestedTrucks - a.allocatedTrucks} idle truck${a.requestedTrucks - a.allocatedTrucks === 1 ? '' : 's'} (${a.allocatedTrucks} of ${a.requestedTrucks}): the extra truck${a.requestedTrucks - a.allocatedTrucks === 1 ? ' only queued' : 's only queued'}, no production lost.`
+                : `${c.name} absorbs the shortfall: ${a.allocatedTrucks} of ${a.requestedTrucks} trucks; ${a.crewRequested - a.crewAllocated} more operator${a.crewRequested - a.crewAllocated === 1 ? '' : 's'} would crew it fully.`}
           </div>
         </div>
         <div className={css.impactRow}>

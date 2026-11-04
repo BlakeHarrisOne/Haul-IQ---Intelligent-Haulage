@@ -1,7 +1,8 @@
 /** Manning result: total required vs available gauge, required-by-role bars (with ticket caps), per-circuit breakdown. */
 import type { ManningResult, Scenario } from '@/core/types';
 import { useApp } from '@/state/store';
-import { Badge, Card, CardBody, CardHead, Ctl, Dot, Icon } from '@/ui';
+import { signed } from '@/core/format';
+import { Badge, Card, CardBody, CardHead, Ctl, Dot, Icon, circuitColor } from '@/ui';
 import { ROLE_META, ROLE_ORDER } from './roles';
 import { groupLines, lineLabel } from './model';
 import css from './manning.module.css';
@@ -22,8 +23,9 @@ export function CrewGauge({ required, available, label }: { required: number; av
         </span>
       </div>
       <div style={{ paddingTop: 18 }}>
-        <div className={`${css.track} ${over ? css.trackBad : ''}`}>
-          <div className={css.fill} style={{ width: pct(Math.min(required, available)), borderRadius: over ? '6px 0 0 6px' : undefined, background: over ? 'var(--bad)' : undefined }} />
+        <div className={css.track}>
+          {/* neutral bar for the crew that fits; status colour only for the shortfall beyond the cut-off */}
+          <div className={css.fill} style={{ width: pct(Math.min(required, available)), borderRadius: over ? '6px 0 0 6px' : undefined }} />
           {over && <div className={css.fillOver} style={{ left: pct(available), width: `calc(${pct(required - available)} - 0px)` }} />}
           <div className={css.cut} style={{ left: pct(available) }}>
             <span className={css.cutLabel} style={available / max > 0.8 ? { transform: 'translateX(-100%)', left: 0 } : available / max < 0.2 ? { transform: 'none', left: 0 } : undefined}>Available {available}</span>
@@ -63,7 +65,7 @@ export function RequiredByRole({ scenario, manning }: { scenario: Scenario; mann
               </div>
             );
           })}
-          {!rows.length && <div className={page.footNote}>No roles required - activate a circuit or enable rules.</div>}
+          {!rows.length && <div className={page.footNote}>No roles required – activate a circuit or enable rules.</div>}
         </div>
       </CardBody>
     </Card>
@@ -81,7 +83,7 @@ export function Breakdown({ scenario, manning }: { scenario: Scenario; manning: 
         {groups.map(g => (
           <div key={g.key} className={css.group}>
             <div className={css.groupHead}>
-              {g.circuit ? <Dot color={g.circuit.color} /> : <Icon name="pin" size={16} style={{ color: 'var(--ink-3)' }} />}
+              {g.circuit ? <Dot color={circuitColor(g.circuit.color)} /> : <Icon name="pin" size={16} style={{ color: 'var(--ink-3)' }} />}
               <span className={css.groupTitle}>{g.title}</span>
               {g.circuit && <Badge tone="na">P{g.circuit.priority} · {g.circuit.trucks} trucks</Badge>}
               <span className={css.groupTotal}>{g.total}</span>
@@ -94,13 +96,13 @@ export function Breakdown({ scenario, manning }: { scenario: Scenario; manning: 
                 <span className={css.lineIco}><Icon name={ROLE_META[l.role].icon} size={16} /></span>
                 <span className={css.lineReason}><span style={{ color: 'var(--ink)' }}>{lab.name}</span>{lab.detail && <span style={{ color: 'var(--ink-3)' }}> · {lab.detail}</span>}</span>
                 <span className={page.chip}>{l.ruleId}</span>
-                <span className={css.lineCount}>{l.count > 0 ? `+${l.count}` : l.count}</span>
+                <span className={css.lineCount}>{signed(l.count, 0)}</span>
               </div>
               );
             })}
           </div>
         ))}
-        {!groups.length && <div className={page.footNote}><Icon name="info" size={16} />No manning lines - no active circuits.</div>}
+        {!groups.length && <div className={page.footNote}><Icon name="info" size={16} />No manning lines – no active circuits.</div>}
         {manning.steps.length > 0 && (
           <div className={page.footNote}><Icon name="formula" size={16} />{manning.steps.length} calculation steps on the Assumptions tab (group “manning”).</div>
         )}

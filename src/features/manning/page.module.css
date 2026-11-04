@@ -1,16 +1,6 @@
 /* Shared page layout for the Manning and Priority sheets (rendered inside the shell's full-page sheet). */
+/* Page header: the shared PageHeader from @/ui; wrapper padding matches the analytics sheets (assumptions/shared/page.module.css) so titles align. */
 .page { display: flex; flex-direction: column; gap: 16px; padding: 4px 0 40px; min-width: 0; }
-
-.head { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 6px 2px 4px; justify-content: space-between; }
-.headTitle { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1 1 520px; max-width: 900px; }
-.headIco {
-  width: 40px; height: 40px; border-radius: 12px; flex: none; display: flex; align-items: center; justify-content: center;
-  background: var(--accent-50); color: var(--accent);
-}
-.h1 { font: 650 26px/32px var(--font-display); color: var(--ink); letter-spacing: -.015em; }
-.sub { font-size: 13.5px; line-height: 19px; color: var(--ink-3); margin-top: 2px; }
-.headGap { flex: 0 1 0; }
-.headActions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
 .grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
 .grid64 { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 16px; align-items: start; }

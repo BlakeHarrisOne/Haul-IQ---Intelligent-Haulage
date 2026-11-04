@@ -2,7 +2,8 @@
 import { useMemo } from 'react';
 import { useManning, useScenario } from '@/state/derived';
 import { useApp } from '@/state/store';
-import { Badge, Button, Card, Empty, Icon, Kpi, Select } from '@/ui';
+import { signed } from '@/core/format';
+import { Badge, Button, Card, Empty, Kpi, PageHeader, Select } from '@/ui';
 import { unitActive } from './roles';
 import { RequiredByRole, Breakdown } from './Result';
 import { RuleSet } from './RuleSet';
@@ -26,24 +27,16 @@ export function ManningView() {
 
   return (
     <div className={page.page}>
-      <header className={page.head}>
-        <div className={page.headTitle}>
-          <span className={page.headIco}><Icon name="crew" size={22} /></span>
-          <div>
-            <h1 className={page.h1}>Manning &amp; crews</h1>
-            <div className={page.sub}>Crew rules turn the plan into seats - trucks, loaders, the coal dozer and support EX a coal circuit always needs, push dozers and fixed roles - checked against the crew on shift.</div>
-          </div>
-        </div>
-        <span className={page.headGap} />
-        <div className={page.headActions}>
+      <PageHeader eyebrow="Crew" icon="crew" title="Manning & crews"
+        desc="Crew rules turn the plan into seats – trucks, loaders, the coal dozer and support EX a coal circuit always needs, push dozers and fixed roles – checked against the crew on shift."
+        actions={<>
           {shifts.length > 0 && (
             <Select value={scenario.crew.activeShiftId} title="Active shift crew" width={220}
               onChange={v => commit(`Active shift: ${shifts.find(x => x.id === v)?.name ?? v}`, s => ({ ...s, crew: { ...s.crew, activeShiftId: v } }))}
               options={shifts.map(x => ({ value: x.id, label: `${x.name} · ${x.available} ops` }))} />
           )}
           <Button icon="priority" onClick={() => setView('priority')}>Priority plan</Button>
-        </div>
-      </header>
+        </>} />
 
       <Card>
         <div className={page.kpis}>
@@ -57,7 +50,7 @@ export function ManningView() {
           </div>
           <div className={page.kpiCell}>
             <Kpi label={manning.surplus < 0 ? 'Shortfall' : 'Surplus'} icon={manning.surplus < 0 ? 'warning' : 'tick'} size="lg"
-              value={<span style={{ color: manning.surplus < 0 ? 'var(--bad-ink)' : 'var(--ok-ink)' }}>{manning.surplus > 0 ? '+' : ''}{manning.surplus}</span>} />
+              value={<span style={{ color: manning.surplus < 0 ? 'var(--bad-ink)' : 'var(--ok-ink)' }}>{signed(manning.surplus, 0)}</span>} />
             <span className={page.kpiFoot}>{manning.surplus < 0 ? 'Lowest priority gives first' : 'Operators spare'}</span>
           </div>
           <div className={page.kpiCell}>

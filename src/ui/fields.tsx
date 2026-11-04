@@ -37,7 +37,11 @@ export interface NumberFieldProps {
 }
 
 export function NumberField({ value, onChange, unit, step = 1, min, max, dp = 2, fixed, small, bare, changed, placeholder, width, disabled, title, onClear }: NumberFieldProps) {
-  const show = (v: number | null | undefined) => (v == null || !Number.isFinite(v) ? '' : fixed ? v.toFixed(dp) : String(+v.toFixed(dp)));
+  // editing text: plain digits (no grouping) so the caret and arrow-key stepping behave
+  const raw = (v: number | null | undefined) => (v == null || !Number.isFinite(v) ? '' : fixed ? v.toFixed(dp) : String(+v.toFixed(dp)));
+  // at rest: en-AU thousands separators so inputs read like the tables beside them (36,000 not 36000)
+  const show = (v: number | null | undefined) => (v == null || !Number.isFinite(v) ? ''
+    : new Intl.NumberFormat('en-AU', { minimumFractionDigits: fixed ? dp : 0, maximumFractionDigits: dp }).format(v));
   const [draft, setDraft] = useState(show(value));
   const [focus, setFocus] = useState(false);
   const ref = useRef<HTMLInputElement>(null);
@@ -59,7 +63,7 @@ export function NumberField({ value, onChange, unit, step = 1, min, max, dp = 2,
         value={draft}
         placeholder={placeholder}
         disabled={disabled}
-        onFocus={e => { setFocus(true); e.currentTarget.select(); }}
+        onFocus={e => { setFocus(true); setDraft(raw(value)); const el = e.currentTarget; requestAnimationFrame(() => el.select()); }}
         onBlur={() => { setFocus(false); commit(); }}
         onChange={e => setDraft(e.target.value)}
         onKeyDown={e => {
