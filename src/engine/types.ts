@@ -18,26 +18,12 @@ export type QueueModel = 'deterministic' | 'mm1n' | 'binomial';
 /** Downhill speed rule: Cat ARC holds the highest gear the retarder sustains; Komatsu ARSC / electric hold any speed. */
 export type DescentRule = 'discrete_gear' | 'continuous';
 
-/** Contract request: optional additions to CircuitParams. */
-export interface CircuitParamsExt extends CircuitParams {
-  /** Spreadsheet mode: 'drop' (Excel: segment time 0, default) or 'clamp' (use the steepest row, 12/14 km/h). */
-  outOfRange?: OutOfRangeMode;
-  /** Rimpull mode motion model (default 'kinematic'). */
-  motion?: MotionModel;
-  /** Production model for fleet options (default 'deterministic'). */
-  queueModel?: QueueModel;
-  /** Loader target PT h/day. Default = truckPtHrsPerDay (the workbook's I34 feeds both C19 and C22). */
-  loaderPtHrsPerDay?: number;
-  /** Kinematic: max (operator) acceleration, m/s² (default 0.6). */
-  accelMaxMs2?: number;
-  /** Kinematic: planning deceleration loaded / empty, m/s² (defaults 0.6 / 0.8). */
-  decelLoadedMs2?: number;
-  decelEmptyMs2?: number;
-  /** Kinematic: tyre–road traction coefficient μ (default 0.5, dry clay loam ≈ 0.55). */
-  tractionCoeff?: number;
-  /** Kinematic: dwell at a modelled stop sign, s (default 5). */
-  stopDwellS?: number;
-}
+/**
+ * Circuit parameters as the engine reads them. The engine options (outOfRange, motion, queueModel, loaderPtHrsPerDay,
+ * accelMaxMs2, decelLoadedMs2, decelEmptyMs2, tractionCoeff, stopDwellS) are now optional fields of the
+ * CircuitParams contract itself; this alias is kept for existing imports.
+ */
+export type CircuitParamsExt = CircuitParams;
 
 /** One gear's rimpull or retarder curve. */
 export interface GearCurve {

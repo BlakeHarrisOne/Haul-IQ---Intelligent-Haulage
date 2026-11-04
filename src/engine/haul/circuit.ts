@@ -69,7 +69,6 @@ export function computeCircuit(scenario: Scenario, circuit: Circuit, opts: Circu
   const hs = scenario.strings.find(s => s.id === haulStringId);
   const truck = scenario.fleet.trucks.find(t => t.id === circuit.truckModelId);
   const material = scenario.materials.find(m => m.id === circuit.materialId);
-  const la = scenario.fleet.loaderAssumptions.find(l => l.unitId === circuit.loaderUnitId);
   const log = new StepLog();
   const warnings: string[] = [];
   const base: CircuitResultExt = {

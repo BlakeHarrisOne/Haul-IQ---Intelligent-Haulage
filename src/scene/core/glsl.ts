@@ -13,20 +13,23 @@ float hk_vnoise(vec2 p) {
   float c = hk_hash12(i + vec2(0.0, 1.0)), d = hk_hash12(i + vec2(1.0, 1.0));
   return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
 }
-// Multi-scale ground detail in metres, each octave faded out before it aliases (fw = metres per pixel).
+// Multi-scale ground detail in metres, each octave faded out before it aliases (fw = metres per pixel):
+// broad tonal drift, soft patches, then pebbles / grit / grain that only appear close up (POV).
+float hk_fade(float fw, float a, float b) { return 1.0 - smoothstep(a, b, fw); }
 float hk_ground(vec2 p, float fw) {
-  float s = (hk_vnoise(p / 210.0) - 0.5) * 0.9;
-  s += (hk_vnoise(p / 53.0 + 3.1) - 0.5) * 0.6 * (1.0 - smoothstep(5.0, 15.0, fw));
-  s += (hk_vnoise(p / 13.0 + 7.7) - 0.5) * 0.42 * (1.0 - smoothstep(1.3, 3.8, fw));
-  s += (hk_vnoise(p / 3.1 + 1.3) - 0.5) * 0.34 * (1.0 - smoothstep(0.3, 0.9, fw));
-  s += (hk_vnoise(p / 0.7 + 9.1) - 0.5) * 0.28 * (1.0 - smoothstep(0.07, 0.2, fw));
+  float s = (hk_vnoise(p / 210.0) - 0.5) * 0.8;
+  s += (hk_vnoise(p / 53.0 + 3.1) - 0.5) * 0.42 * hk_fade(fw, 5.0, 15.0);
+  s += (hk_vnoise(p / 13.0 + 7.7) - 0.5) * 0.22 * hk_fade(fw, 1.3, 3.8);
+  s += (hk_vnoise(p / 3.1 + 1.3) - 0.5) * 0.16 * hk_fade(fw, 0.3, 0.9);
+  s -= smoothstep(0.5, 0.9, hk_vnoise(p / 0.35 + 2.7)) * 0.2 * hk_fade(fw, 0.035, 0.1);
+  s += (hk_vnoise(p / 0.11 + 6.1) - 0.5) * 0.2 * hk_fade(fw, 0.012, 0.035);
   return s;
 }
-// Bump height for the micro relief (fine octaves only).
+// Bump height for the micro relief (fine octaves + pebbles).
 float hk_bump(vec2 p, float fw) {
-  float s = (hk_vnoise(p / 6.0 + 2.2) - 0.5) * 0.9 * (1.0 - smoothstep(0.6, 1.6, fw));
-  s += (hk_vnoise(p / 1.7 + 5.5) - 0.5) * 0.35 * (1.0 - smoothstep(0.17, 0.45, fw));
-  s += (hk_vnoise(p / 0.45 + 8.8) - 0.5) * 0.12 * (1.0 - smoothstep(0.05, 0.12, fw));
+  float s = (hk_vnoise(p / 6.0 + 2.2) - 0.5) * 0.3 * hk_fade(fw, 0.6, 1.6);
+  s += (hk_vnoise(p / 1.3 + 5.5) - 0.5) * 0.12 * hk_fade(fw, 0.13, 0.35);
+  s += (hk_vnoise(p / 0.3 + 8.8) - 0.5) * 0.035 * hk_fade(fw, 0.03, 0.08);
   return s;
 }
 `;

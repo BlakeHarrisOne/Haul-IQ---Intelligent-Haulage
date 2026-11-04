@@ -5,7 +5,7 @@ import { plural } from './roles';
 import { syntheticScenario } from '@/features/insights/synthetic';
 import { computeAllCircuits, computeManning } from '@/engine';
 
-const ctx = { materials: [{ id: 'OB', name: 'Overburden' }, { id: 'CL', name: 'Coal' }] };
+const ctx = { materials: [{ id: 'OB', name: 'Overburden' }, { id: 'CL', name: 'Coal' }], rules: workbookRules() };
 const rule = (r: Partial<CrewRule>): CrewRule => ({ id: 'x', name: 'x', enabled: true, scope: 'per-circuit', role: 'other', count: 1, ...r });
 
 describe('rule sentences', () => {
@@ -15,11 +15,11 @@ describe('rule sentences', () => {
     expect(t.R2_EX_OPERATOR).toBe('For every active excavator or shovel circuit with ≥ 1 truck → +1 excavator operator');
     expect(t.R3_EX_DOZERS).toBe('For every active excavator or shovel circuit with ≥ 1 truck → +2 dozer operators (floor & dump)');
     expect(t.R5_COAL_DOZER).toBe('For every active loader circuit with ≥ 1 truck → +1 coal dozer operator');
-    expect(t.R6_SUPPORT_EX).toBe('For every active circuit on LDR1 with ≥ 1 truck → +1 excavator operator');
+    expect(t.R6_SUPPORT_EX).toBe('For every active circuit on LDR1 or LDR with ≥ 1 truck → +1 excavator operator');
     expect(t.R10_WATER_CARTS).toBe('Site-wide, every shift → +2 water cart operators');
     expect(t.R10_OCE).toBe('Site-wide, every shift → +1 open cut examiner (OCE)');
-    expect(t.R7_BULK_PUSH).toBe('Site-wide, every shift → +(7 − 1 − max(0, trucks operating − 12)) push dozer operators');
-    expect(t.R8_PUSH_ASSIST).toBe('Site-wide, when push dozers > 0 → +1 excavator operator');
+    expect(t.R7_BULK_PUSH).toBe('Site-wide, every shift → +(7 − enabling-task dozer − max(0, trucks operating − 12)) push dozer operators');
+    expect(t.R8_PUSH_ASSIST).toBe('Site-wide, when bulk push dozers > 0 → +1 excavator operator');
   });
 
   it('the engine evaluates the workbook rules to 36 (linked plan) and swaps push dozers for trucks above 12', () => {

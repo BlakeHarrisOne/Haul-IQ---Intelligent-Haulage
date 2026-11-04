@@ -8,8 +8,8 @@ import type { CircuitRow } from './compareData';
 import s from './compare.module.css';
 
 const ROW_H = 34;
-const LABEL_W = 150;
-const truncate = (t: string, n = 20) => (t.length > n ? t.slice(0, n - 1) + '…' : t);
+const LABEL_W = 176;
+const truncate = (t: string, n = 24) => (t.length > n ? t.slice(0, n - 1) + '…' : t);
 
 function RowLabels({ rows, y0 }: { rows: { id: string; name: string; color: string }[]; y0: number }) {
   return (
@@ -17,7 +17,7 @@ function RowLabels({ rows, y0 }: { rows: { id: string; name: string; color: stri
       {rows.map((r, i) => (
         <g key={r.id} transform={`translate(0,${y0 + i * ROW_H + ROW_H / 2})`}>
           <circle cx={6} cy={0} r={4} fill={r.color} />
-          <text x={16} y={0} dy="0.32em" style={{ ...chartText, fill: 'var(--ink)', fontWeight: 600 }}>{truncate(r.name)}</text>
+          <text x={16} y={0} dy="0.32em" style={{ ...chartText, fill: 'var(--ink)', fontWeight: 600 }}>{truncate(r.name)}<title>{r.name}</title></text>
         </g>
       ))}
     </g>

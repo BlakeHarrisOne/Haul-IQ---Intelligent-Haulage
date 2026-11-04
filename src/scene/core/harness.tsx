@@ -66,6 +66,7 @@ export async function mountStandalone(root: HTMLElement) {
     import('react'), import('react-dom/client'), import('./SceneCore'), import('./Chrome'), import('../api'),
   ]);
   const q = new URLSearchParams(location.search);
+  (window as unknown as { __haiulApp: typeof useApp }).__haiulApp = useApp;
   let modules: import('../context').SceneModule[] = [];
   if (q.get('mods') !== '0') {
     try { modules = (await import('../modules')).sceneModules; } catch (e) { console.warn('[harness] scene modules failed to load', e); }

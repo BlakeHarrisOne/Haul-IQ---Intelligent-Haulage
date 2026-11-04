@@ -26,10 +26,13 @@ export function ManningView() {
 
   return (
     <div className={page.page}>
-      <div className={page.head}>
-        <div className={page.sub} style={{ maxWidth: 720 }}>
-          Crew rules turn the plan into seats - trucks, loaders, the coal dozer and support EX a coal circuit always needs, push dozers and
-          fixed roles - checked against the crew on shift.
+      <header className={page.head}>
+        <div className={page.headTitle}>
+          <span className={page.headIco}><Icon name="crew" size={22} /></span>
+          <div>
+            <h1 className={page.h1}>Manning &amp; crews</h1>
+            <div className={page.sub}>Crew rules turn the plan into seats - trucks, loaders, the coal dozer and support EX a coal circuit always needs, push dozers and fixed roles - checked against the crew on shift.</div>
+          </div>
         </div>
         <span className={page.headGap} />
         <div className={page.headActions}>
@@ -40,7 +43,7 @@ export function ManningView() {
           )}
           <Button icon="priority" onClick={() => setView('priority')}>Priority plan</Button>
         </div>
-      </div>
+      </header>
 
       <Card>
         <div className={page.kpis}>

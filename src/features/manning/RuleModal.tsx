@@ -52,7 +52,7 @@ export function RuleModal({ open, rule, scenario, onClose, onSave, isNew }: {
     onSave({ ...d, name: d.name.trim() || 'Untitled rule', when: cleanCondition({ ...d.when, tags: t }), params: parseParams(params),
       expr: d.expr?.trim() || undefined, whenExpr: d.whenExpr?.trim() || undefined } as Rule);
   };
-  const scopeUsesCondition = d.scope !== 'site' || !!d.when;
+  const scopeUsesCondition = true;
   return (
     <Modal open={open} onClose={onClose} width={760}
       title={isNew ? 'New crew rule' : 'Edit crew rule'}

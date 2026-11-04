@@ -1,6 +1,6 @@
 /* Shared page layout for the analytics sheets (Assumptions / Truck curves / Compare). The shell provides the
    scrolling sheet (max-width ~1480 px); this is the content inside it. */
-.page { padding: 28px 28px 64px; display: flex; flex-direction: column; gap: 18px; color: var(--ink); min-width: 0; }
+.page { padding: 8px 0 32px; display: flex; flex-direction: column; gap: 18px; color: var(--ink); min-width: 0; }
 .head { display: flex; align-items: flex-end; gap: 16px 24px; flex-wrap: wrap; }
 .headText { min-width: 0; flex: 1 1 520px; }
 .eyebrow { font-size: 12px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-ink); display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
@@ -16,7 +16,7 @@
 .s12 { grid-column: span 12; } .s8 { grid-column: span 8; } .s7 { grid-column: span 7; } .s6 { grid-column: span 6; }
 .s5 { grid-column: span 5; } .s4 { grid-column: span 4; } .s3 { grid-column: span 3; }
 .stack { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-.sticky { position: sticky; top: 16px; }
+.sticky { position: sticky; top: calc(var(--top, 4px) + 8px); }
 @media (max-width: 1180px) { .sticky { position: static; } }
 @media (max-width: 1180px) {
   .s8, .s7, .s6, .s5, .s4 { grid-column: span 12; }

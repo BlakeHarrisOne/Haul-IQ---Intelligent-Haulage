@@ -77,6 +77,20 @@ describe('priority planner', () => {
     expect(p.crewUsed).toBeLessThanOrEqual(28);
   });
 
+  it('surplus trucks that only queue are released first, at no production loss', () => {
+    const { s } = plan();
+    const short = straightString('h-ldr-short', [{ len: 300, grade: 0 }, { len: 300, grade: 0.05 }]);
+    const s2 = { ...s, strings: [...s.strings, short], circuits: s.circuits.map(c => (c.id === 'c-ldr1' ? { ...c, haulStringId: short.id } : c)) };
+    const res2 = computeAllCircuits(s2);
+    expect(res2['c-ldr1'].trucksRecommended).toBeLessThan(3);
+    const p = computePriority(s2, res2, { crewAvailable: 35 });
+    const ldr = p.allocations.find(a => a.circuitId === 'c-ldr1')!;
+    expect(ldr.allocatedTrucks).toBe(2);
+    expect(ldr.bcmDayLost).toBeCloseTo(0, 6);
+    expect(p.tasks.find(t => t.ruleId === 'R7_BULK_PUSH')!.allocated).toBe(6);
+    expect(p.narrative.some(l => /trimmed 3 → 2 trucks: the extra truck only queued/.test(l))).toBe(true);
+  });
+
   it('trucks are allocated in priority order', () => {
     const { s, res } = plan();
     const p = computePriority(s, res, { crewAvailable: 99, trucksAvailable: 10 });

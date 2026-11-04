@@ -5,7 +5,6 @@
 import { describe, expect, it } from 'vitest';
 import type { CrewRule } from '@/core/types';
 import { defaultCrewRules } from '@/data';
-import { workbookRules } from '@/features/manning/rules';
 import type { CrewRuleExt } from '../types';
 import { fixture } from '../testing';
 import { evaluateCrew, type CrewCircuit } from './evaluate';
@@ -81,8 +80,9 @@ describe('workbook crew scenarios (Targets rows 47, 65–116)', () => {
     expect(r0.ruleCounts.R8_PUSH_ASSIST ?? 0).toBe(0);
   });
 
-  it("agrees with the manning feature's rendering of the rule set (R7 as a fixed 6)", () => {
-    const r = evalScenario(TC.rule_set.test_scenarios[0], workbookRules());
+  it('a plain-count rendering of R7 (fixed 6, no expr / whenExpr) gives the same linked-plan total', () => {
+    const plain = defaultCrewRules().map(r => { const { expr, whenExpr, params, ...rest } = r as CrewRuleExt; void expr; void whenExpr; void params; return rest as CrewRule; });
+    const r = evalScenario(TC.rule_set.test_scenarios[0], plain);
     expect(r.total).toBe(36);
   });
 });

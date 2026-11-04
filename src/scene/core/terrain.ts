@@ -48,6 +48,7 @@ export class TerrainLayer {
   private contact: THREE.Mesh;
   private shadowCatcher: THREE.Mesh;
   private skirt: THREE.Mesh | null = null;
+  private apron: THREE.Mesh | null = null;
   private rim: THREE.LineSegments | null = null;
   private aoTex: THREE.DataTexture;
   private contactTex: THREE.Texture | null = null;
@@ -244,7 +245,7 @@ float hk_tanS; float hk_rl; float hk_fw; vec2 hk_pw; float hk_bh;`);
   }`, 'before');
       sh.fragmentShader = f;
     };
-    m.customProgramCacheKey = () => 'hk-terrain-v2';
+    m.customProgramCacheKey = () => 'hk-terrain-v3';
     return m;
   }
 
@@ -308,6 +309,7 @@ ${NOISE_GLSL}`);
     this.meshes = [];
     if (this.skirt) { this.skirt.geometry.dispose(); this.ve.remove(this.skirt); this.skirt = null; }
     if (this.rim) { this.rim.geometry.dispose(); this.ve.remove(this.rim); this.rim = null; }
+    if (this.apron) { this.apron.geometry.dispose(); this.ve.remove(this.apron); this.apron = null; }
     this.contactTex?.dispose(); this.contactTex = null;
     this.grid = null;
     this.triangles = 0;
@@ -358,6 +360,7 @@ ${NOISE_GLSL}`);
     this.datumY = this.min.y - Math.max(10, 0.14 * relief);
     if (grid) this.bakeAO(grid);
     this.buildSkirt(locals);
+    this.buildApron();
     this.buildBackdrop();
     this.hasData = true;
   }
@@ -435,6 +438,70 @@ ${NOISE_GLSL}`);
     this.ve.add(this.rim);
   }
 
+  /**
+   * Driving apron: rings around the survey rectangle that continue the edge heights outwards and ease to the mean
+   * edge level out to the horizon (terrain material, so POV/chase see continuous ground instead of the model's edge).
+   */
+  private buildApron() {
+    const g = this.grid;
+    if (!g) return;
+    const x0 = g.ox, x1 = g.ox + (g.nx - 1) * g.dx, y0 = g.oy, y1 = g.oy + (g.ny - 1) * g.dx;
+    const mean = this.edgeMeanY;
+    const per = 2 * (x1 - x0 + y1 - y0);
+    const step = Math.max(g.dx * 2, per / 1600);
+    const nW = Math.max(2, Math.round((x1 - x0) / step)), nH = Math.max(2, Math.round((y1 - y0) / step));
+    // perimeter parameter → point on a rectangle expanded by `o`, CCW from the SW corner, with its outward dir
+    const ring: { u: number; side: number }[] = [];
+    for (let i = 0; i < nW; i++) ring.push({ u: i / nW, side: 0 });
+    for (let i = 0; i < nH; i++) ring.push({ u: i / nH, side: 1 });
+    for (let i = 0; i < nW; i++) ring.push({ u: i / nW, side: 2 });
+    for (let i = 0; i < nH; i++) ring.push({ u: i / nH, side: 3 });
+    const at = (r: { u: number; side: number }, o: number): [number, number] => {
+      const X0 = x0 - o, X1 = x1 + o, Y0 = y0 - o, Y1 = y1 + o;
+      switch (r.side) {
+        case 0: return [X0 + (X1 - X0) * r.u, Y0];
+        case 1: return [X1, Y0 + (Y1 - Y0) * r.u];
+        case 2: return [X1 - (X1 - X0) * r.u, Y1];
+        default: return [X0, Y1 - (Y1 - Y0) * r.u];
+      }
+    };
+    const inset = g.dx * 0.02;
+    const edgeH = ring.map(r => {
+      const [x, y] = at(r, -inset);
+      const h = g.at(Math.min(x1, Math.max(x0, x)), Math.min(y1, Math.max(y0, y)));
+      return h === h ? h : mean;
+    });
+    const offs = [0, 40, 160, 600, 2000, 9000];
+    const blend = [0, 0.2, 0.55, 0.85, 1, 1];
+    const drop = [0, 0, 0.3, 1.2, 3, 8];
+    const pos: number[] = [];
+    for (let k = 0; k < offs.length; k++) {
+      for (let i = 0; i < ring.length; i++) {
+        const [x, y] = at(ring[i], offs[k]);
+        const h = edgeH[i] + (mean - edgeH[i]) * blend[k] - drop[k];
+        pos.push(x, k === 0 ? edgeH[i] : h, -y);
+      }
+    }
+    const n = ring.length, idx: number[] = [];
+    for (let k = 0; k < offs.length - 1; k++) for (let i = 0; i < n; i++) {
+      const a = k * n + i, b = k * n + ((i + 1) % n), c = (k + 1) * n + ((i + 1) % n), d = (k + 1) * n + i;
+      idx.push(a, d, c, a, c, b);
+    }
+    const P = new Float32Array(pos), I = new Uint32Array(idx);
+    if (windsDown(P, I)) for (let k = 0; k < I.length; k += 3) { const t = I[k + 1]; I[k + 1] = I[k + 2]; I[k + 2] = t; }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(P, 3));
+    geo.setAttribute('normal', new THREE.BufferAttribute(smoothNormals(P, I, true), 3));
+    geo.setIndex(new THREE.BufferAttribute(I, 1));
+    geo.computeBoundingSphere();
+    const m = new THREE.Mesh(geo, this.terrainMat);
+    m.name = 'terrain-apron';
+    m.receiveShadow = true;
+    m.visible = this.driving;
+    this.apron = m;
+    this.ve.add(m);
+  }
+
   private buildBackdrop() {
     const cx = (this.min.x + this.max.x) / 2, cz = (this.min.z + this.max.z) / 2;
     const w = this.max.x - this.min.x, d = this.max.z - this.min.z, diag = Math.hypot(w, d);
@@ -491,7 +558,10 @@ ${NOISE_GLSL}`);
     this.driving = on;
     if (this.skirt) this.skirt.visible = !on;
     if (this.rim) this.rim.visible = !on;
+    if (this.apron) this.apron.visible = on && this.meshes.some(m => m.visible);
     this.contact.visible = !on && this.hasData;
+    this.ground.visible = this.hasData && !(on && this.apron);
+    this.shadowCatcher.visible = this.hasData && !on;
     this.groundMat.color.copy(on ? pal.c.driveGround : pal.c.backdrop);
     this.placeGround();
   }

@@ -78,17 +78,20 @@ export function PriorityView() {
 
   return (
     <div className={page.page}>
-      <div className={page.head}>
-        <div className={page.sub} style={{ maxWidth: 720 }}>
-          Drag to re-prioritise circuits and site tasks. Crew and trucks run out at the bottom of the list first - the impact on the last
-          priority shows before long or short-haul options are considered.
+      <header className={page.head}>
+        <div className={page.headTitle}>
+          <span className={page.headIco}><Icon name="priority" size={22} /></span>
+          <div>
+            <h1 className={page.h1}>Fleet &amp; task priority</h1>
+            <div className={page.sub}>Drag to re-prioritise circuits and site tasks. Crew and trucks run out at the bottom of the list first - see the impact on the last priority before long or short-haul options.</div>
+          </div>
         </div>
         <span className={page.headGap} />
         <div className={page.headActions}>
           <Button icon="crew" onClick={() => setView('manning')}>Manning</Button>
           <Button variant="primary" icon="tick" disabled={!changed} onClick={apply} title={changed ? 'Set each circuit’s trucks to the allocated number' : 'Allocation equals the request'}>Apply allocation</Button>
         </div>
-      </div>
+      </header>
 
       <Card>
         <div className={css.controls}>
@@ -126,7 +129,7 @@ export function PriorityView() {
           </div>
           <div className={css.ctlCell}>
             <Kpi label="Lost bcm / day" value={<span className={lost > 0.5 ? css.bad : undefined}>{lost > 0.5 ? `−${kb(lost)}` : '0'}</span>}
-              delta={`${reduced} reduced · ${parked} parked`} deltaTone={lost > 0.5 ? 'bad' : 'na'} />
+              delta={reduced + parked ? `${reduced ? `${reduced} reduced` : ''}${reduced && parked ? ' · ' : ''}${parked ? `${parked} parked` : ''}` : 'nothing cut'} deltaTone={lost > 0.5 ? 'bad' : 'na'} />
           </div>
         </div>
       </Card>

@@ -4,6 +4,7 @@
  */
 import type { CrewRole, CrewRule, CrewRuleCondition, LoaderType, Material, RuleScope } from '@/core/types';
 import type { CrewRuleExt } from '@/engine';
+import { defaultCrewRules } from '@/data';
 import { ROLE_META, plural } from './roles';
 
 /** A crew rule with the engine's derived-rule extensions (expr / whenExpr / params / task priority). */
@@ -34,7 +35,11 @@ const ID_WORDS: Record<string, string> = {
 
 /** Render an engine expression in words: params → their values, totals.trucks → 'trucks operating', roles.pushDozer → 'push dozers'. */
 export function prettyExpr(src: string, rule: Pick<Rule, 'params'>, ctx?: RuleContext): string {
+  // operators first (identifiers never contain them), then identifiers → words
   return src
+    .replace(/\s*-\s*/g, ' − ').replace(/\s*\*\s*/g, ' × ').replace(/\s*>=\s*/g, ' ≥ ').replace(/\s*<=\s*/g, ' ≤ ')
+    .replace(/\s*&&\s*/g, ' and ').replace(/\s*\|\|\s*/g, ' or ').replace(/\s*!=\s*/g, ' ≠ ').replace(/\s*==\s*/g, ' = ')
+    .replace(/\(\s*− /g, '(−')
     .replace(/[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)+/g, id => {
       if (ID_WORDS[id]) return ID_WORDS[id];
       const [ns, key] = id.split('.', 2);
@@ -42,10 +47,7 @@ export function prettyExpr(src: string, rule: Pick<Rule, 'params'>, ctx?: RuleCo
       if (ns === 'roles') return ROLE_META[key as CrewRole]?.short.toLowerCase() ?? key;
       if (ns === 'rules') return ctx?.rules?.find(r => r.id === key)?.name.toLowerCase() ?? key;
       return id;
-    })
-    .replace(/\s*-\s*/g, ' − ').replace(/\s*\*\s*/g, ' × ').replace(/\s*>=\s*/g, ' ≥ ').replace(/\s*<=\s*/g, ' ≤ ')
-    .replace(/\s*&&\s*/g, ' and ').replace(/\s*\|\|\s*/g, ' or ').replace(/\s*!=\s*/g, ' ≠ ').replace(/\s*==\s*/g, ' = ')
-    .replace(/\(\s*− /g, '(−');
+    });
 }
 
 export interface RuleSentence {
@@ -134,40 +136,13 @@ export function describeRule(rule: CrewRule, ctx?: RuleContext): RuleSentence {
 // ─────────────────────────────────────────────────────────────── the workbook's rule set
 
 /**
- * The workbook manning rules (spec 01 §9.5, R1-R10) as CrewRules. Totals for the linked plan (EX09 5, EX04 4,
- * LDR1 3 trucks, 1 enabling dozer) = 36, matching Targets!D88.
- * R7 (bulk push = 7 − enabling − max(0, trucks − 12)) uses the engine's derived-rule `expr` (CrewRuleExt) and is a
- * prioritised site task (Targets DZR priority 4) the priority planner can shed; R8 is gated by `whenExpr`.
+ * The workbook manning rules (spec 01 §9.5, R1-R10): the data module's defaults, so "Reset to workbook rules"
+ * restores exactly what a new scenario starts with. Totals for the linked plan (EX09 5, EX04 4, LDR1 3 trucks,
+ * 1 enabling dozer) = 36, matching Targets!D88. R7 (bulk push = 7 − enabling − max(0, trucks − 12)) uses the
+ * engine's derived-rule `expr` and is a prioritised site task (DZR priority 4); R8 is gated by `whenExpr`.
  */
 export function workbookRules(): Rule[] {
-  const T = 'Targets & Haulage Priorities';
-  return [
-    { id: 'R1_TRUCK_OPERATORS', name: 'Truck operators', enabled: true, scope: 'per-truck', role: 'truck', count: 1, perUnits: 1,
-      note: 'Every truck allocated to a circuit needs one truck operator.', sheetRef: `${T}!D68 =$E$6` },
-    { id: 'R2_EX_OPERATOR', name: 'Excavator operator', enabled: true, scope: 'per-circuit', when: { loaderTypes: ['excavator', 'shovel'], minTrucks: 1 },
-      role: 'excavator', count: 1, note: 'Prime-mover excavator operator for a trucked EX circuit.', sheetRef: `${T}!E68 =IF(D68>0,1,0)` },
-    { id: 'R3_EX_DOZERS', name: 'EX floor & dump dozers', enabled: true, scope: 'per-circuit', when: { loaderTypes: ['excavator', 'shovel'], minTrucks: 1 },
-      role: 'dumpDozer', count: 2, note: '1 floor / clean-up dozer at the face + 1 dump dozer at the tip head.', sheetRef: `${T}!E69 =IF(D68>0,2,0)` },
-    { id: 'R4_LOADER_OPERATOR', name: 'Loader operator', enabled: true, scope: 'per-circuit', when: { loaderTypes: ['loader'], minTrucks: 1 },
-      role: 'loader', count: 1, note: 'Coal loader (WA900) operator.', sheetRef: `${T}!E75 =IF(D75>0,1,0)` },
-    { id: 'R5_COAL_DOZER', name: 'Coal dozer', enabled: true, scope: 'per-circuit', when: { loaderTypes: ['loader'], minTrucks: 1 },
-      role: 'coalDozer', count: 1, note: 'A coal circuit always needs its coal dozer (push-up / clean-up for the loader).', sheetRef: `${T}!E76 =IF(D75>0,1,0)` },
-    { id: 'R6_SUPPORT_EX', name: 'Support excavator (EX03/EX08)', enabled: true, scope: 'per-circuit', when: { loaderUnitIds: ['LDR1'], minTrucks: 1 },
-      role: 'excavator', count: 1, note: 'A coal circuit needs its supporting EX. Workbook keys this to LDR 1 only.', sheetRef: `${T}!E79 =IF(D75>0,1,0)` },
-    { id: 'R7_BULK_PUSH', name: 'Bulk push dozers', enabled: true, scope: 'site', role: 'pushDozer', count: 6,
-      expr: 'params.pushFleet - params.enabling - max(0, totals.trucks - params.maxTrucks)', params: { pushFleet: 7, enabling: 1, maxTrucks: 12 },
-      priority: 4, bcmPerUnitDay: 18 * 320,
-      note: 'Push fleet less enabling dozers; every truck above 12 takes a push-dozer operator. Task priority 4 (DZR), 18 h × 320 bcm/h per dozer.',
-      sheetRef: `${T}!E47 =IF(E57>12,7-(E57-12)-E52,7-E52)` },
-    { id: 'R8_PUSH_ASSIST', name: 'EX06 dozer-push assist', enabled: true, scope: 'site', role: 'excavator', count: 1, whenExpr: 'roles.pushDozer > 0',
-      note: '“EX06 DZR Assist”: manned whenever bulk push dozers > 0.', sheetRef: `${T}!E82 =IF(E81>0,1,0)` },
-    { id: 'R9_ENABLING_DOZERS', name: 'Enabling-task dozer', enabled: true, scope: 'site', role: 'pushDozer', count: 1,
-      note: 'Dozer taken off push for enabling tasks (DR prep).', sheetRef: `${T}!E83 =$E$52` },
-    { id: 'R10_WATER_CARTS', name: 'Water carts', enabled: true, scope: 'site', role: 'waterCart', count: 2, note: 'Fixed daily manning.', sheetRef: `${T}!E85` },
-    { id: 'R10_GRADERS', name: 'Graders', enabled: true, scope: 'site', role: 'grader', count: 2, note: 'Fixed daily manning.', sheetRef: `${T}!E86` },
-    { id: 'R10_SUPERVISORS', name: 'Supervisors', enabled: true, scope: 'site', role: 'supervisor', count: 2, note: 'Supervisors/OCE row = 3 (2 supervisors + 1 OCE, AG15:AG16).', sheetRef: `${T}!E87` },
-    { id: 'R10_OCE', name: 'Open cut examiner', enabled: true, scope: 'site', role: 'oce', count: 1, note: 'Statutory: an OCE present whenever mining (CMSHR 2017 s.104).', sheetRef: `${T}!E87` },
-  ];
+  return defaultCrewRules() as Rule[];
 }
 
 /** A new blank rule for the editor. */

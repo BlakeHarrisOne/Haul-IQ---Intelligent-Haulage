@@ -2,7 +2,8 @@
  * Priority planner: allocate trucks and crew to circuits in priority order (1 first).
  *
  *   1. Trucks: each active circuit (priority order) gets min(requested, trucks left).
- *   2. Crew: while the crew rules need more people than the shift has, shed from the LOWEST priority item:
+ *   2. Crew: first release surplus trucks that add no production (over-trucked circuits, lowest priority first);
+ *      then, while the crew rules need more people than the shift has, shed from the LOWEST priority item:
  *      a prioritised site task (CrewRuleExt.priority, e.g. bulk push = Targets priority 4) loses one person, or a
  *      circuit loses one truck; a circuit at 0 trucks is parked (its loader operator and support roles go too).
  *   3. Back-fill: in priority order, re-add trucks / task people while the crew still fits (uses any slack a park freed).
@@ -109,11 +110,30 @@ export function computePriority(scenario: Scenario, results: Record<Id, CircuitR
     inputs: [{ label: 'Crew available', value: crewAvail, source: opts.crewAvailable != null ? 'Input' : shift ? `Shift crew · ${shift.name}` : 'Not limited' }],
   });
 
-  // 2. shed lowest priority first
+  // 2a. release surplus trucks that add no production (over-trucked circuits), lowest priority first
   const before = new Map(alloc);
-  const taskCount = (t: CrewRuleExt) => overrides[t.id] ?? taskFull[t.id] ?? 0;
+  const bcmAt = (c: Circuit, n: number) => optionAt(scenario, c, results[c.id] as CircuitResultExt | undefined, n).bcm;
+  const trimmed = new Map<Id, number>();
   let guard = 0;
-  while (ev.total > crewAvail && guard++ < 1000) {
+  for (const c of [...circuits].reverse()) {
+    while (ev.total > crewAvail && guard++ < 1000) {
+      const n = alloc.get(c.id) ?? 0;
+      if (n <= 1 || bcmAt(c, n - 1) < bcmAt(c, n) - 0.5) break;
+      alloc.set(c.id, n - 1);
+      trimmed.set(c.id, (trimmed.get(c.id) ?? 0) + 1);
+      ev = evalAt(alloc, overrides, crewAvail);
+    }
+  }
+  for (const [id, k] of trimmed) {
+    const c = circuits.find(x => x.id === id)!;
+    narrative.push(`${c.name} (P${c.priority}) trimmed ${before.get(id)} → ${alloc.get(id)} truck${alloc.get(id) === 1 ? '' : 's'}: the extra truck${k > 1 ? 's' : ''} only queued (no production lost).`);
+    log.add('priority', `priority.trim.${id}`, `${c.name}: surplus trucks released`, 'V(n − 1) = V(n) → release a truck', k, 'trucks', {
+      substituted: `${before.get(id)} → ${alloc.get(id)} at ${fmt(bcmAt(c, alloc.get(id) ?? 0), 0)} bcm/day`,
+    });
+  }
+  // 2b. shed lowest priority first
+  const taskCount = (t: CrewRuleExt) => overrides[t.id] ?? taskFull[t.id] ?? 0;
+  while (ev.total > crewAvail && guard++ < 2000) {
     const it = shedOrder.find(x => (x.kind === 'task' ? taskCount(x.rule) > 0 : (alloc.get(x.c.id) ?? 0) > 0));
     if (!it) break;
     if (it.kind === 'task') overrides[it.rule.id] = taskCount(it.rule) - 1;
@@ -177,7 +197,7 @@ export function computePriority(scenario: Scenario, results: Record<Id, CircuitR
       lostPtHrsShift: optAl.lostPt, alternatives,
     });
     const b4 = before.get(c.id) ?? 0;
-    if (status !== 'full') {
+    if (status !== 'full' && !(trimmed.has(c.id) && optReq.bcm - optAl.bcm < 0.5)) {
       const why = nAl < b4 || b4 === nReq ? 'crew' : 'trucks';
       const lostTxt = `−${fmtInt(optReq.bcm - optAl.bcm)} bcm/day${nAl > 0 ? `, loader hangs ${fmt(optAl.lostPt, 2)} h/shift` : ''}`;
       narrative.push(status === 'parked'

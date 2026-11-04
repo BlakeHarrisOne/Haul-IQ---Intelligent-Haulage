@@ -69,7 +69,7 @@ export function withPhysics(t: TruckModel): TruckX {
 
 export type Quality = 'oem' | 'oem_derived' | 'third_party' | 'estimated' | 'n/a' | 'unknown';
 export const QUALITY_LABEL: Record<Quality, string> = {
-  oem: 'OEM', oem_derived: 'OEM-derived', third_party: '3rd party', estimated: 'Estimated', 'n/a': 'n/a', unknown: 'unverified',
+  oem: 'OEM', oem_derived: 'OEM-derived', third_party: '3rd party', estimated: 'Estimated', 'n/a': 'n/a', unknown: 'not recorded',
 };
 export const qualityTone = (q: Quality): 'ok' | 'info' | 'warn' | 'na' => (q === 'oem' ? 'ok' : q === 'oem_derived' ? 'info' : q === 'estimated' || q === 'third_party' ? 'warn' : 'na');
 
@@ -101,11 +101,18 @@ export function specRows(t: TruckX): SpecRow[] {
     { label: 'Retarder', value: `${f(t.retarderPowerKW ?? o?.retarder.continuous_power_kW, 0, 'kW continuous')} · ${descent(t)}`, quality: qualityOf(t, 'retarder', 'retarder'), note: o?.retarder.power_source },
     { label: 'Body (heaped)', value: f(t.bodyHeapedM3 ?? o?.body?.default_heaped_m3, 1, 'm³'), quality: qualityOf(t, 'body', 'bodyHeapedM3') },
     { label: 'Tyre', value: t.dims.tyre ?? o?.tyre ?? '—', quality: qualityOf(t, 'tyre', 'tyre') },
-    { label: 'Dimensions L × W × H', value: `${f(t.dims.length, 1)} × ${f(t.dims.width, 1)} × ${f(t.dims.height, 1)} m`, quality: t.estimated?.includes('dims') ? 'estimated' : qualityOf(t, 'dims', 'dims') },
-    { label: 'Operator eye height', value: f(t.dims.eyeHeight, 1, 'm'), quality: t.estimated?.includes('dims') || t.estimated?.includes('eyeHeight') ? 'estimated' : 'unknown' },
+    { label: 'Dimensions L × W × H', value: `${f(t.dims.length, 1)} × ${f(t.dims.width, 1)} × ${f(t.dims.height, 1)} m`, quality: dimsQuality(t, 'dims'), note: srcNote(t, /dimension/i) },
+    { label: 'Operator eye height', value: f(t.dims.eyeHeight, 1, 'm'), quality: dimsQuality(t, 'dims.eyeHeight'), note: t.dims.eyeBack != null ? `${f(t.dims.eyeBack, 2)} m behind front · ${f(Math.abs(t.dims.eyeRight ?? 0), 2)} m ${(t.dims.eyeRight ?? 0) < 0 ? 'left' : 'right'} of centre` : undefined },
     { label: 'Turning circle', value: f(o?.turning?.clearance_circle_diameter_m, 1, 'm'), quality: qualityOf(t, 'turning') },
   ];
 }
+
+function dimsQuality(t: TruckX, field: string): Quality {
+  if (t.estimated?.some(e => e === 'dims' || e === field)) return 'estimated';
+  if (t.dataQuality?.dims) return qualityOf(t, 'dims');
+  return t.sources?.some(x => /dimension/i.test(x.title)) ? 'third_party' : 'unknown';
+}
+const srcNote = (t: TruckModel, re: RegExp) => t.sources?.find(x => re.test(x.title))?.title.replace(/^.*? · /, '');
 
 function descent(t: TruckX) {
   const r = t.descentRule ?? oemFor(t)?.retarder.descent_speed_rule_default;
@@ -113,8 +120,14 @@ function descent(t: TruckX) {
 }
 
 export function sourcesOf(t: TruckModel): { field: string; url?: string; title: string }[] {
+  if (t.sources?.length) {
+    return t.sources.map(x => {
+      const parts = x.title.split(' · ');
+      if (x.url) return { field: parts.length > 1 ? parts[parts.length - 1] : 'source', url: x.url, title: hostOf(x.url) };
+      return { field: 'reference', title: x.title.startsWith(t.name) ? x.title.slice(t.name.length).trim() : x.title };
+    });
+  }
   const o = oemFor(t);
-  const list = o?.sources?.length ? o.sources.map(s => ({ field: s.field, url: s.url, title: hostOf(s.url) })) : t.sources.map(s => ({ field: s.title, url: s.url, title: s.url ? hostOf(s.url) : s.title }));
-  return list;
+  return (o?.sources ?? []).map(x => ({ field: x.field, url: x.url, title: hostOf(x.url) }));
 }
 function hostOf(u: string) { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } }

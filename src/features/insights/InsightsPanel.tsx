@@ -158,7 +158,7 @@ export function InsightsPanel() {
             return (
               <div key={t.rule.id} className={css.optRow} title={`Site task (P${t.rule.priority}) - people`}>
                 <Dot color="var(--c7)" />
-                <span className={css.optName}>P{t.rule.priority} {t.rule.name} <span style={{ color: 'var(--ink-3)' }}>ppl</span></span>
+                <span className={css.optName}>P{t.rule.priority} {t.rule.name} <span style={{ color: 'var(--ink-3)' }}>· people</span></span>
                 <span className={css.optNum}>{t.current} → <b style={{ color: d > 0 ? 'var(--ok-ink)' : d < 0 ? 'var(--bad-ink)' : undefined }}>{t.proposed}</b></span>
                 <span className={css.optNum} style={{ color: db > 0.5 ? 'var(--ok-ink)' : db < -0.5 ? 'var(--bad-ink)' : 'var(--ink-3)' }}>{Math.abs(db) < 0.5 ? '–' : `${db > 0 ? '+' : '−'}${kb(Math.abs(db))}`}</span>
               </div>

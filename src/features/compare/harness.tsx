@@ -52,7 +52,7 @@ function Harness() {
         </Chrome>
       </div>
       <div style={{ flex: 1, overflow: 'auto' }} id="sheet">
-        <div style={{ maxWidth: 1480, margin: '0 auto' }}>
+        <div style={{ maxWidth: 1480, margin: '0 auto', padding: '10px 24px 64px' }}>
           {ready && (view === 'assumptions' ? <AssumptionsView /> : view === 'curves' ? <CurvesView /> : <CompareView />)}
         </div>
       </div>

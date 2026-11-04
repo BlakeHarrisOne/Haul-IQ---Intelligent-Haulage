@@ -65,7 +65,7 @@ export function Shifts({ scenario }: { scenario: Scenario }) {
                 <TextField bare value={sh.name} onChange={v => patch(sh.id, { name: v }, 'Rename shift crew')} />
                 <NumberField value={sh.available} onChange={v => patch(sh.id, { available: Math.max(0, Math.round(v)) }, `${sh.name}: available`)} dp={0} step={1} min={0} unit="ops" small title="Operators available on this crew" />
                 <span style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                  {surplus >= 0 ? <Badge tone="ok" icon="tick">+{surplus} spare</Badge> : <Badge tone="bad" icon="warning">{surplus} short</Badge>}
+                  {surplus >= 0 ? <Badge tone="ok" icon="tick">+{surplus} spare</Badge> : <Badge tone="bad" icon="warning">{-surplus} short</Badge>}
                 </span>
                 <span style={{ display: 'flex' }}>
                   <Ctl small icon="sliders" on={open === sh.id} tip="Role caps (tickets)" onClick={() => setOpen(open === sh.id ? null : sh.id)} />
