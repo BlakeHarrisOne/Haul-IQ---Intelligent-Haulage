@@ -546,6 +546,12 @@ export interface Scenario {
     rules: CrewRule[];
     shifts: ShiftCrew[];
     activeShiftId: Id;
+    /**
+     * People caps for prioritised site tasks (rule id → max people), written by "Apply allocation" on the Priority view
+     * when the plan stands part of a task down (e.g. bulk push 6 → 4). computeManning honours them, so the applied
+     * plan mans exactly what the planner reported. Absent = uncapped.
+     */
+    taskCaps?: Record<Id, number>;
   };
   shift: ShiftProfile;
   settings: ScenarioSettings;

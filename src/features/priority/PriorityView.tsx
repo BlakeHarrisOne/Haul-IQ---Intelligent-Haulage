@@ -42,7 +42,7 @@ export function PriorityView() {
   const requestedOf = (it: PItem) => (it.kind === 'circuit' ? it.circuit.trucks : taskOf(it.id)?.requested ?? 0);
   const last = [...items].reverse().find(it => requestedOf(it) > 0);
   const lost = plan.bcmDayPlanned - plan.bcmDayAchieved;
-  const changed = plan.allocations.some(x => x.allocatedTrucks !== x.requestedTrucks);
+  const changed = plan.allocations.some(x => x.allocatedTrucks !== x.requestedTrucks) || (plan.tasks ?? []).some(t => t.allocated < t.requested);
   const crewShort = plan.crewRequired - crewAvailable;
   const maxCrew = Math.max(60, plan.crewRequired + 10, crewAvailable + 5);
   const reduced = plan.allocations.filter(x => x.status === 'reduced').length + plan.tasks.filter(t => t.allocated < t.requested && t.allocated > 0).length;
@@ -65,7 +65,15 @@ export function PriorityView() {
   };
   const patch = (id: Id, p: Partial<Circuit>, label: string) => commit(label, st => ({ ...st, circuits: st.circuits.map(c => (c.id === id ? { ...c, ...p } : c)) }));
   const apply = () => {
-    commit('Apply priority allocation', st => ({ ...st, circuits: st.circuits.map(c => { const a = allocOf(c.id); return a ? { ...c, trucks: a.allocatedTrucks } : c; }) }));
+    // Apply the whole plan: trucks per circuit AND people caps for site tasks the plan stands down (e.g. push 6 → 4),
+    // so the Manning view mans exactly what the planner reported.
+    const taskCaps: Record<string, number> = {};
+    for (const t of plan.tasks ?? []) if (t.allocated < t.requested) taskCaps[t.ruleId] = t.allocated;
+    commit('Apply priority allocation', st => ({
+      ...st,
+      circuits: st.circuits.map(c => { const a = allocOf(c.id); return a ? { ...c, trucks: a.allocatedTrucks } : c; }),
+      crew: { ...st.crew, taskCaps: Object.keys(taskCaps).length ? taskCaps : undefined },
+    }));
     toast('ok', 'Allocated trucks applied to the circuits');
   };
   const dnd = (id: Id) => ({
@@ -89,7 +97,7 @@ export function PriorityView() {
         <span className={page.headGap} />
         <div className={page.headActions}>
           <Button icon="crew" onClick={() => setView('manning')}>Manning</Button>
-          <Button variant="primary" icon="tick" disabled={!changed} onClick={apply} title={changed ? 'Set each circuit’s trucks to the allocated number' : 'Allocation equals the request'}>Apply allocation</Button>
+          <Button variant="primary" icon="tick" disabled={!changed} onClick={apply} title={changed ? 'Set each circuit’s trucks to the allocated number and stand down the reduced site tasks' : 'Allocation equals the request'}>Apply allocation</Button>
         </div>
       </header>
 

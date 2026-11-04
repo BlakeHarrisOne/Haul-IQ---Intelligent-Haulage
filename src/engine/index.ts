@@ -57,6 +57,6 @@ export function computeManning(scenario: Scenario, results: Record<Id, CircuitRe
   const shift = scenario.crew.shifts.find(s => s.id === (shiftId ?? scenario.crew.activeShiftId));
   return evaluateCrew({
     circuits: crewCircuits(scenario), rules: scenario.crew.rules, trucksAvailable: scenario.fleet.trucksAvailable,
-    available: shift?.available ?? 0, shift,
+    available: shift?.available ?? 0, shift, caps: scenario.crew.taskCaps,
   });
 }

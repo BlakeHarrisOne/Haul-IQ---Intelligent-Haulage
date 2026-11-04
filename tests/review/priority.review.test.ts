@@ -39,15 +39,24 @@ describe('review: priority planner site-task accounting', () => {
     expect(push.allocated).toBe(ev.ruleCounts.R7_BULK_PUSH); // … but reports 3 (frozen at the 15-truck value)
   });
 
-  it('R-PRIO-2 applying the plan (allocated trucks, no task reported as reduced) must fit the crew it was planned for', () => {
+  // Integrator revision: the original line `expect(push.allocated).toBe(push.requested)` asserted the planner's old
+  // (buggy) report that push was NOT reduced. Keeping priority order at crew 30 requires standing 2 push dozers down
+  // (P4) rather than cutting EX04 (P2) to 3 trucks, so the planner now reports push 6 → 4. The defect this test guards
+  // - "the applied plan mans more crew than the planner reported" - is checked here end-to-end and more strictly:
+  // Apply writes allocated trucks AND task caps (PriorityView), and computeManning must then equal crewUsed.
+  it('R-PRIO-2 applying the plan (allocated trucks + task caps) mans exactly the crew it reported, within the crew available', () => {
     const { s, res } = site();
     const p = computePriority(s, res, { crewAvailable: 30 });
     expect(p.crewUsed).toBeLessThanOrEqual(30);
-    const push = p.tasks.find(t => t.ruleId === 'R7_BULK_PUSH')!;
-    expect(push.allocated).toBe(push.requested);             // planner says push is NOT reduced
-    // "Apply priority allocation" (PriorityView) writes allocatedTrucks back to the circuits
-    const applied = { ...s, circuits: s.circuits.map(c => ({ ...c, trucks: p.allocations.find(a => a.circuitId === c.id)!.allocatedTrucks })) };
+    const taskCaps: Record<string, number> = {};
+    for (const t of p.tasks ?? []) if (t.allocated < t.requested) taskCaps[t.ruleId] = t.allocated;
+    const applied = {
+      ...s,
+      circuits: s.circuits.map(c => ({ ...c, trucks: p.allocations.find(a => a.circuitId === c.id)!.allocatedTrucks })),
+      crew: { ...s.crew, taskCaps },
+    };
     const m = computeManning(applied, computeAllCircuits(applied));
-    expect(m.total).toBeLessThanOrEqual(30);                 // actual: 32 (R7 back to 6 at 11 trucks)
+    expect(m.total).toBeLessThanOrEqual(30);
+    expect(m.total).toBe(p.crewUsed);
   });
 });

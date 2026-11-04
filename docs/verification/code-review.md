@@ -310,3 +310,13 @@ and an icosphere:
   up to about 0.6 m. This behaviour is documented.
 - A segment speed override above the circuit's global limit is ignored. This is documented as a "global cap", but the
   haulage point table displays the override.
+
+### Integrator resolution — R-PRIO-2 (applied plan vs reported crew)
+
+The engine fix made the planner report rule-driven site tasks honestly (at crew 30 it keeps priority order by standing
+two P4 bulk-push dozers down, "push 6 → 4", instead of cutting P2 EX04 to 3 trucks). The remaining gap was that
+**Apply allocation** wrote only truck counts, so the Manning view still manned 6 push dozers (32 crew). Fix:
+`Scenario.crew.taskCaps` (rule id → max people) is written by Apply together with the allocated trucks, and
+`computeManning` honours it. The review test's outdated precondition (`push.allocated === push.requested`, the old
+buggy report) was replaced by the stricter end-to-end invariant: after applying trucks + caps, `computeManning(...).total`
+equals the planner's `crewUsed` and is ≤ the crew available. **Status: fixed, test passes.**
