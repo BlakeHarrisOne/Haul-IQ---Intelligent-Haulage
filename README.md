@@ -13,7 +13,7 @@ physics, queuing, crew rules and scenario comparison.
 
 | View | What it does |
 |---|---|
-| **Site** | 3D pit with hill-shaded terrain, contours, grade-coloured haul strings, translucent dig/dump solids that deplete / fill with the shift slider, animated trucks, loaders and dozers. Tools: select, draw string, edit points, auto-route (least-cost path under a max grade), cross-section A–B, measure. Cameras: orbit, plan, driver POV (3D cab + HUD), chase. Right inspector: circuits, the **# trucks chooser** (the spreadsheet's row-28 buttons, generalised: production vs target, lost PT, queue, match factor, deliberate over/under-trucking), point-table editor, solid stats. Bottom: shift timeline with prestart / crib / fuel / changeover, long-section profile and section panels. |
+| **Site** | 3D pit with hill-shaded terrain, labelled contours, true-width haul roads (grade-coloured on the map; gravel carriageway with windrows and guide posts in the cab view), dig blocks that carve away and dump lifts that build up as the shift plays (horizon: this shift, a week, or time-lapse to completion), animated trucks, loaders and dozers, sky and lighting driven by the shift clock. Tools: select, draw string, edit points, auto-route (least-cost path under a max grade), cross-section A–B, measure. Cameras: orbit, plan, driver POV (3D cab + HUD), chase. Right inspector: circuits, the **# trucks chooser** (the spreadsheet's row-28 buttons, generalised: production vs target, lost PT, queue, match factor, deliberate over/under-trucking), point-table editor, solid stats. Bottom: shift timeline with 15-minute production bars and a running bcm total, prestart / crib / fuel / changeover events; long-section profile (steepest 100 m vs the 10 % limit, verdict first) and a true-scale A–B section with the truck drawn to scale and a road-width check. |
 | **Assumptions** | The calculation ledger: every step as a formula, the substituted numbers, the result and the **equivalent workbook cell** (e.g. `ActiveRoute!C16`); the Travel Time table reborn; editable loader, truck-load, material, speed-table and shift assumptions; spreadsheet vs rimpull comparison. |
 | **Truck curves** | Rimpull per gear, envelope and retarder curves with resistance lines and each segment's operating point; speed-vs-grade (workbook table vs physics); spec sheets with per-field provenance (OEM / third party / estimated). |
 | **Compare** | Every circuit side by side (haul, cycle, trucks assigned / needed, truck and loader PT h/day vs the 18 h minimum, lost PT, queue, bcm/day), what-if truck steppers, and scenario-vs-scenario deltas. |
@@ -45,7 +45,9 @@ double-click. `npm run build` produces a regular multi-file build in `dist/`.
 npm test
 ```
 
-runs the test suite (engine parity with the workbook, physics sanity, geometry, I/O, planners, UI helpers).
+runs the unit and verification suite (engine parity with the workbook, physics sanity, geometry, I/O, planners, UI
+helpers). With the dev server running, `node tests/e2e/run.cjs` drives the real app through the main workflows in a
+headless browser.
 
 ## Data in and out
 
@@ -71,7 +73,7 @@ Two speed models per circuit:
 Every number in the UI traces to a calculation step with its formula and inputs. Specs and verification:
 [`docs/spec/01-spreadsheet-calcs.md`](docs/spec/01-spreadsheet-calcs.md) (workbook reverse-engineered, 3,872 / 3,872
 values reproduced), [`docs/spec/04-market-and-methods.md`](docs/spec/04-market-and-methods.md) (methods, HaulSim /
-Spry feature map), [`docs/verification/`](docs/verification/) (independent audits).
+Spry feature map), [`docs/verification/`](docs/verification/) (independent calculation audit, code review, design QA and end-to-end results — every defect found was reproduced by a test before it was fixed).
 
 > **Truck curves are estimates.** Gear speeds and the CAT 789C stall rimpull are OEM figures; the remaining rimpull /
 > retarder points are modelled from engine power and drivetrain efficiency and sanity-checked against published climb
