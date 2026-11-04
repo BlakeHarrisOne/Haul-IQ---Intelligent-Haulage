@@ -307,7 +307,7 @@ export const actorsModule: SceneModule = (ctx: SceneContext) => {
     // playback: the only place tMin advances while playing
     if (s.timeline.playing) {
       const end = s.scenario.shift.lengthH * 60;
-      let t = s.timeline.tMin + s.timeline.speed * Math.min(0.1, Math.max(0, dt));
+      let t = s.timeline.tMin + s.timeline.speed * Math.min(0.25, Math.max(0, dt));
       if (t >= end) { t = end; s.setTimeline({ tMin: t, playing: false }); } else s.setTimeline({ tMin: t });
     }
     const f = ctx.frame();
@@ -512,7 +512,6 @@ export const actorsModule: SceneModule = (ctx: SceneContext) => {
     lastFollow = info;
     followKey = `${c.circuit.id}:${k}`;
     const front = worldToScene(f, pose.fe, pose.fn, pose.fz);
-    const d = c.model.dims;
     // the eye of the seated driver in the model (pitched with the truck); the core rides FollowTarget with an unpitched
     // offset, so the reported position is shifted to make position + offset land exactly on that eye (matters on ramps)
     const back = g.frontAxleX - g.eye[0], height = g.eye[1], right = g.eye[2];

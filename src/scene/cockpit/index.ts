@@ -25,7 +25,7 @@ export const cockpitModule: SceneModule = (ctx: SceneContext) => {
   const st = () => useApp.getState();
   const root = document.createElement('div');
   root.className = css.root;
-  ctx.labelLayer.appendChild(root);
+  (ctx.hudLayer ?? ctx.labelLayer).appendChild(root); // hints / HUD stay visible when labels are off
   const hud = document.createElement('div');
   hud.className = css.hud;
   hud.style.display = 'none';

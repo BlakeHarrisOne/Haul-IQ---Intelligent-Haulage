@@ -36,7 +36,10 @@ export interface FollowTarget {
   heading: number;
   /** Pitch of the vehicle, radians (positive nose-up). */
   pitch: number;
-  /** Driver eye offset in vehicle frame (m): height above ground, back from front, right of centreline. */
+  /**
+   * Driver eye offset in the vehicle frame, metres: `height` above the ground, `back` = distance BEHIND `position`
+   * (the front-axle ground point) along the heading, `right` = to the right of the centreline (negative = left-hand cab).
+   */
   eye: { height: number; back: number; right: number };
   speedKmh: number;
   loaded: boolean;
@@ -54,8 +57,13 @@ export interface SceneContext {
   canvas: HTMLCanvasElement;
   /** A transparent 2D canvas over the WebGL canvas (same CSS size; devicePixelRatio-scaled) for overlays. */
   overlay: HTMLCanvasElement;
-  /** A DOM layer over the canvas for HTML labels (pointer-events: none; children may opt in). */
+  /** A DOM layer over the canvas for HTML labels (pointer-events: none; children may opt in). Hidden by the Labels toggle. */
   labelLayer: HTMLDivElement;
+  /**
+   * A DOM layer above the labels for tool hints and the POV HUD - never hidden by the Labels toggle.
+   * Optional until every core implements it: modules fall back to `labelLayer`.
+   */
+  hudLayer?: HTMLDivElement;
   frame(): Frame;
   /** Named groups the modules add their objects to. */
   layers: Record<'terrain' | 'solids' | 'strings' | 'actors' | 'tools' | 'labels' | 'fx', THREE.Group>;
