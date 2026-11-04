@@ -17,56 +17,66 @@
 .playing:hover { background: var(--ink-2); }
 :global(:root[data-theme="dark"]) .playing { background: var(--surface-3); box-shadow: inset 0 0 0 1px var(--hair); }
 
-.clock { display: flex; flex-direction: column; justify-content: center; min-width: 148px; padding: 0 10px 0 8px; line-height: 1; }
-.time { font: 700 20px/24px var(--font); font-variant-numeric: tabular-nums; letter-spacing: -.01em; color: var(--ink); }
+.clock { display: flex; flex-direction: column; justify-content: center; min-width: 148px; max-width: 260px; padding: 0 10px 0 8px; line-height: 1; flex: 0 1 auto; }
+.time { font: 700 20px/24px var(--font); font-variant-numeric: tabular-nums; letter-spacing: -.01em; color: var(--ink); white-space: nowrap; }
 .time small { font-size: 12px; font-weight: 600; color: var(--ink-3); margin-left: 6px; letter-spacing: 0; }
-.sub { display: flex; align-items: center; gap: 5px; font: 500 11.5px/14px var(--font); color: var(--ink-3); white-space: nowrap; }
-.subEvent { color: var(--warn-ink); font-weight: 600; }
+.sub { display: flex; align-items: center; gap: 5px; min-width: 0; font: 500 11.5px/14px var(--font); color: var(--ink-3); white-space: nowrap; }
+.sub svg { flex: none; }
+.subText { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
-.speed { font-variant-numeric: tabular-nums; min-width: 72px; }
+.speed { font-variant-numeric: tabular-nums; min-width: 68px; }
+.horizon { padding: 0 8px 0 9px; gap: 6px; font-size: 13px; }
+.caret { color: var(--ink-3) !important; margin-left: -2px; }
 
-.pt { display: flex; align-items: center; gap: 8px; padding: 0 10px 0 6px; white-space: nowrap; }
+.pt { display: flex; align-items: center; gap: 8px; padding: 0 8px 0 6px; white-space: nowrap; flex: none; }
 .ptVal { font: 700 14px/18px var(--font); font-variant-numeric: tabular-nums; }
 .ptLab { font: 500 11.5px/14px var(--font); color: var(--ink-3); }
 
-.chips { flex: 1; min-width: 0; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px; mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent); }
-.chips::-webkit-scrollbar { display: none; }
+/* circuit chips: "EX09 7.1k / 15.7k bcm" → "EX09 7.1k" → colour dots + "+N" (Timeline.tsx CircuitChips) */
+.chips { flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 6px; overflow: hidden; padding: 2px; }
+.chipsDots { gap: 4px; }
 .chip {
-  position: relative; flex: none; display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 10px 0 9px;
+  position: relative; flex: none; display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 10px 0 9px;
   border: 1px solid var(--hair); border-radius: 9px; background: var(--surface); cursor: pointer; overflow: hidden;
   font: 500 12.5px/16px var(--font); color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap;
   transition: background-color var(--t-fast), border-color var(--t-fast);
 }
-.chip:hover { background: var(--hover); }
-.chipOn { border-color: var(--accent); background: var(--accent-50); }
+.chipIds { gap: 6px; padding: 0 8px 0 7px; }
+.chip:hover, .dotChip:hover, .more:hover { background: var(--hover); }
+.chipOn { border-color: var(--accent) !important; background: var(--accent-50) !important; }
 .chip b { color: var(--ink); font-weight: 650; }
-.metric { display: inline-flex; align-items: center; gap: 3px; color: var(--ink-2); font-weight: 600; }
-.metric svg { color: var(--ink-3); }
-.more { display: inline-flex; gap: 8px; max-width: 0; opacity: 0; overflow: hidden; margin-left: -8px; transition: max-width var(--t-med) var(--ease), opacity var(--t-med) var(--ease), margin var(--t-med) var(--ease); }
-.chip:hover .more, .chip:focus-visible .more, .chipOn .more { max-width: 140px; opacity: 1; margin-left: 0; }
-.chip i { font-style: normal; color: var(--ink-3); }
+.swatch { width: 8px; height: 8px; border-radius: 3px; flex: none; }
+.metric { display: inline-flex; align-items: baseline; color: var(--ink); font-weight: 650; }
+.metric i { font-style: normal; font-weight: 500; color: var(--ink-3); white-space: pre; }
 .chipBar { position: absolute; left: 0; bottom: 0; height: 2px; border-radius: 0 2px 2px 0; transition: width .3s linear; }
+.dotChip, .more {
+  flex: none; display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; padding: 0;
+  border: 1px solid var(--hair); border-radius: 8px; background: var(--surface); cursor: pointer;
+}
+.dotChip .swatch { width: 10px; height: 10px; }
+.more { width: 36px; font: 650 12px/1 var(--font); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.menuChip { display: inline-flex; align-items: center; gap: 8px; }
+.panelToggle { flex: none; }
 
 /* ── scrubber ──────────────────────────────────────────────────────────────── */
 .scrub { position: relative; margin: 0 4px 0 10px; touch-action: none; cursor: pointer; user-select: none; }
 .track { position: absolute; left: 0; right: 0; top: 3px; height: 20px; border-radius: 6px; background: var(--surface-3); box-shadow: inset 0 0 0 1px var(--hair-2); overflow: hidden; }
 .elapsed { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, var(--accent-50), var(--accent-100)); }
 .hourLine { position: absolute; top: 5px; bottom: 5px; width: 1px; background: var(--hair); }
-.ev {
-  position: absolute; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center; gap: 4px; overflow: hidden;
-  padding: 0 5px; font: 600 11px/1 var(--font); white-space: nowrap; border-left: 1px solid; border-right: 1px solid;
-}
-.ev span { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-.ev svg { flex: none; }
-.ev-prestart, .ev-changeover {
-  color: var(--ink-2); border-color: color-mix(in srgb, var(--ink-4) 50%, transparent);
-  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--ink-4) 22%, transparent) 0 4px, color-mix(in srgb, var(--ink-4) 10%, transparent) 4px 8px);
-}
-.ev-crib { color: var(--warn-ink); background: var(--warn-100); border-color: color-mix(in srgb, var(--warn) 45%, transparent); }
-.ev-fuel { color: var(--accent-ink); background: var(--accent-100); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
-.ev-blast { color: var(--bad-ink); background: var(--bad-100); border-color: color-mix(in srgb, var(--bad) 45%, transparent); }
-.ev-other { color: var(--ink-2); background: var(--na-50); border-color: var(--hair); }
+/* events: shared stoppage language (src/ui/events.ts) – neutral tints, hatched where the fleet stops, rust for blasting */
+.ev { position: absolute; top: 0; bottom: 0; border-left: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-right: 1px solid color-mix(in srgb, currentColor 30%, transparent); }
 .evActive { box-shadow: inset 0 0 0 1.5px currentColor; }
+.evLabel {
+  position: absolute; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center; gap: 4px; overflow: hidden;
+  padding: 0 4px; font: 650 11px/1 var(--font); white-space: nowrap;
+}
+.evLabel span { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.evLabel svg { flex: none; }
+/* 15-minute production bars: played opaque, still to come at 38 % */
+.bars { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.bars path { fill: var(--ink-2); }
+.barFuture { opacity: calc(.56 * .38); }
+.barPlayed { opacity: .56; }
 
 .ticks { position: absolute; left: 0; right: 0; top: 25px; height: 12px; }
 .tick { position: absolute; top: 0; translate: -50% 0; font: 500 10.5px/12px var(--font); color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -80,6 +90,16 @@
   background: var(--surface); box-shadow: 0 0 0 2px var(--accent), var(--shadow-sm);
 }
 .ghost { position: absolute; top: 3px; height: 20px; width: 1px; background: var(--ink-3); opacity: .5; pointer-events: none; }
+.tickHidden { opacity: 0; }
+.tick { transition: opacity var(--t-fast); }
+/* head flag "10:30 · 12,400 bcm so far": rides under the head, clamped inside the bar */
+.headFlag {
+  position: absolute; top: 24px; height: 15px; display: flex; align-items: center; gap: 4px; padding: 0 6px; border-radius: 5px; pointer-events: none;
+  font: 500 10.5px/1 var(--font); color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap;
+  background: var(--surface); box-shadow: inset 0 0 0 1px var(--hair);
+}
+.headFlag b { font-weight: 700; color: var(--accent-ink); }
+.headFlagLive { box-shadow: inset 0 0 0 1px var(--accent); }
 .flag {
   position: absolute; bottom: calc(100% + 6px); translate: -50% 0; padding: 4px 8px; border-radius: 7px; pointer-events: none;
   background: #1F2329; color: #fff; font: 600 12px/16px var(--font); font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: var(--shadow);
@@ -87,6 +107,5 @@
 .flag span { color: rgba(255, 255, 255, .7); font-weight: 500; margin-left: 6px; }
 
 @media (max-width: 1440px) {
-  .ptLab { display: none; }
-  .clock { min-width: 132px; }
+  .clock { min-width: 128px; max-width: 192px; }
 }

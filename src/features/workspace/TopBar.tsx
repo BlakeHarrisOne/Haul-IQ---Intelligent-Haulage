@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useApp } from '@/state/store';
 import { ago, useLibrary } from '@/features/scenarios';
-import { Brand, Chrome, ChromeLabel, ChromeSep, Ctl, Icon, MenuButton, Segmented, Toggle, cx, type MenuItem } from '@/ui';
+import { Brand, Chrome, ChromeLabel, ChromeSep, Ctl, Icon, MenuButton, Segmented, Tip, Toggle, cx, type MenuItem } from '@/ui';
 import { MOD, SHOW_LAYERS, VIEWS } from './defs';
 import {
   cmdExportScenario, cmdExportStrings, cmdLoadDemo, cmdNew, cmdReport, cmdSave, cmdSaveAs,
@@ -46,11 +46,14 @@ function DocTitle() {
       </div>
     );
   }
+  // the name gets ~220 px; the full name is always one hover away
   return (
-    <button type="button" className={s.doc} onClick={() => setEdit(true)} title={`${name} - click to rename`}>
-      <span className={s.docName}>{name}</span>
-      <SaveState />
-    </button>
+    <Tip text={<>{name}<span className={s.docTipHint}>Click to rename</span></>}>
+      <button type="button" className={s.doc} onClick={() => setEdit(true)} aria-label={`${name} – click to rename`}>
+        <span className={s.docName}>{name}</span>
+        <SaveState />
+      </button>
+    </Tip>
   );
 }
 
@@ -63,17 +66,17 @@ export function DocChrome() {
   const last = past[past.length - 1], next = future[0];
   const items: MenuItem[] = [
     { label: 'New scenario', icon: 'plus', onSelect: cmdNew },
-    { label: 'Open…', icon: 'folder', hint: `${MOD}O`, onSelect: () => setView('scenarios') },
+    { label: 'Open…', icon: 'folder', shortcut: `${MOD}+O`, onSelect: () => setView('scenarios') },
     { label: 'Open the demo site', icon: 'sparkle', onSelect: () => { void cmdLoadDemo(); } },
     { separator: true, label: '' },
-    { label: 'Save', icon: 'save', hint: `${MOD}S`, onSelect: cmdSave },
-    { label: 'Save as…', icon: 'copy', hint: `${MOD}⇧S`, onSelect: cmdSaveAs },
+    { label: 'Save', icon: 'save', shortcut: `${MOD}+S`, onSelect: cmdSave },
+    { label: 'Save as…', icon: 'copy', shortcut: `${MOD}+⇧+S`, onSelect: cmdSaveAs },
     { separator: true, label: '' },
-    { label: 'Import surfaces / solids…', icon: 'upload', hint: '.00t', onSelect: pickMeshes },
+    { label: 'Import surfaces / solids…', icon: 'upload', hint: '.00t', shortcut: `${MOD}+I`, onSelect: pickMeshes },
     { label: 'Import strings…', icon: 'string', hint: '.str .csv', onSelect: pickStrings },
     { label: 'Open a scenario file…', icon: 'file', hint: '.haiul.json', onSelect: pickScenarioFile },
     { separator: true, label: '' },
-    { label: 'Export scenario', icon: 'download', hint: '.haiul.json', onSelect: cmdExportScenario },
+    { label: 'Export scenario', icon: 'download', hint: '.haiul.json', shortcut: `${MOD}+E`, onSelect: cmdExportScenario },
     { label: 'Export strings as CSV', icon: 'table', onSelect: () => cmdExportStrings('csv') },
     { label: 'Export strings as DXF', icon: 'download', onSelect: () => cmdExportStrings('dxf') },
     { label: 'Print a summary report', icon: 'report', onSelect: cmdReport },
@@ -180,7 +183,33 @@ function SettingsPanel() {
 
 const THEME_ICON: Record<ThemePref, 'sun' | 'moon' | 'sliders'> = { light: 'sun', dark: 'moon', system: 'sliders' };
 
-export function RightChrome() {
+/** The five layer toggles folded into one "Show ▾" popover (when the top row is too tight for them inline). */
+function ShowPopover() {
+  const layers = useApp(st => st.layers);
+  const toggleLayer = useApp(st => st.toggleLayer);
+  const [open, setOpen] = useState(false);
+  const on = SHOW_LAYERS.filter(l => layers[l.id]).length;
+  return (
+    <Popover open={open} onClose={() => setOpen(false)} title="Show"
+      anchor={(
+        <Ctl icon="layers" on={open} onClick={() => setOpen(o => !o)} tip={`Show layers – ${on} of ${SHOW_LAYERS.length} on`} aria-haspopup="dialog" aria-expanded={open}>
+          Show<Icon name="down" size={14} className={s.caret} />
+        </Ctl>
+      )}>
+      {SHOW_LAYERS.map(l => (
+        <div key={l.id} className={s.setRowInline}>
+          <span style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+            <span className={s.setLabel}><Icon name={l.icon} size={18} />{l.label}</span>
+            <span className={s.setHint} style={{ paddingLeft: 26 }}>{l.hint}</span>
+          </span>
+          <Toggle on={!!layers[l.id]} onChange={() => toggleLayer(l.id)} />
+        </div>
+      ))}
+    </Popover>
+  );
+}
+
+export function RightChrome({ foldShow = false }: { foldShow?: boolean }) {
   const layers = useApp(st => st.layers);
   const toggleLayer = useApp(st => st.toggleLayer);
   const panels = useApp(st => st.panels);
@@ -195,16 +224,18 @@ export function RightChrome() {
   }));
   return (
     <div className={cx(s.topRight, s.fadeT)}>
-      {view === 'site' && hasAssets && (
+      {view === 'site' && hasAssets && (foldShow ? (
+        <Chrome><ShowPopover /></Chrome>
+      ) : (
         <Chrome>
           <ChromeLabel>Show</ChromeLabel>
           {SHOW_LAYERS.map(l => (
-            <Ctl key={l.id} icon={l.icon} on={!!layers[l.id]} onClick={() => toggleLayer(l.id)} tip={`${l.label} – ${l.hint}`}>
+            <Ctl key={l.id} icon={l.icon} on={!!layers[l.id]} className={s.showItem} onClick={() => toggleLayer(l.id)} tip={`${l.label} – ${l.hint}`} aria-label={l.label}>
               <span className={s.showLabel}>{l.label}</span>
             </Ctl>
           ))}
         </Chrome>
-      )}
+      ))}
       <Chrome>
         {view === 'site' && hasAssets && (
           <Ctl icon="panel" on={panels.inspector} onClick={() => togglePanel('inspector')} tip={panels.inspector ? 'Hide inspector' : 'Show inspector'} shortcut="]" />

@@ -236,3 +236,250 @@ Severity:
 
 Fixing P0 #1 and P1 #2–#17 (most are contained CSS, layout or rendering changes; #5, #8 and #9 are the larger graphics
 work) is what it takes to say, credibly, that hAIul SIM exceeds both on every axis the user named.
+
+---
+
+### Fixed: crew-planning views (Manning, Priority, Insights): #12, #20, #22, #23, #25, #26, #37
+
+Files: `src/features/manning/**`, `src/features/priority/**`, `src/features/insights/**`. Screenshots (light and dark,
+1920×1080 and 1366×768) are in `…/scratchpad/fix_views_b/`. `r_*` are the real app with the WebGL canvas hidden behind
+the sheet to keep software GL fast; `h_*` are the Manning dev harness.
+
+- **#12 Fixed.** Manning and Priority now use the shared `PageHeader` from `@/ui`: eyebrow "Crew" or "Planning", the
+  crew or priority icon, a 28 px title, the lede, and actions on the right. This is the same component, position and
+  sizes as Assumptions, Curves and Compare. The old icon-tile header classes in `manning/page.module.css` are removed. The
+  page wrapper uses the same padding as the analytics sheets (4 px top, 16 px gap). Measured at 1366 and 1920, the
+  eyebrow and the 28 px title sit at the same x and y on Assumptions, Curves, Compare, Manning and Priority.
+- **#20 Fixed.** Manning's role bars and its required-vs-available gauge are now neutral `--ink-2` on a `--surface-3`
+  track. Status colour appears only for the shortfall (hatched rust past the cut-off) and for an exceeded ticket cap.
+  - The equipment-table switches (about 40) and the rule-set switches now use a quiet neutral "on" track (`.quiet`). The
+    accent stays on the focus ring only.
+  - "Spare" is a neutral badge. "Parked" is neutral with a pause glyph.
+  - The rule "fires" counts are neutral badges. "Off" and "Not firing" are muted text.
+  - Priority's "Use this option" is now a secondary button, so "Apply allocation" is the only primary on the page.
+- **#22 Fixed.** Every circuit colour these views draw now goes through `circuitColor()`, so dark mode shows the dark
+  step of the same hue: EX04 is olive in every element, with no amber/olive mix. This covers:
+  - Manning: the Why-this-many dots, the week grid and the equipment task dots.
+  - Priority: the card stripe, the production mini-bar, the crew-budget blocks, the truck bar, the legend and the
+    inactive-circuit chips.
+  - Insights: the optimiser rows.
+- **#23 Fixed.** In the crew budget, the loader block is solid. The truck block is a 60 % tint and carries the label. The
+  support block is a 32 % tint. Labels are `var(--ink)`, which is dark ink in light mode and light ink in dark mode.
+  - Measured contrast across all eight slots `--c1`…`--c8` is at least 6.0:1 in light and 5.08:1 in dark. White on the
+    old 80 % tints was 1.9–3.9:1.
+  - Fixed site roles are a 30 % `--ink-3` tint with an ink label: 10.4:1 in light and 9.0:1 in dark. White on `--ink-4`
+    was 3.1:1.
+- **#25 Fixed (one item left).** Percentages now follow `format.ts`, with no space: "70% of plan", "steeper than 10%",
+  "8% of block".
+  - En dashes replace hyphens in the copy: the ledes, the footnotes, the switch titles, "Last priority – gives first",
+    the crew-budget subtitle, and the Insights hero, footer, optimiser and headlines (for example "13.1 h/day – below
+    the 18 h minimum").
+  - A true minus comes from `signed()`: the Manning shortfall shows "−6", and the rule line and fire counts use it too.
+  - **Not done:** thousands separators in `NumberField` inputs when they are not focused. That is a change to the shared
+    `src/ui/fields.tsx`. In these folders, only the rule modal's bcm/day field can go above 999.
+- **#26 Fixed.** The Priority signals now agree with each other.
+  - The status badge reads "Got 5 of 5". It gets the green tick only when nothing was cut and the grant runs at full
+    rate. It is neutral when the grant is below or above full rate, and when idle trucks were released at no cost ("Got 2
+    of 3"). It is caution when a cut costs production, and "Parked" or "Stood down" when nothing was granted. Site tasks
+    and the last-priority card use the same badge.
+  - Over- and under-trucking are computed against the trucks **granted**. LDR1, trimmed 3 → 2 at its full rate of 2, no
+    longer says "Over-trucked +1".
+  - A circuit the plan cut below its full rate shows "under-trucked at the N granted (… cut by the plan)" and has no
+    "Mark deliberate" button.
+  - The truck bar shows the granted trucks ("Trucks 11 of 12"), with the released trucks hatched. It now matches "Trucks
+    used 11 / 12".
+  - The bcm/day KPI reads "incl. push dozers · haul 60.1k". The haul figure is the one Compare shows, and the tooltip
+    gives the full reconciliation.
+  - The Lost KPI counts "reduced" separately from "released".
+  - The KPI strip and the circuit cards reflow on their own width (container queries), so they still fit when Insights
+    narrows the sheet.
+- **Added: a verdict line at the top of Priority.** It is built from the plan by `planVerdict` in `priority/plan.ts`. For
+  example: "Crew 30 of 36 needed: bulk push stands 5 down, LDR1 releases 1 idle truck, EX09 and EX04 under-trucked
+  (−1, −3)."
+- **#37 Fixed.** In Insights, "Optimise fleet" is the only primary button. The finding-level "apply" actions, such as
+  "Apply allocation", are secondary. While the optimiser's proposal is open, its "Apply" becomes the primary and the
+  hero button steps down to a secondary "Re-optimise fleet".
+
+---
+
+### Fixed: haulage and analytics views (profile, section, inspector, Assumptions, Truck curves, Compare): #9 (section), #10, #12, #13, #14, #19, #20, #22, #25, #27, #28, #29, #30, #31, #40, HRL §11.1–11.3
+
+Files: `src/features/haulage/**`, `src/features/assumptions/**`, `src/features/curves/**`, `src/features/compare/**`.
+Screenshots (light and dark, 1920×1080 and 1366×768) are in `…/scratchpad/fix_views_a/`. While this round ran, opening a
+section in the full app crashed in `src/scene/core/Chrome.tsx` (a scene fix in progress, outside these folders), so the
+section panel was checked in the haulage harness (`/src/features/haulage/harness/index.html?sel=circuit:0&section=1`,
+files `5x_section_harness_*.png`) as well as in the app.
+
+- **#9 (section part) Fixed.** Where A–B crosses a haul string, the section now shows the road.
+  - On the section itself, each crossing shows its carriageway at `roadWidthM` (30 m by default), widened by 1 / sin θ
+    for an oblique cut. The running surface sits at the string's RL, with a 1.5 : 1 bund at `bundHeightM` (1.8 m by
+    default) on each edge.
+  - A true-scale road detail sits beside the section, cut square across the road. It shows the ground, both bunds (with
+    their height), and the truck in rear view drawn from `TruckModel.dims` (width, height, tyre code → dual tyres) in
+    the left lane. An oncoming ghost of the same truck sits in the right lane.
+  - Behind them is the "width needed" band: 3.5 × the widest vehicle on that road (two-way), measured from the left edge.
+    It is sage when the road passes; when it fails it is rust, with the shortfall hatched past the right edge. A dimension
+    line reads "two-way 3.5 × 7.6 m = 26.8 m", and a second one under the ground reads "30.0 m carriageway".
+  - The truck drawn is the selected circuit's. The check uses the widest truck on the road (its circuits, main or
+    alternative haul). A select picks the road when several cross.
+  - The pure helpers live in `haulage/model.ts` (`roadCheck`, `trucksOnString`, `tyreSize`, `apparentWidth`, `bundBase`)
+    and are unit-tested.
+  - The string inspector has a new **Road** section: carriageway width and bund height fields (undoable), led by the two
+    verdicts.
+- **HRL §11.2 / §11.3 Fixed (profile and section).**
+  - `maxFittedGrade` finds the steepest least-squares grade over any 100 m (sampled every 2 m), so a short spike between
+    two survey points does not set it. It is unit-tested.
+  - The profile shades that 100 m window in its verdict colour and draws the fitted grade as a 3 px line. The 10 % limit
+    is dashed through the same point (±70 m). The caption "+9.0% over 100 m" is placed clear of the end labels.
+  - Both panels lead with a verdict sentence. The profile reads "✓ Max 9.0% over 100 m on the S51 ramp – within 10%":
+    the place comes from the segment zone and the nearer end, else the chainage. The section reads "✓ Road wide enough
+    for two-way CAT 789D: 30.0 m, needs 26.8 m", or "Road 3.2 m too narrow for …" in rust. The evidence follows.
+- **#10 Fixed.** The profile header shows the full string name (it no longer shrinks) and the verdict. The meta (length,
+  RL range, max grades, cycle) moved to the footer and the name's tooltip, and the circuit name is no longer repeated.
+  - The legend sits under the chart, in a footer row aligned to the plot.
+  - The speed lane has ticks at 0 / 20 / 40 / 60 (the domain rounds up to a multiple of 20) with light gridlines.
+  - The left gutter now has two columns: lane names (RL m, Grade, km/h, Ch m) on the left and tick values on the right,
+    so "grade", "40" and "km/h" can no longer collide.
+  - Limit labels in the speed lane skip a label that would overlap the one before. The Dig / Dump end labels sit on a
+    solid plate, so lines no longer show through the gaps between words.
+- **#12 Fixed.** Assumptions, Truck curves and Compare import `PageHeader` straight from `@/ui`. The old header classes
+  are gone from `assumptions/shared/page.module.css`, and the page wrapper is 4 px top with a 16 px gap, the same as
+  Manning and Priority. The in-page "Site assumptions" heading has its own sub-heading style.
+- **#13 Fixed.** The Assumptions shift profile uses `EVENT_STYLE` and `eventBackground` from `@/ui`, exactly as the Site
+  timeline does: neutral tints, hatched where the fleet stops, and rust only for blasting. Each block carries the event
+  icon (a flag for prestart) and its label.
+  - Each event row shows the icon tile and the kind's proper label ("Prestart", not "prestart").
+  - A legend under the strip lists the kinds used plus "Productive".
+- **#14 Fixed.** The Compare circuits table has a sticky first column. It scrolls sideways inside a frame with a right
+  edge fade while columns are hidden, and a soft shadow at the sticky column once you have scrolled. The scroller can
+  take keyboard focus.
+  - Below 1440 px the secondary sub-line (loader · truck · material) is dropped. It stays in the name's tooltip, and the
+    route is no longer repeated when it equals the name.
+- **#19 Fixed.** In card heads on all three sheets (`.headSafe` in the shared page CSS), the title never shrinks
+  (`flex: none`). The meta text takes what is left and ends in an ellipsis. When even the title and the actions do not
+  fit, the actions wrap to a second row.
+  - At 1366 the heads read "Calculation ledger", "Spreadsheet vs rimpull" and "CAT 789D" in full.
+- **#20 Fixed (these folders).** The accent is no longer used for data:
+  - the spec sheet's "OEM-derived" badge is neutral;
+  - Assumptions key-result rows use weight and a neutral `--ink-3` rule;
+  - formula cell references and info callouts are neutral;
+  - the "circuit setting" badge is neutral;
+  - the trucks-used meter and the needed-trucks tick are ink;
+  - the "Loaded" truck badge is neutral with a truck glyph;
+  - the fleet chooser's achieved bars use the circuit's own colour.
+  The accent remains on selection, focus and the primary action.
+- **#22 Fixed (these folders).** Every circuit or string colour drawn here goes through `circuitColor()`:
+  - the inspector dots and keys, the profile and section keys, and the section markers;
+  - the fleet chooser fill;
+  - the Assumptions circuit picker and loader table;
+  - the Compare rows, charts and what-if (`compareData` resolves `color` once).
+- **#25 Fixed (these folders).**
+  - Percentages follow `format.ts` with no space: "≤4 / 8 / 10 / >10%", "±16%", "82% of 73,700 target", "+10.0%".
+  - Number inputs show grouped digits when not focused ("36,000"). A new `assumptions/shared/NumField` is used in the
+    circuit assumptions, the Assumptions edit cells, the circuit parameters, the asset card and the road fields. Esc now
+    reverts correctly without committing.
+  - Spaced hyphens and em dashes became en dashes ("Deterministic – n × PT × productivity"), and an empty value is "–".
+  - Negative grades use a true minus via `signed()`: the grade chips, the slider readout, the balance table, the chart
+    axes and the resistance legend. `smart()` also emits "−".
+- **#27 Fixed.** In Speed vs grade, "Table optimistic" stays a solid rust tint and "Table pessimistic" is a neutral 45°
+  hatch, in the chart and in its legend key. The "pessimistic" verdict word is neutral with a dotted underline. Signed
+  ranges read "+3 to +7%".
+- **#28 Fixed.** The section's string labels are placed greedily:
+  - the focused string goes first, then left to right;
+  - nine candidate positions are tried (above, below, beside, then further out with a leader);
+  - every candidate is checked against labels already placed, every crossing marker and the A / B pills, and is kept
+    inside the plot;
+  - names are no longer cut at 24 characters;
+  - when there is no room, a label is left out, and the hover readout still lists the crossing (now with its road width).
+- **#29 Fixed.** The trucks-chooser legend is a two-column grid, so it lays out as two rows of two with no orphan.
+  "Idle trucks" became "Idle capacity".
+- **#30 Fixed.** "Deliberately under-trucked by N" is now a clay (`--warn`) callout with an info glyph, and "over-trucked"
+  is neutral. "Use recommended · N" is kept. Rust stays for real faults. `truckingCall` and its test are updated.
+- **#31 Fixed.** The three Compare chart cards stretch to the same height, and their legends sit on the bottom line on
+  one row. The dot-plot labels are shortened ("needed", "rec.", "under", "over"), with the full wording in tooltips.
+- **#40 Fixed.** The shift-profile footer reads "720 − Σ(duration × fleet stopped) = 600 productive min (120 lost)".
+
+---
+
+### Fixed: workspace shell and scenario library: #1, #2 (shell part), #4, #11, #12, #13, #15, #18, #21, #22, #32, #33, #34, #36, #38
+
+Files: `src/features/workspace/**` and `src/features/scenarios/**`. Screenshots (light and dark, 1920×1080 and 1366×768)
+are in `…/scratchpad/fix_shell/`. While this round ran, the shared dev server kept crashing on scene-core work in
+progress (`atmos.setTheme`, a terrain shader). So these were captured from a snapshot of `HEAD` plus only these two
+folders, served on port 5174 (`fix_shell/snap`).
+
+- **#1 Fixed (P0).** The top row no longer relies on breakpoints: it checks for collisions.
+  - `layout.ts` `useTopRowFit` measures the document chip, the view switcher and the right chrome, then steps down a
+    density level until no two of them come within 8 px. It re-fits from full labels whenever the viewport width, the
+    view, the assets or the web fonts change. All of this runs in layout effects, before paint.
+  - The levels drop labels in priority order:
+    0. All labels.
+    1. Show icons only.
+    2. Switcher icons only, except the active view.
+    3. The five layer toggles fold into a **"Show ▾" popover** (toggle rows with hints), and the document name narrows
+       to 150 px.
+    4. The active view drops its label too.
+    5. The switcher moves to a second row (last resort).
+  - The 1679 / 1880 / 1180 px media queries are gone.
+  - Measured in Chromium: 2560 px uses level 0, 1920 uses level 1 (every switcher label is visible, including Priority
+    and Scenarios), 1366–1790 uses level 2, and 1280 uses level 3.
+  - A sweep from 1100 to 2600 px in 30 px steps found no overlaps.
+  - `layout.test.ts` checks that at 1280, 1366, 1440, 1680, 1920 and 2560 px no two top-row rectangles touch, on site
+    and on sheets. It uses the measured widths per level, and also checks the order in which labels drop.
+- **#2 (shell part) Fixed.** In POV and chase (`.ride`), the rest pill rests at the top centre, under the scene's ride
+  tag (y 58–90, the tag is at 18–48). It uses the same dark glass as the tag and never sits on the cockpit HUD
+  (`31_pov_rest_pill_glass_1366.png`). Hiding the scale bar and the legend in rides is scene-core work.
+- **#4 Fixed.** The circuit chips fit the space they have. In a layout effect they step down from full ("EX09 5.6k /
+  15.6k bcm") to compact ("EX09 5.6k"), then to the name only (the progress underline stays), then to colour dots. When
+  even the dots don't fit, the rest sit behind a "+N" menu.
+  - Every chip keeps its numbers in the tooltip.
+  - The chips no longer expand on hover, so the layout cannot change under the pointer.
+  - The long-section toggle sits after its own separator, outside the chip flow.
+  - "of shift PT" stays visible at 1366.
+  - Event labels choose the full label, then the kind's short label ("Fuel"), then an icon only. Each event keeps its
+    full label, times and "% of fleet stopped" in a tooltip. The clock line drops the parenthetical and ends in an
+    ellipsis.
+- **#11 Fixed.** The time bar now shows production.
+  - The track carries 15-minute production bars from the engine's simulated shift (`simulateShift` + `simProductionAt`,
+    summed over the active circuits). Played bars are drawn at full strength and future bars at 38 %, so crib and
+    prestart show as dips.
+  - A head flag "10:32 · 10,931 bcm so far" rides under the head, clamped inside the bar. The hour labels it covers step
+    aside.
+  - The hover flag reads "12:37 16,183 bcm so far · Crib".
+  - The chips read "EX09 5.6k / 15.6k bcm", with a so-far / shift underline in the circuit colour.
+  - A compact **horizon** menu (calendar icon: Shift · Week · To completion) sits next to the speed control and sets
+    `store.timeline.horizon`.
+  - The helpers in `timelineData.ts` are unit-tested.
+- **#12 Fixed.** The Scenarios page uses the shared `PageHeader` (eyebrow "Library", folder icon, 28 px title). Its
+  title sits at the same height as Compare.
+- **#13 Fixed.** Timeline events use `EVENT_STYLE`, `eventBackground` and `EVENT_STYLE[kind].icon` (a flag for prestart),
+  and so do the clock's event line and the palette's "Jump to …" commands. Event edges are drawn in the event's own ink.
+  No accent or circuit colours remain.
+- **#15 Fixed.** When Insights is open over a sheet, the sheet scroller gets `padding-right: 428px` (400 + 2 gutters), so
+  the page reflows into the space left of the drawer. On Compare, Export CSV, Print and the Status column are fully
+  visible (`14_insights_over_compare_*.png`).
+- **#18 Fixed.** Sheets scroll inside `.sheetScroll`, which has a 72 px top mask (transparent to 28 px, then fades in).
+  Content fades out under the floating chrome instead of sliding visibly beneath it. The backdrop lives on the unmasked
+  outer layer.
+- **#21 Fixed.**
+  - The sheet ground is 95 % `--bg-app` with `blur(48px) saturate(70%)`. Empty pages read as a calm surface.
+  - Thumbnails are drawn per theme. The plan renderer has light and dark palettes (dark ground, darker hillshade, dark
+    string halos, `circuitHex`). The live "Open now" card redraws when the theme changes.
+  - A save records `thumbnailTheme`. A thumbnail saved in the other theme is toned down to sit on the card (dimmed with a
+    vignette in dark) until the scenario is saved again.
+- **#22 Fixed (these folders).** Timeline chips, the "+N" menu, palette dots for circuits and strings, the import strings
+  preview and the plan thumbnails all use `circuitColor()` / `circuitHex()`.
+- **#32 Fixed.** The command palette now uses the same full `--scrim` as `Modal`, so the palette, shortcuts, import and
+  dialogs share one scrim.
+- **#33 Fixed.** File-menu shortcuts use `MenuItem.shortcut`, shown as key caps: Ctrl O, Ctrl S, Ctrl ⇧ S, and the new
+  Ctrl I and Ctrl E. Extension hints stay as plain text.
+- **#34 Fixed.** The document name gets a fixed 232 px button (about 220 px of text): "Demo – Strip pit, week 45" is now
+  shown in full. Hovering shows the full name in the shared tooltip ("… · Click to rename"). It narrows to 150 px only at
+  top-row level 3 and above.
+- **#36 Fixed.** `fuzzyFilter` takes a kind boost (circuit 2.4 > string 1.6 > asset 0.8). The boost outweighs target
+  length but not match quality. For "ex09" the order is now the circuit, the two strings, then the block. This is
+  unit-tested.
+- **#38 Fixed.** The material select is 212 px wide, so "OB · Overburden" fits. `importChecks.ts` `sheetLikeSolid` flags
+  a closed solid whose volume ÷ plan area is under 0.5 m. Such a solid gets a warning ("Encloses 250 bcm over 2.5 ha –
+  an average of 0.01 m thick. It looks like a sheet, check the solid.") and an amber Volume readout. The footer counts it
+  under "with notes". This is unit-tested.

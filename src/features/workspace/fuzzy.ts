@@ -87,8 +87,11 @@ function argBestBefore(row: Float64Array, i: number) {
   return arg;
 }
 
-/** Filter + rank items; `keys` gives the searchable strings (first is the label used for highlighting). */
-export function fuzzyFilter<T>(items: readonly T[], query: string, keys: (it: T) => string[]): { item: T; score: number; indices: number[] }[] {
+/**
+ * Filter + rank items; `keys` gives the searchable strings (first is the label used for highlighting). `boost` adds a
+ * small per-item bias so equally good matches order by kind (e.g. circuit before string before asset).
+ */
+export function fuzzyFilter<T>(items: readonly T[], query: string, keys: (it: T) => string[], boost?: (it: T) => number): { item: T; score: number; indices: number[] }[] {
   if (!query.trim()) return items.map(item => ({ item, score: 0, indices: [] }));
   const out: { item: T; score: number; indices: number[] }[] = [];
   for (const item of items) {
@@ -101,7 +104,7 @@ export function fuzzyFilter<T>(items: readonly T[], query: string, keys: (it: T)
         if (!best || sc > best.score) { best = { score: sc, indices: r.indices }; bestIdx = ki; }
       }
     });
-    if (best) out.push({ item, score: (best as FuzzyMatch).score, indices: bestIdx === 0 ? (best as FuzzyMatch).indices : [] });
+    if (best) out.push({ item, score: (best as FuzzyMatch).score + (boost?.(item) ?? 0), indices: bestIdx === 0 ? (best as FuzzyMatch).indices : [] });
   }
   return out.sort((a, b) => b.score - a.score);
 }

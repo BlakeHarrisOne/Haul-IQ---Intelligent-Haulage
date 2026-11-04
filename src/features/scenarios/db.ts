@@ -27,6 +27,8 @@ export interface ScenarioKpis {
 }
 
 export interface LibraryMeta extends ScenarioMeta {
+  /** UI theme the thumbnail was rendered in (undefined = light, from before themes were recorded). */
+  thumbnailTheme?: 'light' | 'dark';
   createdAt?: string;
   siteName?: string;
   savedAt?: string;
@@ -128,12 +130,18 @@ export async function loadScenario(id: string): Promise<Scenario | undefined> {
 export interface SaveOptions {
   /** Data-URL thumbnail; omitted = keep the previous one. */
   thumbnail?: string;
+  /** Theme the new thumbnail was rendered in. */
+  thumbnailTheme?: 'light' | 'dark';
 }
 
 export async function saveScenario(s: Scenario, opts: SaveOptions = {}): Promise<LibraryMeta> {
   const db = await openDb();
   const prev = await getMeta(s.id).catch(() => undefined);
-  const meta = metaFor(s, { thumbnail: opts.thumbnail ?? prev?.thumbnail, savedAt: nowIso() });
+  const meta = metaFor(s, {
+    thumbnail: opts.thumbnail ?? prev?.thumbnail,
+    thumbnailTheme: opts.thumbnail ? (opts.thumbnailTheme ?? 'light') : prev?.thumbnailTheme,
+    savedAt: nowIso(),
+  });
   const tx = db.transaction([STORE_SCENARIOS, STORE_META], 'readwrite');
   tx.objectStore(STORE_SCENARIOS).put(s);
   tx.objectStore(STORE_META).put(meta);
@@ -160,7 +168,7 @@ export async function duplicateScenario(id: string, name?: string): Promise<Libr
   if (!s) return undefined;
   const prev = await getMeta(id);
   const t = nowIso();
-  return saveScenario({ ...s, id: uid('scn'), name: name ?? `${s.name} (copy)`, createdAt: t, updatedAt: t }, { thumbnail: prev?.thumbnail });
+  return saveScenario({ ...s, id: uid('scn'), name: name ?? `${s.name} (copy)`, createdAt: t, updatedAt: t }, { thumbnail: prev?.thumbnail, thumbnailTheme: prev?.thumbnailTheme });
 }
 
 // ── autosave recovery slot ───────────────────────────────────────────────────────────────────────

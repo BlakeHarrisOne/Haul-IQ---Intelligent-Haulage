@@ -95,8 +95,10 @@ export function Sheet() {
   const View = VIEW_COMPONENTS[shown as Exclude<ViewId, 'site'>];
   return (
     <div className={cx(s.sheet, closing && s.closing)} role="region" aria-label={def.title}>
-      <div className={s.page} key={shown}>
-        <div className={s.viewHost} data-empty={`The ${def.title} view is being built.`}><View /></div>
+      <div className={s.sheetScroll}>
+        <div className={s.page} key={shown}>
+          <div className={s.viewHost} data-empty={`The ${def.title} view is being built.`}><View /></div>
+        </div>
       </div>
     </div>
   );

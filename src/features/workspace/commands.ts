@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { app, type AppState } from '@/state/store';
 import { openScenario, useLibrary } from '@/features/scenarios';
-import type { IconName } from '@/ui';
+import { EVENT_STYLE, circuitColor, type IconName } from '@/ui';
 import { CAMERAS, MOD, SHOW_LAYERS, SPEEDS, TOOLS, VIEWS } from './defs';
 import {
   cmdExportScenario, cmdExportStrings, cmdLoadDemo, cmdNew, cmdRename, cmdReport, cmdSave, cmdSaveAs, cmdStep, cmdTogglePlay,
@@ -21,6 +21,8 @@ export interface Command {
   keywords?: string[];
   /** Colour dot (circuits / strings). */
   color?: string;
+  /** Tie-break for equally good matches: circuits, then strings, then surfaces & solids (higher first). */
+  rank?: number;
   run: () => void;
   disabled?: boolean;
 }
@@ -39,6 +41,10 @@ export function setCameraMode(mode: AppState['camera']) {
   st.setCamera(mode);
 }
 
+/** Kind boosts for the palette ranking, added to the fuzzy score: big enough to outweigh target length (0.02/char), far
+ * smaller than a real difference in match quality (prefix +10, word start +7, consecutive +6). */
+export const RANK = { circuit: 2.4, string: 1.6, asset: 0.8 } as const;
+
 export function buildCommands(): Command[] {
   const st = app();
   const s = st.scenario;
@@ -52,7 +58,7 @@ export function buildCommands(): Command[] {
   out.push({ id: 'time.start', title: 'Jump to shift start', group: 'Shift', icon: 'skipBack', shortcut: 'Home', run: () => st.setTimeline({ tMin: 0 }) });
   out.push({ id: 'time.end', title: 'Jump to shift end', group: 'Shift', icon: 'skipFwd', shortcut: 'End', run: () => st.setTimeline({ tMin: s.shift.lengthH * 60, playing: false }) });
   for (const sp of SPEEDS) out.push({ id: `time.speed.${sp}`, title: `Playback speed ×${sp}`, group: 'Shift', icon: 'speed', keywords: [`${sp} minutes per second`], run: () => st.setTimeline({ speed: sp }) });
-  for (const e of s.shift.events) out.push({ id: `time.ev.${e.id}`, title: `Jump to ${e.label}`, group: 'Shift', icon: e.kind === 'crib' ? 'crib' : e.kind === 'fuel' ? 'fuel' : e.kind === 'changeover' ? 'swap' : e.kind === 'blast' ? 'blast' : 'clock', keywords: [e.kind], run: () => st.setTimeline({ tMin: e.startMin }) });
+  for (const e of s.shift.events) out.push({ id: `time.ev.${e.id}`, title: `Jump to ${e.label}`, group: 'Shift', icon: EVENT_STYLE[e.kind].icon, keywords: [e.kind], run: () => st.setTimeline({ tMin: e.startMin }) });
 
   for (const l of SHOW_LAYERS) out.push({ id: `layer.${l.id}`, title: `${st.layers[l.id] ? 'Hide' : 'Show'} ${l.label.toLowerCase()}`, group: 'Show', icon: l.icon, keywords: ['layer', 'toggle', l.hint], run: () => st.toggleLayer(l.id) });
   out.push({ id: 'panel.inspector', title: `${st.panels.inspector ? 'Hide' : 'Show'} the inspector`, group: 'Panels', icon: 'panel', shortcut: ']', run: () => st.togglePanel('inspector') });
@@ -84,11 +90,11 @@ export function buildCommands(): Command[] {
   out.push({ id: 'app.keys', title: 'Keyboard shortcuts', group: 'Help', icon: 'keyboard', shortcut: '?', run: () => ui().set({ shortcutsOpen: true }) });
 
   for (const c of s.circuits) {
-    out.push({ id: `sel.c.${c.id}`, title: c.name, group: 'Circuits', icon: 'excavator', color: c.color, keywords: [c.loaderUnitId, c.materialId, 'circuit'], run: () => { st.setView('site'); st.select({ kind: 'circuit', id: c.id }); } });
-    out.push({ id: `pov.c.${c.id}`, title: `Ride along · ${c.name}`, group: 'Circuits', icon: 'pov', color: c.color, keywords: ['pov', 'driver', 'cab', c.loaderUnitId], run: () => { st.setView('site'); st.setCamera('pov', c.id); if (!app().timeline.playing) cmdTogglePlay(); } });
+    out.push({ id: `sel.c.${c.id}`, title: c.name, group: 'Circuits', icon: 'excavator', color: circuitColor(c.color), rank: RANK.circuit, keywords: [c.loaderUnitId, c.materialId, 'circuit'], run: () => { st.setView('site'); st.select({ kind: 'circuit', id: c.id }); } });
+    out.push({ id: `pov.c.${c.id}`, title: `Ride along · ${c.name}`, group: 'Circuits', icon: 'pov', color: circuitColor(c.color), rank: RANK.circuit, keywords: ['pov', 'driver', 'cab', c.loaderUnitId], run: () => { st.setView('site'); st.setCamera('pov', c.id); if (!app().timeline.playing) cmdTogglePlay(); } });
   }
-  for (const hs of s.strings) out.push({ id: `sel.s.${hs.id}`, title: hs.name, group: 'Haul strings', icon: 'string', color: hs.color, keywords: ['string', 'road', 'route'], run: () => { st.setView('site'); st.select({ kind: 'string', id: hs.id }); } });
-  for (const a of s.assets) out.push({ id: `sel.a.${a.id}`, title: a.name, group: 'Surfaces & solids', icon: a.kind === 'solid' ? 'solid' : 'surface', color: a.color, keywords: [a.role, a.kind, a.fileName ?? ''], run: () => { st.setView('site'); st.select({ kind: 'asset', id: a.id }); } });
+  for (const hs of s.strings) out.push({ id: `sel.s.${hs.id}`, title: hs.name, group: 'Haul strings', icon: 'string', color: circuitColor(hs.color), rank: RANK.string, keywords: ['string', 'road', 'route'], run: () => { st.setView('site'); st.select({ kind: 'string', id: hs.id }); } });
+  for (const a of s.assets) out.push({ id: `sel.a.${a.id}`, title: a.name, group: 'Surfaces & solids', icon: a.kind === 'solid' ? 'solid' : 'surface', color: a.color, rank: RANK.asset, keywords: [a.role, a.kind, a.fileName ?? ''], run: () => { st.setView('site'); st.select({ kind: 'asset', id: a.id }); } });
   for (const m of useLibrary.getState().items.slice(0, 12)) {
     if (m.id === s.id) continue;
     out.push({ id: `open.${m.id}`, title: `Open · ${m.name}`, group: 'Saved scenarios', icon: 'folder', keywords: [m.siteName ?? ''], run: () => { void openScenario(m.id); } });

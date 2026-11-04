@@ -10,7 +10,7 @@ import {
   clearRecovery, deleteScenario, duplicateScenario, getRecovery, idbAvailable, listScenarios, loadScenario, putRecovery,
   renameScenario, saveScenario, type LibraryMeta, type RecoverySlot,
 } from './db';
-import { makeThumbnail } from './thumbnail';
+import { docTheme, makeThumbnail } from './thumbnail';
 import { parseScenarioFile, scenarioFileName, serializeScenario } from './serialize';
 
 /** Compare picks - read by the Compare view (analytics agent). */
@@ -64,8 +64,9 @@ export async function saveCurrent(opts: { asNew?: { name: string } } = {}): Prom
   }
   useLibrary.setState({ busy: true });
   try {
+    const thumbnailTheme = docTheme();
     const thumbnail = await makeThumbnail(s, { preferScene: st.view === 'site' });
-    const meta = await saveScenario(s, { thumbnail });
+    const meta = await saveScenario(s, { thumbnail, thumbnailTheme });
     // only mark clean if nothing changed while we were writing
     if (app().scenario === s) app().markSaved();
     useLibrary.setState({ savedRef: { id: s.id, at: meta.savedAt ?? nowIso() }, recovery: undefined });

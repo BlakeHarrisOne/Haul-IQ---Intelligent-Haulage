@@ -12,6 +12,7 @@ import type { ParseReply } from './parse.worker';
 import { read00t, readStringsText } from './geomBridge';
 import { sceneFit } from './sceneBridge';
 import type { ImportItem } from './importTypes';
+import { sheetLikeSolid } from './importChecks';
 import { ui } from './uiStore';
 import { CAT_HEX } from '@/ui';
 
@@ -87,6 +88,7 @@ function warningsFor(item: ImportItem, s: Scenario): string[] {
     out.push(`Not a closed solid (${st.boundaryEdges.toLocaleString('en-AU')} open edges) – volume and depletion can't be measured.`);
   }
   if (st.closed && st.volume != null && st.volume < 1) out.push('The solid encloses almost no volume – check the triangulation.');
+  else { const sheet = sheetLikeSolid(st); if (sheet) out.push(sheet); }
   const zr = st.bbox.max[2] - st.bbox.min[2];
   if (zr > 3000) out.push(`Elevation range is ${Math.round(zr).toLocaleString('en-AU')} m – check the units.`);
   const ref = s.assets.length ? s.site.origin : undefined;

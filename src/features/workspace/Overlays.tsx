@@ -34,7 +34,7 @@ export function CommandPalette() {
   const listRef = useRef<HTMLDivElement>(null);
   const cmds = useMemo(() => (open ? buildCommands() : []), [open]);
   const results = useMemo(() => {
-    const r = fuzzyFilter(cmds, q, c => [c.title, c.group, ...(c.keywords ?? [])]);
+    const r = fuzzyFilter(cmds, q, c => [c.title, c.group, ...(c.keywords ?? [])], c => c.rank ?? 0);
     return q.trim() ? r.slice(0, 60) : r;
   }, [cmds, q]);
   useEffect(() => { if (open) { setQ(''); setActive(0); requestAnimationFrame(() => inputRef.current?.focus()); } }, [open]);

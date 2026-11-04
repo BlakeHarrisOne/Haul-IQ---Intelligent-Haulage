@@ -2,9 +2,10 @@ import { useMemo } from 'react';
 import { useApp } from '@/state/store';
 import { num } from '@/core/format';
 import type { AssetRole, DepletionMode } from '@/core/types';
-import { Badge, Button, Check, Ctl, Field, Icon, Modal, NumberField, Segmented, Select, TextField, cx, type IconName } from '@/ui';
+import { Badge, Button, Check, Ctl, Field, Icon, Modal, NumberField, Segmented, Select, TextField, circuitColor, cx, type IconName } from '@/ui';
 import { commitImport, DEFAULT_MATERIALS, pickFiles, pickMeshes, pickStrings, refreshWarnings, ROLE_COLORS, SWATCHES } from './importer';
 import type { ImportItem } from './importTypes';
+import { sheetLikeSolid } from './importChecks';
 import { useShellUi, ui } from './uiStore';
 import m from './import.module.css';
 
@@ -23,8 +24,13 @@ function patch(key: string, p: Partial<ImportItem>, recheck = false) {
   ui().set({ importItems: ui().importItems.map(i => (i.key === key ? upd(i) : i)) });
 }
 
-function Readout({ label, value, unit, title }: { label: string; value: string; unit?: string; title?: string }) {
-  return <div className={m.ro} title={title}><div className={m.roLab}>{label}</div><div className={m.roVal}>{value}{unit && <i>{unit}</i>}</div></div>;
+function Readout({ label, value, unit, title, warn }: { label: string; value: string; unit?: string; title?: string; warn?: boolean }) {
+  return (
+    <div className={cx(m.ro, warn && m.roWarn)} title={title}>
+      <div className={m.roLab}>{warn && <Icon name="warning" size={13} />}{label}</div>
+      <div className={m.roVal}>{value}{unit && <i>{unit}</i>}</div>
+    </div>
+  );
 }
 
 function ItemCard({ it }: { it: ImportItem }) {
@@ -65,7 +71,8 @@ function ItemCard({ it }: { it: ImportItem }) {
             <Readout label="Triangles" value={num(st.triangleCount)} title={`${num(st.vertexCount)} vertices`} />
             <Readout label="Plan area" value={num(st.planArea / 10_000, 1)} unit="ha" />
             {st.closed && st.volume != null
-              ? <Readout label="Volume" value={st.volume > 1e6 ? num(st.volume / 1e6, 2) : num(st.volume)} unit={st.volume > 1e6 ? 'M bcm' : 'bcm'} />
+              ? <Readout label="Volume" value={st.volume > 1e6 ? num(st.volume / 1e6, 2) : num(st.volume)} unit={st.volume > 1e6 ? 'M bcm' : 'bcm'}
+                  warn={!!sheetLikeSolid(st)} title={sheetLikeSolid(st) ?? `Average thickness ${num(st.volume / Math.max(1, st.planArea), 1)} m`} />
               : <Readout label="RL range" value={`${num(st.bbox.min[2], 0)}–${num(st.bbox.max[2], 0)}`} unit="m" />}
             <Readout label="Centroid E · N" value={`${num(st.centroid[0], 0)} · ${num(st.centroid[1], 0)}`} title={`RL ${num(st.centroid[2], 1)} m`} />
             <Readout label="Extent" value={`${num(st.bbox.max[0] - st.bbox.min[0], 0)} × ${num(st.bbox.max[1] - st.bbox.min[1], 0)}`} unit="m" />
@@ -74,7 +81,7 @@ function ItemCard({ it }: { it: ImportItem }) {
             {block && (
               <>
                 <Field label="Material">
-                  <Select value={it.materialId} width={150} onChange={v => patch(it.key, { materialId: v, color: it.role === 'dig' ? (mats.find(x => x.id === v)?.color ?? it.color) : it.color })}
+                  <Select value={it.materialId} width={212} onChange={v => patch(it.key, { materialId: v, color: it.role === 'dig' ? (mats.find(x => x.id === v)?.color ?? it.color) : it.color })}
                     options={mats.map(x => ({ value: x.id, label: `${x.id} · ${x.name}` }))} />
                 </Field>
                 <Field label={it.role === 'dig' ? 'Depletion' : 'Fill'}>
@@ -132,7 +139,7 @@ function StringsPreview() {
               const p0 = s.points[0];
               return (
                 <tr key={s.id}>
-                  <td><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 3, background: s.color, marginRight: 8 }} />{s.name}</td>
+                  <td><span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 3, background: circuitColor(s.color), marginRight: 8 }} />{s.name}</td>
                   <td className={m.r}>{s.points.length}</td>
                   <td className={m.r}>{num(len)} m</td>
                   <td className={m.r}>{s.points.length ? `${num(zmin, 1)}–${num(zmax, 1)}` : '–'}</td>

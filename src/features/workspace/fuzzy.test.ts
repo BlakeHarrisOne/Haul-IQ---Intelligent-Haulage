@@ -60,3 +60,23 @@ describe('fuzzyFilter', () => {
     expect(fuzzyFilter(cmds, '', keys)).toHaveLength(cmds.length);
   });
 });
+
+describe('palette ranking by kind', () => {
+  // the same name as a circuit, a haul string and a dig block: equal matches order circuit > string > asset (#36)
+  const RANK = { circuit: 2.4, string: 1.6, asset: 0.8 };
+  const items = [
+    { title: 'EX09 OB block', kind: 'asset' as const },
+    { title: 'EX09 OB → S51 West lift (long haul)', kind: 'string' as const },
+    { title: 'EX09 OB → S51 West lift', kind: 'string' as const },
+    { title: 'EX09 OB → S51 West lift', kind: 'circuit' as const },
+    { title: 'Ride along · EX09 OB → S51 West lift', kind: 'circuit' as const },
+  ];
+  it('ranks circuit, then string, then asset for "ex09"', () => {
+    const r = fuzzyFilter(items, 'ex09', i => [i.title], i => RANK[i.kind]);
+    expect(r.slice(0, 4).map(x => x.item.kind)).toEqual(['circuit', 'string', 'string', 'asset']);
+  });
+  it('never lets the kind boost beat a clearly better match', () => {
+    const r = fuzzyFilter(items, 'ex09 ob block', i => [i.title], i => RANK[i.kind]);
+    expect(r[0].item.title).toBe('EX09 OB block');
+  });
+});

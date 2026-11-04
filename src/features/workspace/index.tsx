@@ -2,7 +2,7 @@
  * OWNER: shell agent. The application shell: full-bleed 3D stage with floating chrome (HRL v6 anatomy), sheets for the
  * analysis views over the still-mounted viewport, import flow, command palette, toasts and global keys.
  */
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Viewport } from '@/scene';
 import { useApp } from '@/state/store';
 import { loadDemo } from '@/state/demo';
@@ -18,6 +18,7 @@ import { ImportModal } from './ImportModal';
 import { CommandPalette, Dialogs, DropOverlay, ShortcutsSheet, useDropTarget } from './Overlays';
 import { useGlobalKeys } from './commands';
 import { useHudRest, useThemeEffect } from './hooks';
+import { useTopRowFit } from './layout';
 import { ui } from './uiStore';
 import s from './shell.module.css';
 
@@ -41,6 +42,8 @@ function useBoot() {
     return () => { stop(); window.removeEventListener('beforeunload', beforeUnload); };
   }, []);
 }
+
+const TOP_ROW = [s.topLeft, s.switcher, s.topRight].map(c => `.${c}`).join(', ');
 
 function RestPill() {
   const tMin = useApp(st => st.timeline.tMin);
@@ -67,13 +70,21 @@ export function Shell() {
   const inspectorOn = useApp(st => st.panels.inspector);
   const profileOn = useApp(st => st.panels.profile);
   const insightsOn = useApp(st => st.panels.insights);
+  const camera = useApp(st => st.camera);
   const rested = useHudRest();
   const site = view === 'site';
   const showTimeline = hasAssets && hasCircuits;
   const showInspector = hasAssets && inspectorOn && !insightsOn;
+  const ride = site && (camera === 'pov' || camera === 'chase');
+  // the top row re-fits whenever what it holds changes (view → active label, assets → Show bar)
+  const appRef = useRef<HTMLDivElement>(null);
+  const density = useTopRowFit(appRef, TOP_ROW, [view, hasAssets]);
 
   return (
-    <div className={cx(s.app, !site && s.sheetUp, rested && s.rested, !showTimeline && s.noTimeline, !showInspector && !insightsOn && s.noInspector)}>
+    <div ref={appRef} data-top-density={density}
+      className={cx(s.app, !site && s.sheetUp, rested && s.rested, ride && s.ride, !showTimeline && s.noTimeline,
+        !showInspector && !insightsOn && s.noInspector, insightsOn && !site && s.insightsOpen,
+        density >= 1 && s.dShowIcons, density >= 2 && s.dNavIcons, density >= 3 && s.dNarrowDoc, density >= 4 && s.dNavBare, density >= 5 && s.dStack)}>
       <div className={s.stage}><Viewport /></div>
 
       {site && !hasAssets && <Welcome />}
@@ -81,7 +92,7 @@ export function Shell() {
       <div className={s.hud} data-hud>
         <DocChrome />
         <ViewSwitcher />
-        <RightChrome />
+        <RightChrome foldShow={density >= 3} />
         {hasAssets && <ToolRail />}
         {hasAssets && <ToolHint />}
         {showInspector && <InspectorCard />}

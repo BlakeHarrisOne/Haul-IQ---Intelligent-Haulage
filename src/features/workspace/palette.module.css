@@ -1,4 +1,5 @@
-.scrim { position: fixed; inset: 0; z-index: var(--z-modal); background: color-mix(in srgb, var(--scrim) 70%, transparent); animation: fade var(--t-med) var(--ease); }
+/* the one modal scrim (same --scrim as Modal: shortcuts, import, dialogs) */
+.scrim { position: fixed; inset: 0; z-index: var(--z-modal); background: var(--scrim); animation: fade var(--t-med) var(--ease); }
 @keyframes fade { from { opacity: 0; } }
 .panel {
   position: absolute; left: 50%; top: 13vh; translate: -50% 0; width: min(660px, calc(100vw - 32px));

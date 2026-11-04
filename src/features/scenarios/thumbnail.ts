@@ -4,12 +4,24 @@
  * strings - so every saved scenario gets a recognisable picture even without WebGL.
  */
 import type { MeshAsset, Scenario } from '@/core/types';
+import { circuitHex } from '@/ui';
 
 type SceneApiLike = { screenshot?: (opts?: { width?: number; height?: number }) => unknown };
 const sceneMods = import.meta.glob<{ sceneApi?: SceneApiLike }>('/src/scene/api.ts', { eager: true });
 const sceneApi = (): SceneApiLike | undefined => Object.values(sceneMods)[0]?.sceneApi;
 
 const W = 480, H = 300;
+
+export type ThumbTheme = 'light' | 'dark';
+/** The UI theme in effect (the shell writes it to <html data-theme>). */
+export const docTheme = (): ThumbTheme =>
+  (typeof document !== 'undefined' && document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
+
+/** Plan-map palette per theme, so a thumbnail sits on its card like the rest of the UI. */
+const PALETTE: Record<ThumbTheme, { bg: [string, string]; base: [number, number, number]; lift: [number, number, number]; shade: [number, number]; halo: string }> = {
+  light: { bg: ['#EEF1F5', '#E2E6EC'], base: [226, 224, 218], lift: [14, 10, 6], shade: [0.52, 0.62], halo: 'rgba(255,255,255,.9)' },
+  dark: { bg: ['#1B2029', '#141820'], base: [112, 108, 100], lift: [30, 26, 20], shade: [0.42, 0.58], halo: 'rgba(10,14,20,.75)' },
+};
 
 function makeCanvas(w: number, h: number): HTMLCanvasElement | null {
   if (typeof document === 'undefined') return null;
@@ -54,7 +66,7 @@ export async function makeThumbnail(s: Scenario, opts: { preferScene?: boolean }
       }
     } catch (e) { console.warn('[scenarios] scene screenshot failed', e); }
   }
-  try { return planThumbnail(s); } catch (e) { console.warn('[scenarios] plan thumbnail failed', e); return undefined; }
+  try { return planThumbnail(s, W, H, docTheme()); } catch (e) { console.warn('[scenarios] plan thumbnail failed', e); return undefined; }
 }
 
 // ── plan renderer ────────────────────────────────────────────────────────────────────────────────
@@ -101,7 +113,8 @@ function rasterise(a: MeshAsset, owner: number, zb: Float32Array, ob: Int16Array
   }
 }
 
-export function planThumbnail(s: Scenario, w = W, h = H): string | undefined {
+export function planThumbnail(s: Scenario, w = W, h = H, theme: ThumbTheme = docTheme()): string | undefined {
+  const pal = PALETTE[theme];
   const c = makeCanvas(w, h);
   if (!c) return undefined;
   const g = c.getContext('2d')!;
@@ -113,7 +126,7 @@ export function planThumbnail(s: Scenario, w = W, h = H): string | undefined {
   }
   for (const hs of s.strings) for (const p of hs.points) { x0 = Math.min(x0, p.e); x1 = Math.max(x1, p.e); y0 = Math.min(y0, p.n); y1 = Math.max(y1, p.n); }
   const bg = g.createLinearGradient(0, 0, 0, h);
-  bg.addColorStop(0, '#EEF1F5'); bg.addColorStop(1, '#E2E6EC');
+  bg.addColorStop(0, pal.bg[0]); bg.addColorStop(1, pal.bg[1]);
   g.fillStyle = bg; g.fillRect(0, 0, w, h);
   if (!Number.isFinite(x0) || x1 - x0 < 1 || y1 - y0 < 1) return c.toDataURL('image/jpeg', 0.85);
 
@@ -156,14 +169,14 @@ export function planThumbnail(s: Scenario, w = W, h = H): string | undefined {
       const nl = Math.hypot(dzdx, dzdy, 1);
       const shade = Math.max(0, (-dzdx * L[0] - dzdy * L[1] + L[2]) / nl);
       const t = zmax > zmin ? (z - zmin) / (zmax - zmin) : 0.5;
-      let r = 226 + 14 * t, gg = 224 + 10 * t, b = 218 + 6 * t; // cream hypsometric tint
+      let r = pal.base[0] + pal.lift[0] * t, gg = pal.base[1] + pal.lift[1] * t, b = pal.base[2] + pal.lift[2] * t; // hypsometric tint
       const a = os[k] >= 0 ? s.assets[os[k]] : ob[k] >= 0 ? s.assets[ob[k]] : undefined;
       if (a && a.role !== 'topo') {
         const [cr, cg, cb] = hexRgb(a.color);
         const m = a.role === 'design' ? 0.35 : 0.6;
         r = r * (1 - m) + cr * m; gg = gg * (1 - m) + cg * m; b = b * (1 - m) + cb * m;
       }
-      const sh = 0.52 + 0.62 * shade;
+      const sh = pal.shade[0] + pal.shade[1] * shade;
       img.data[o] = Math.min(255, r * sh);
       img.data[o + 1] = Math.min(255, gg * sh);
       img.data[o + 2] = Math.min(255, b * sh);
@@ -183,8 +196,8 @@ export function planThumbnail(s: Scenario, w = W, h = H): string | undefined {
     if (hs.visible === false || hs.points.length < 2) continue;
     g.beginPath();
     hs.points.forEach((p, i) => (i ? g.lineTo(px(p.e), py(p.n)) : g.moveTo(px(p.e), py(p.n))));
-    g.strokeStyle = 'rgba(255,255,255,.9)'; g.lineWidth = 5; g.stroke();
-    g.strokeStyle = hs.color || '#0A6FE6'; g.lineWidth = 2.5; g.stroke();
+    g.strokeStyle = pal.halo; g.lineWidth = 5; g.stroke();
+    g.strokeStyle = circuitHex(hs.color || '#2A78D6', theme === 'dark'); g.lineWidth = 2.5; g.stroke();
   }
   return c.toDataURL('image/jpeg', 0.85);
 }

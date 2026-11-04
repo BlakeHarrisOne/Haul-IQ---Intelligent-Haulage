@@ -43,20 +43,30 @@
 }
 .restPill span { color: var(--ink-3); font-weight: 600; }
 .rested .restPill { opacity: 1; translate: -50% 0; }
+/* POV / chase: the cockpit HUD owns the bottom centre, so the pill rests at the top centre (under the scene's ride tag) */
+.ride .restPill {
+  left: 50%; top: calc(var(--g) + var(--chrome-h)); bottom: auto; translate: -50% -8px;
+  /* the cockpit's dark glass (matches the scene's ride tag above it) */
+  background: rgba(16, 22, 30, .5); color: #F4F7FA; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16);
+}
+.ride .restPill span { color: rgba(236, 242, 248, .72); }
+.ride.rested .restPill { translate: -50% 0; }
 
 /* ── top row ───────────────────────────────────────────────────────────────── */
-.topLeft { position: absolute; top: var(--g); left: var(--g); width: 400px; z-index: calc(var(--z-sheet) + 2); }
+.topLeft { position: absolute; top: var(--g); left: var(--g); min-width: 400px; z-index: calc(var(--z-sheet) + 2); }
 .switcher { position: absolute; top: var(--g); left: 50%; translate: -50% 0; z-index: calc(var(--z-sheet) + 2); }
 .topRight { position: absolute; top: var(--g); right: var(--g); display: flex; gap: 8px; z-index: calc(var(--z-sheet) + 2); }
 .rested .switcher.fadeT { translate: -50% -6px; }
 
 .brandBox { display: flex; align-items: center; padding: 0 6px 0 7px; height: 100%; flex: none; }
 .doc {
-  flex: 1; min-width: 0; height: var(--ctl-h); display: flex; flex-direction: column; justify-content: center; gap: 1px;
+  flex: none; width: 232px; min-width: 0; height: var(--ctl-h); display: flex; flex-direction: column; justify-content: center; gap: 1px;
   padding: 0 6px; border: 0; border-radius: var(--r-ctl); background: transparent; text-align: left; cursor: text;
   transition: background-color var(--t-fast) ease-out;
 }
 .doc:hover { background: var(--hover); }
+.docTipHint { margin-left: 8px; color: rgba(255, 255, 255, .62); }
 .docName { font: 600 13px/18px var(--font); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .docState { display: flex; align-items: center; gap: 6px; font: 500 11.5px/14px var(--font); color: var(--ink-3); white-space: nowrap; overflow: hidden; }
 .docInput {
@@ -65,18 +75,18 @@
 }
 .stateDot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
 
-.navLabel { display: inline; }
-@media (max-width: 1679px) {
-  .switcher .navItem:not([aria-pressed="true"]) { width: var(--ctl-h); padding: 0; }
-  .switcher .navItem:not([aria-pressed="true"]) .navLabel { display: none; }
-}
-.showLabel { display: none; }
-@media (min-width: 1880px) {
-  .showLabel { display: inline; }
-}
-@media (max-width: 1180px) {
-  .switcher { left: auto; right: var(--g); top: calc(var(--top)); translate: none; }
-}
+/* Top-row density (layout.ts useTopRowFit): labels drop in priority order until no two surfaces touch. */
+.navLabel, .showLabel { display: inline; }
+.dShowIcons .showItem { width: var(--ctl-h); padding: 0; }
+.dShowIcons .showLabel { display: none; }
+.dNavIcons .switcher .navItem:not([aria-pressed="true"]) { width: var(--ctl-h); padding: 0; }
+.dNavIcons .switcher .navItem:not([aria-pressed="true"]) .navLabel { display: none; }
+.dNarrowDoc .doc { width: 150px; }
+.dNavBare .switcher .navItem { width: var(--ctl-h); padding: 0; }
+.dNavBare .switcher .navLabel { display: none; }
+.dStack .switcher { left: auto; right: var(--g); top: var(--top); translate: none; }
+.dStack.rested .switcher.fadeT { translate: 0 -6px; }
+.caret { color: var(--ink-3) !important; margin-left: -3px; }
 
 /* ── left tool rail ────────────────────────────────────────────────────────── */
 .rail { position: absolute; left: var(--g); top: var(--top); z-index: var(--z-chrome); }
@@ -148,12 +158,21 @@
 
 /* ── sheets (other views over the still-mounted viewport) ──────────────────── */
 .sheet {
-  position: absolute; inset: 0; z-index: var(--z-sheet); overflow: auto; overscroll-behavior: contain;
-  padding-top: var(--top);
-  background: color-mix(in srgb, var(--bg-app) 86%, transparent);
-  backdrop-filter: blur(22px) saturate(125%); -webkit-backdrop-filter: blur(22px) saturate(125%);
+  position: absolute; inset: 0; z-index: var(--z-sheet); overflow: hidden;
+  /* a near-solid ground: the pit behind is a hint of place, never a smear on an empty page */
+  background: color-mix(in srgb, var(--bg-app) 95%, transparent);
+  backdrop-filter: blur(48px) saturate(70%); -webkit-backdrop-filter: blur(48px) saturate(70%);
   animation: sheetIn var(--t-slow) var(--ease);
 }
+/* the scroller fades content out over the top 72 px so nothing slides visibly under the floating chrome */
+.sheetScroll {
+  position: absolute; inset: 0; overflow: auto; overscroll-behavior: contain; padding-top: var(--top);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, transparent 28px, rgba(0, 0, 0, .3) 52px, #000 72px);
+  mask-image: linear-gradient(180deg, transparent 0, transparent 28px, rgba(0, 0, 0, .3) 52px, #000 72px);
+  transition: padding-right var(--t-slow) var(--ease);
+}
+/* Insights open over a sheet: the page reflows into the space left of the drawer instead of sitting under it */
+.insightsOpen .sheetScroll { padding-right: calc(400px + 2 * var(--g)); }
 .sheet.closing { animation: sheetOut .22s var(--ease) forwards; pointer-events: none; }
 @keyframes sheetIn { from { opacity: 0; } }
 @keyframes sheetOut { to { opacity: 0; } }

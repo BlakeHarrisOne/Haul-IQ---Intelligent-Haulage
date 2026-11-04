@@ -1,15 +1,28 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useApp } from '@/state/store';
 import { num } from '@/core/format';
-import { Badge, Button, Check, Ctl, Empty, Icon, MenuButton, Modal, Segmented, TextField, cx, type IconName } from '@/ui';
+import { Badge, Button, Check, Ctl, Empty, Icon, MenuButton, Modal, PageHeader, Segmented, TextField, cx, type IconName } from '@/ui';
 import { scenarioKpis, type LibraryMeta, type ScenarioKpis } from './db';
 import {
   duplicateInLibrary, exportLibraryScenario, importScenarioFile, newScenario, openScenario, removeScenario, renameInLibrary, saveCurrent,
   useLibrary, useScenarioPicks,
 } from './library';
 import { ago } from './time';
-import { planThumbnail } from './thumbnail';
+import { docTheme, planThumbnail, type ThumbTheme } from './thumbnail';
 import s from './scenarios.module.css';
+
+/** The UI theme on <html data-theme>, live (thumbnails are drawn per theme). */
+function useDocTheme(): ThumbTheme {
+  const [theme, setTheme] = useState<ThumbTheme>(docTheme);
+  useEffect(() => {
+    const mo = new MutationObserver(() => setTheme(docTheme()));
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => mo.disconnect();
+  }, []);
+  return theme;
+}
+
+const SAVE_KEYS = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ? '⌘S' : 'Ctrl+S';
 
 function useNow(ms = 30_000) {
   const [now, setNow] = useState(Date.now());
@@ -38,16 +51,18 @@ function Counts({ m }: { m: Pick<LibraryMeta, 'circuits' | 'strings' | 'assets'>
   return <div className={s.counts}>{item('excavator', m.circuits, 'circuit')}{item('string', m.strings, 'haul string')}{item('surface', m.assets, 'surface')}</div>;
 }
 
-function Thumb({ src, children }: { src?: string; children?: ReactNode }) {
+function Thumb({ src, children, foreign }: { src?: string; children?: ReactNode; foreign?: ThumbTheme }) {
+  // a thumbnail saved in the other theme is toned to sit on this one (re-saving redraws it in the current theme)
   return (
-    <div className={s.thumb}>
+    <div className={cx(s.thumb, foreign === 'light' && s.fromLight, foreign === 'dark' && s.fromDark)}>
       {src ? <img src={src} alt="" draggable={false} /> : <div className={s.thumbEmpty}><Icon name="surface" size={28} /></div>}
       {children}
     </div>
   );
 }
 
-function ScenarioCard({ m, current, now, onDelete }: { m: LibraryMeta; current: boolean; now: number; onDelete: (m: LibraryMeta) => void }) {
+function ScenarioCard({ m, current, now, theme, onDelete }: { m: LibraryMeta; current: boolean; now: number; theme: ThumbTheme; onDelete: (m: LibraryMeta) => void }) {
+  const made = m.thumbnailTheme ?? 'light';
   const picked = useScenarioPicks(st => st.ids.includes(m.id));
   const toggle = useScenarioPicks(st => st.toggle);
   const [renaming, setRenaming] = useState(false);
@@ -61,7 +76,7 @@ function ScenarioCard({ m, current, now, onDelete }: { m: LibraryMeta; current: 
   return (
     <article className={cx(s.card, picked && s.picked)}>
       <button type="button" className={s.thumbBtn} onClick={() => openScenario(m.id)} title={`Open “${m.name}”`}>
-        <Thumb src={m.thumbnail} />
+        <Thumb src={m.thumbnail} foreign={made !== theme ? made : undefined} />
       </button>
       <label className={s.pick} title="Pick for Compare">
         <Check on={picked} onChange={() => toggle(m.id)} />
@@ -103,12 +118,13 @@ function CurrentCard({ inLibrary }: { inLibrary: boolean }) {
   const dirty = useApp(st => st.dirty);
   const busy = useLibrary(st => st.busy);
   const k = useMemo(() => scenarioKpis(scenario), [scenario]);
+  const theme = useDocTheme();
   const [thumb, setThumb] = useState<string>();
   useEffect(() => {
     // after the sheet has animated in; rasterising a large pit takes a moment
-    const t = setTimeout(() => { try { setThumb(planThumbnail(scenario)); } catch { /* keep placeholder */ } }, 450);
+    const t = setTimeout(() => { try { setThumb(planThumbnail(scenario, undefined, undefined, theme)); } catch { /* keep placeholder */ } }, 450);
     return () => clearTimeout(t);
-  }, [scenario.assets, scenario.strings]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [scenario.assets, scenario.strings, theme]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <article className={cx(s.card, s.currentCard)}>
       <Thumb src={thumb}>
@@ -124,7 +140,7 @@ function CurrentCard({ inLibrary }: { inLibrary: boolean }) {
       <footer className={s.foot}>
         <Button size="sm" variant="primary" icon="save" disabled={busy} onClick={() => saveCurrent()}>Save to library</Button>
         <span style={{ flex: 1 }} />
-        <span className={s.hint}>⌘S</span>
+        <span className={s.hint}>{SAVE_KEYS}</span>
       </footer>
     </article>
   );
@@ -142,6 +158,7 @@ export function ScenariosView() {
   const [confirm, setConfirm] = useState<LibraryMeta | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const now = useNow();
+  const theme = useDocTheme();
 
   useEffect(() => { refresh(); }, [refresh]);
 
@@ -156,13 +173,8 @@ export function ScenariosView() {
 
   return (
     <div className={s.view}>
-      <header className={s.head}>
-        <span className={s.headIco}><Icon name="folder" size={22} /></span>
-        <div style={{ minWidth: 0 }}>
-          <h1 className={s.h1}>Scenarios</h1>
-          <div className={s.sub}>Saved in this browser on this computer · export a .haiul.json to share one or move it to another machine</div>
-        </div>
-      </header>
+      <PageHeader eyebrow="Library" icon="folder" title="Scenarios"
+        desc="Saved in this browser on this computer. Export a .haiul.json to share one or move it to another machine." />
       <div className={s.toolbar}>
         <span className={s.search}>
           <Icon name="search" size={18} />
@@ -198,13 +210,13 @@ export function ScenariosView() {
                 <Button icon="upload" onClick={() => fileRef.current?.click()}>Import .haiul.json</Button>
               </div>
             )}>
-            {q ? 'Try another name.' : 'Scenarios you save (⌘S) are kept in this browser on this computer. Export a .haiul.json to share one or move it to another machine.'}
+            {q ? 'Try another name.' : `Scenarios you save (${SAVE_KEYS}) are kept in this browser on this computer. Export a .haiul.json to share one or move it to another machine.`}
           </Empty>
         </div>
       ) : (
         <div className={s.grid}>
           {showCurrent && !q && <CurrentCard inLibrary={inLibrary} />}
-          {list.map(m => <ScenarioCard key={m.id} m={m} current={m.id === scenario.id} now={now} onDelete={setConfirm} />)}
+          {list.map(m => <ScenarioCard key={m.id} m={m} current={m.id === scenario.id} now={now} theme={theme} onDelete={setConfirm} />)}
         </div>
       )}
 
