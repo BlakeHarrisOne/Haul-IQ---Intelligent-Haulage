@@ -10,6 +10,7 @@ import { HeightGrid } from './heightGrid';
 import { boundaryEdges, smoothNormals, toLocal, windsDown, type LocalMesh } from './meshUtil';
 import { BUMP_GLSL, NOISE_GLSL, hillshadeLights } from './glsl';
 import type { Palette } from './theme';
+import { GRADE_HEX } from '@/ui';
 
 export interface TerrainUniforms {
   [k: string]: THREE.IUniform;
@@ -89,8 +90,11 @@ export class TerrainLayer {
       uHSW: { value: new THREE.Vector4(...(hs.weights as [number, number, number, number])) },
       uDetail: { value: 0.15 },
       uCurv: { value: 0.32 },
+      uGlowP: { value: Array.from({ length: 8 }, () => new THREE.Vector4(0, -1e6, 0, 1)) },
+      uGlowCol: { value: new THREE.Color('#FFB46A') },
+      uGlowK: { value: 0 },
       uBump: { value: 0.9 },
-      uHeat: { value: [new THREE.Color('#3E8A5A'), new THREE.Color('#1F8A8A'), new THREE.Color('#B8692E'), new THREE.Color('#B5564C')] },
+      uHeat: { value: [new THREE.Color(GRADE_HEX.flat), new THREE.Color(GRADE_HEX.mod), new THREE.Color(GRADE_HEX.steep), new THREE.Color(GRADE_HEX.max)] },
       // skirt
       uTopsoil: { value: new THREE.Color() },
       uWeathered: { value: new THREE.Color() },
@@ -142,6 +146,7 @@ uniform sampler2D uAO; uniform vec4 uAOX; uniform vec2 uAOSize; uniform float uA
 uniform vec3 uLow; uniform vec3 uMid; uniform vec3 uHigh; uniform vec3 uBatter; uniform vec3 uFloor; uniform vec3 uVeg;
 uniform float uSlopeOn; uniform float uHS; uniform float uShadeVex; uniform vec3 uHSL[4]; uniform vec4 uHSW;
 uniform float uDetail; uniform float uBump; uniform vec3 uHeat[4]; uniform float uCurv;
+uniform vec4 uGlowP[8]; uniform vec3 uGlowCol; uniform float uGlowK;
 ${NOISE_GLSL}
 ${BUMP_GLSL}
 float hk_tanS; float hk_rl; float hk_fw; vec2 hk_pw; float hk_bh;`);
@@ -196,9 +201,10 @@ float hk_tanS; float hk_rl; float hk_fw; vec2 hk_pw; float hk_bh;`);
     base *= mix(1.0, 0.42 + 0.78 * hs, uHS);
     if (uSlopeOn > 0.5) {
       float gr = hk_tanS;
-      vec3 heat = mix(uHeat[0], uHeat[1], smoothstep(0.03, 0.05, gr));
-      heat = mix(heat, uHeat[2], smoothstep(0.07, 0.09, gr));
-      heat = mix(heat, uHeat[3], smoothstep(0.11, 0.14, gr));
+      // continuous ramp through the grade classes (0 / 4 / 8 / 10 %+), not pass/fail
+      vec3 heat = mix(uHeat[0], uHeat[1], smoothstep(0.0, 0.04, gr));
+      heat = mix(heat, uHeat[2], smoothstep(0.04, 0.08, gr));
+      heat = mix(heat, uHeat[3], smoothstep(0.08, 0.10, gr));
       base = mix(base, heat * (0.55 + 0.6 * hs), 0.62);
     }
     diffuseColor.rgb = base;
@@ -218,6 +224,17 @@ float hk_tanS; float hk_rl; float hk_fw; vec2 hk_pw; float hk_bh;`);
   }`, 'replace');
       f = patch(f, 'opaque_fragment', /* glsl */ `
   {
+    // night: warm pools from lighting plants at the working faces
+    if (uGlowK > 0.0) {
+      float gsum = 0.0;
+      for (int i = 0; i < 8; i++) {
+        vec4 gp = uGlowP[i];
+        vec3 dv = vLoc - gp.xyz;
+        float r2 = dot(dv, dv) / (gp.w * gp.w);
+        gsum += exp(-r2 * 2.2) * (1.0 + 0.0 * gp.w);
+      }
+      outgoingLight += uGlowCol * diffuseColor.rgb * gsum * uGlowK;
+    }
     // site grid (E/N), faded when lines get closer than ~7 px
     if (uGrid.z > 0.5) {
       vec2 gp = (hk_pw + uGridOff) / uGrid.x;
@@ -238,14 +255,15 @@ float hk_tanS; float hk_rl; float hk_fw; vec2 hk_pw; float hk_bh;`);
       float line = 1.0 - smoothstep(wpx - 0.5, wpx + 0.6, dpx);
       float spacing = I / fz;
       float fade = mix(smoothstep(3.0, 7.0, spacing), smoothstep(1.4, 3.0, spacing * uContour.y), isMajor);
-      fade *= smoothstep(0.003, 0.02, hk_tanS);
+      // flats (dump tops, pit floor) stay clean: no speckle where the slope / height change per pixel vanishes
+      fade *= smoothstep(0.006, 0.035, hk_tanS);
       float a = line * fade * uInkAlpha * mix(0.6, 1.0, isMajor);
       outgoingLight = mix(outgoingLight, uInk * 0.12 + outgoingLight * 0.25, a);
     }
   }`, 'before');
       sh.fragmentShader = f;
     };
-    m.customProgramCacheKey = () => 'hk-terrain-v3';
+    m.customProgramCacheKey = () => 'hk-terrain-v4';
     return m;
   }
 
@@ -577,6 +595,7 @@ ${NOISE_GLSL}`);
     this.groundMat.color.copy(this.driving ? c.driveGround : c.backdrop);
     this.contactMat.opacity = d.contact;
     this.shadowCatcherMat.opacity = d.contact * 0.5;
+    this.u.uGlowK.value = d.plantGlow * 2.2;
     this.rimMat.color.set(p.def.stars > 0 ? '#9FB0C8' : '#FFFFFF');
     this.rimMat.opacity = p.def.stars > 0 ? 0.35 : 0.75;
   }
@@ -589,6 +608,14 @@ ${NOISE_GLSL}`);
     this.u.uGrid.value.z = on ? 1 : 0;
   }
   setSlope(on: boolean) { this.u.uSlopeOn.value = on ? 1 : 0; }
+  /** Night lighting-plant pools: local (VE-1) positions + radius (m). */
+  setGlows(list: { x: number; y: number; z: number; r: number }[]) {
+    const arr = this.u.uGlowP.value as THREE.Vector4[];
+    for (let i = 0; i < arr.length; i++) {
+      const g = list[i];
+      if (g) arr[i].set(g.x, g.y, g.z, g.r); else arr[i].set(0, -1e6, 0, 1);
+    }
+  }
   setHillshade(k: number, rotDeg = 0) {
     this.u.uHS.value = k;
     const hs = hillshadeLights(rotDeg);

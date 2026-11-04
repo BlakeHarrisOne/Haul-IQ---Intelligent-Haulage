@@ -280,7 +280,9 @@ export const stringsModule: SceneModule = (ctx: SceneContext) => {
   const offOverlay = ctx.onOverlay((g, w, h) => {
     const s = st();
     const P = makeProjector(ctx);
-    const labelsOn = s.layers.labels !== false;
+    // in the driver's seat the screen-space marks would float over the cab: only stop signs stay
+    const pov = s.camera === 'pov';
+    const labelsOn = s.layers.labels !== false && !pov;
     placed.length = 0;
     // strings hauled by a circuit first, so a shared dig / dump shows that circuit's pin
     const ordered = [...entries.values()].sort((a, b) => Number(!!circuitOfString(s.scenario, b.id)) - Number(!!circuitOfString(s.scenario, a.id)));
@@ -290,7 +292,7 @@ export const stringsModule: SceneModule = (ctx: SceneContext) => {
       const focus = (s.selection.kind === 'string' && s.selection.id === e.id) || (s.hover.kind === 'string' && s.hover.id === e.id);
       placePin(e.pinStart, P, e, 0, labelsOn && (!e.startLinked || focus), e.startLinked ? 46 : 16);
       placePin(e.pinEnd, P, e, e.path.n - 1, labelsOn && (!e.endLinked || focus), e.endLinked ? 46 : 16);
-      drawEnds(g, P, e);
+      if (!pov) drawEnds(g, P, e);
       drawStops(g, P, e);
     }
     const sel = s.selection;

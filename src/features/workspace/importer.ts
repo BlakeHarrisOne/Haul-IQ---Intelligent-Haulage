@@ -13,11 +13,13 @@ import { read00t, readStringsText } from './geomBridge';
 import { sceneFit } from './sceneBridge';
 import type { ImportItem } from './importTypes';
 import { ui } from './uiStore';
+import { CAT_HEX } from '@/ui';
 
 export const ROLE_COLORS: Record<AssetRole, string> = {
-  topo: '#B9BCB4', dig: '#C79A6B', dump: '#7FA58E', design: '#0A6FE6', other: '#8E949C',
+  topo: '#B9BCB4', dig: '#C79A6B', dump: '#7FA58E', design: CAT_HEX[0], other: '#8E949C',
 };
-export const SWATCHES = ['#B9BCB4', '#C79A6B', '#2E3238', '#9C8C7A', '#7FA58E', '#0A6FE6', '#7B5EA7', '#1F8A8A', '#B8692E', '#B5564C'];
+/** Material / ground swatches (topo, OB, coal, IB, dump) followed by the categorical data palette. */
+export const SWATCHES = ['#B9BCB4', '#C79A6B', '#2E3238', '#9C8C7A', '#7FA58E', ...CAT_HEX.slice(0, 6)];
 export const DEFAULT_MATERIALS = [
   { id: 'OB', name: 'Overburden', color: '#C79A6B' },
   { id: 'CL', name: 'Coal', color: '#2E3238' },
@@ -153,7 +155,7 @@ async function readStrings(f: File) {
   try {
     const s = app().scenario;
     const topo = s.assets.find(a => a.role === 'topo');
-    const { strings, warnings } = readStringsText(await f.text(), f.name, topo, s.strings.length);
+    const { strings, warnings } = readStringsText(await f.text(), f.name, CAT_HEX, topo, s.strings.length);
     if (!strings.length) throw new Error('No strings found in this file.');
     ui().set({ stringsImport: { fileName: f.name, strings, warnings }, importOpen: true });
   } catch (e) {

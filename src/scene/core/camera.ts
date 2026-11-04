@@ -233,14 +233,19 @@ export class CameraRig {
   /** Frame a box in the current mode (animated unless dur = 0). */
   frame(box: THREE.Box3, dur = 900) {
     if (this.mode === 'pov' || this.mode === 'chase') return;
-    const to = this.mode === 'plan' ? this.planFitParams(box) : this.fitParams(box, this.P.az, this.P.el);
+    const to = this.mode === 'plan' ? this.planFitParams(box) : this.fitParams(box, this.P.az, this.P.el, 0.97);
     if (this.mode === 'orbit') this.lastOrbit = cloneP(to);
     this.tweenParams(to, dur, this.mode);
   }
 
   /** Immediately set the default overview. */
   home(box: THREE.Box3) {
-    const p = this.fitParams(box, 24 * D2R, 33 * D2R, 0.96);
+    // pick the azimuth (10–50°, looking north-east-ish) that frames the site largest: diagonal views fill the free area
+    let p = this.fitParams(box, 24 * D2R, 34 * D2R, 0.97);
+    for (let a = 10; a <= 50; a += 5) {
+      const q = this.fitParams(box, a * D2R, 34 * D2R, 0.97);
+      if (q.dist < p.dist * 0.985) p = q;
+    }
     this.P = p; this.lastOrbit = cloneP(p); this.homeDist = p.dist;
     if (this.mode === 'plan') this.P = this.planFitParams(box);
     this.tr = null;

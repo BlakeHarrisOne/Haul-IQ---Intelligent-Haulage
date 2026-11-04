@@ -160,7 +160,7 @@ export function startHarness(host: HTMLElement) {
       if (mode === 'pov') {
         const e = t.eye;
         persp.position.set(t.position.x - fx * e.back + rx * e.right, t.position.y + e.height, t.position.z - fz * e.back + rz * e.right);
-        persp.fov = 62;
+        persp.fov = 70;
         const pitch = t.pitch * 0.85 - 0.035;
         persp.lookAt(persp.position.x + fx * Math.cos(pitch) * 10, persp.position.y + Math.sin(pitch) * 10, persp.position.z + fz * Math.cos(pitch) * 10);
       } else {

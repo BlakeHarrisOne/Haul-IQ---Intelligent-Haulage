@@ -49,6 +49,22 @@ export const sceneApi = {
     const b = s && bboxOfPoints(s.points);
     if (b && core) core.focusBox(b.min, b.max, 0.15);
   },
+  /** Frame a circuit: its haul string plus its dig and dump solids together (falls back to whatever exists). */
+  focusCircuit(circuitId: string): void {
+    const sc = useApp.getState().scenario;
+    const c = sc.circuits.find(x => x.id === circuitId);
+    if (!c || !core) return;
+    const min: Vec3 = [Infinity, Infinity, Infinity], max: Vec3 = [-Infinity, -Infinity, -Infinity];
+    const grow = (a: Vec3, b: Vec3) => { for (let k = 0; k < 3; k++) { min[k] = Math.min(min[k], a[k]); max[k] = Math.max(max[k], b[k]); } };
+    const hs = sc.strings.find(x => x.id === c.haulStringId);
+    const sb = hs && bboxOfPoints(hs.points);
+    if (sb) grow(sb.min, sb.max);
+    for (const id of [c.digId, c.dumpId]) {
+      const a = id ? sc.assets.find(x => x.id === id) : undefined;
+      if (a) grow(a.stats.bbox.min, a.stats.bbox.max);
+    }
+    if (min[0] <= max[0]) core.focusBox(min, max, 0.12);
+  },
   /** Fly to a camera mode (also updates the store so the UI stays in sync). */
   setCameraMode(mode: CameraMode, povCircuitId?: string): void { useApp.getState().setCamera(mode, povCircuitId); },
   /** Face north keeping the tilt. */

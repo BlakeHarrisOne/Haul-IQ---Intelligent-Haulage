@@ -14,6 +14,7 @@ import { TerrainLayer } from './terrain';
 import { SolidsLayer } from './solids';
 import { SectionLayer } from './section';
 import { currentTheme, palette, watchTheme, type Palette, type ThemeName } from './theme';
+import { drawSiteRefs } from './refs';
 import css from './core.module.css';
 
 export interface ViewInfo { heading: number; mpp: number; mode: CamMode; transitioning: boolean }
@@ -331,6 +332,7 @@ export class SceneCore {
       this.rig.setBounds(b);
       this.atmos.setSiteBox(b);
       if ((!this.homed || topoChanged) && !b.isEmpty() && (topo.length || solids.length)) {
+        this.rig.safe = this.insets();
         this.rig.home(b);
         this.homed = true;
       }
@@ -408,6 +410,7 @@ export class SceneCore {
       } catch (e) { console.warn('[scene] shift state failed', e); }
     }
     if (this.solids.setFractions(fr, force)) { this.shadowDirty = true; this.requestRender(true); }
+    this.terrain.setGlows(this.solids.glowSpots());
   }
 
   /** Testing / thumbnails: force a depletion fraction on every solid (null = follow the timeline). */
@@ -433,7 +436,11 @@ export class SceneCore {
    */
   insets(): import('./labels').Insets {
     const st = useApp.getState();
-    const def = { top: 70, right: st.panels.inspector ? 428 : 16, bottom: 78, left: 70 };
+    // the shell exposes --right-col (inspector column width, 0 when collapsed) on the app root
+    let right = st.panels.inspector ? 428 : 16;
+    const rc = typeof getComputedStyle !== 'undefined' ? getComputedStyle(this.container).getPropertyValue('--right-col').trim() : '';
+    if (rc) { const v = parseFloat(rc); if (Number.isFinite(v)) right = v > 0 ? v + 14 : 16; }
+    const def = { top: 70, right, bottom: 96, left: 70 };
     const o = this.insetOverride ?? {};
     const r = { top: o.top ?? def.top, right: o.right ?? def.right, bottom: o.bottom ?? def.bottom, left: o.left ?? def.left };
     // never let insets eat more than ~60 % of a small viewport
@@ -673,7 +680,13 @@ export class SceneCore {
     o.setTransform(1, 0, 0, 1, 0, 0);
     o.clearRect(0, 0, this.overlay.width, this.overlay.height);
     o.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
-    if (this.labelLayer.style.display !== 'none') this.solids.drawLeaders(o);
+    if (this.labelLayer.style.display !== 'none') {
+      if (mode === 'orbit' && this.terrain.grid && this.terrain.hasData && this.gridOn && this.builtTopo.length && this.terrain.meshes[0]?.visible) {
+        drawSiteRefs({ ctx: o, camera: cam, w: this.w, h: this.h, grid: this.terrain.grid, origin: this.frameV.origin, ve, datumY: this.terrain.datumY,
+          stepM: gs * (this.rig.transitioning ? 2 : 1), ink: this.pal.def.overlayInk, halo: this.pal.def.overlayHalo, insets: this.insets() });
+      }
+      this.solids.drawLeaders(o);
+    }
     if (this.overlayCbs.size) {
       for (const cb of this.overlayCbs) { try { o.save(); cb(o, this.w, this.h); o.restore(); } catch (e) { console.error('[scene] overlay', e); } }
     }
@@ -722,6 +735,7 @@ export class SceneCore {
   // ─────────────────────────────────────────────────────────── API helpers
 
   fitAll() {
+    this.rig.safe = this.insets();
     const b = this.sceneBounds();
     if (this.rig.mode === 'pov' || this.rig.mode === 'chase') useApp.getState().setCamera('orbit');
     this.rig.frame(b);

@@ -408,6 +408,19 @@ export class SolidsLayer {
       li => this.items.get(li.id)?.asset.color ?? '#888');
   }
 
+  /** Working-face positions (local VE-1) for the night lighting-plant pools: digs first, then dumps. */
+  glowSpots(): { x: number; y: number; z: number; r: number }[] {
+    const out: { x: number; y: number; z: number; r: number }[] = [];
+    const items = [...this.items.values()].filter(i => i.asset.visible !== false).sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'dig' ? -1 : 1));
+    for (const it of items) {
+      const L = it.local;
+      const span = Math.max(L.max[0] - L.min[0], L.max[2] - L.min[2]);
+      const c = it.cap.visible && it.cap.geometry.boundingSphere ? it.cap.geometry.boundingSphere.center : null;
+      out.push({ x: c ? c.x : it.anchor.x, y: c ? c.y : L.max[1], z: c ? c.z : it.anchor.z, r: Math.min(170, Math.max(60, span * 0.42)) });
+    }
+    return out.slice(0, 8);
+  }
+
   /** Local meshes for section cuts. */
   locals(): { local: LocalMesh; color: string; id: string }[] {
     return [...this.items.values()].filter(i => i.asset.visible !== false).map(i => ({ local: i.local, color: i.asset.color, id: i.asset.id }));

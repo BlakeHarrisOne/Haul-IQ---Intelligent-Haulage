@@ -52,8 +52,9 @@
 .hourLine { position: absolute; top: 5px; bottom: 5px; width: 1px; background: var(--hair); }
 .ev {
   position: absolute; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center; gap: 4px; overflow: hidden;
-  font: 600 11px/1 var(--font); white-space: nowrap; border-left: 1px solid; border-right: 1px solid;
+  padding: 0 5px; font: 600 11px/1 var(--font); white-space: nowrap; border-left: 1px solid; border-right: 1px solid;
 }
+.ev span { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .ev svg { flex: none; }
 .ev-prestart, .ev-changeover {
   color: var(--ink-2); border-color: color-mix(in srgb, var(--ink-4) 50%, transparent);

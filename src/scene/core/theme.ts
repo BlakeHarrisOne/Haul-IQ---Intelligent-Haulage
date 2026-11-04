@@ -45,6 +45,8 @@ export interface PaletteDef {
   // ground contact shadow
   contact: number;
   stars: number;
+  /** Warm lighting-plant pools at the working faces (night). */
+  plantGlow: number;
   glow: string;
   shadowIntensity: number;
   /** Label/overlay ink (2D canvas, CSS). */
@@ -62,11 +64,11 @@ export const PALETTES: Record<ThemeName, PaletteDef> = {
     driveGround: '#C9C0B0',
     sun: '#FFF1DC',
     sunIntensity: 3.3,
-    sunAzDeg: 244,
+    sunAzDeg: 240,
     sunElDeg: 36,
     hemiSky: '#C3D4E9',
     hemiGround: '#A39581',
-    hemiIntensity: 0.8,
+    hemiIntensity: 0.48,
     exposure: 0.96,
     tLow: '#968E81',
     tMid: '#CABDA6',
@@ -85,10 +87,11 @@ export const PALETTES: Record<ThemeName, PaletteDef> = {
     coal: '#2B2A2B',
     contact: 0.34,
     stars: 0,
+    plantGlow: 0,
     glow: '#FFE7C2',
     shadowIntensity: 0.82,
-    overlayInk: '#1F2329',
-    overlayHalo: 'rgba(255,255,255,0.85)',
+    overlayInk: '#3A3F47',
+    overlayHalo: 'rgba(255,255,255,0.7)',
   },
   dark: {
     skyZenith: '#060A12',
@@ -98,9 +101,9 @@ export const PALETTES: Record<ThemeName, PaletteDef> = {
     driveHorizon: '#1E2836',
     driveGround: '#1A1F26',
     sun: '#B9CCF2',
-    sunIntensity: 2.1,
+    sunIntensity: 3.0,
     sunAzDeg: 222,
-    sunElDeg: 34,
+    sunElDeg: 33,
     hemiSky: '#3A4E70',
     hemiGround: '#1C1A18',
     hemiIntensity: 0.95,
@@ -112,16 +115,17 @@ export const PALETTES: Record<ThemeName, PaletteDef> = {
     tFloor: '#4A4845',
     tVeg: '#7D7C68',
     ink: '#D6E2F2',
-    inkAlpha: 0.34,
+    inkAlpha: 0.5,
     gridInk: '#9FB6D6',
     gridAlpha: 0.045,
-    topsoil: '#4A3B30',
-    weathered: '#7C6447',
-    rockA: '#6F6A61',
-    rockB: '#5B574F',
+    topsoil: '#5A4838',
+    weathered: '#977A58',
+    rockA: '#8E887D',
+    rockB: '#736E65',
     coal: '#151516',
     contact: 0.55,
     stars: 1,
+    plantGlow: 1,
     glow: '#9DB7E8',
     shadowIntensity: 0.7,
     overlayInk: '#E9EDF2',

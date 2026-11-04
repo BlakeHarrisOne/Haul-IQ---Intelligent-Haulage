@@ -24,6 +24,9 @@ export interface WheelSpot { x: number; y: number; z: number; r: number; side: 1
 
 export interface TruckGeoms {
   body: THREE.BufferGeometry;
+  /** Body without the cab exterior + the cab's interior shell: what the driver sees from the seat (POV). */
+  bodyNoCab: THREE.BufferGeometry;
+  cabInterior: THREE.BufferGeometry;
   tray: THREE.BufferGeometry;
   load: THREE.BufferGeometry;
   wheelHi: THREE.BufferGeometry;
@@ -37,7 +40,7 @@ export interface TruckGeoms {
   /** Local x of the front bumper / front axle (from the mid-axle origin). */
   frontX: number;
   frontAxleX: number;
-  /** Driver eye in local axes. */
+  /** Driver eye in local axes (the seated eye the model and the POV use). */
   eye: [number, number, number];
   cabSide: 1 | -1;
 }
@@ -92,6 +95,71 @@ function wheel(K: Kit, r: number, w: number, rb: number, detail: 'hi' | 'lo', ri
   }
 }
 
+const IN = {
+  headliner: [0.83, 0.835, 0.82] as RGB, trim: [0.42, 0.45, 0.48] as RGB, pillar: [0.36, 0.385, 0.41] as RGB, wall: [0.62, 0.635, 0.645] as RGB,
+  dash: [0.2, 0.215, 0.23] as RGB, dashTop: [0.27, 0.285, 0.3] as RGB, screen: [0.05, 0.07, 0.09] as RGB, wheel: [0.09, 0.095, 0.1] as RGB,
+  seal: [0.04, 0.04, 0.045] as RGB,
+};
+
+/**
+ * Operator cab interior seen from the seat: headliner, header beam, raked A-pillars, rear B-pillars, side belt rails,
+ * windscreen sill, door cards, dash with the binnacle and instrument face, steering wheel and column. Windows are openings (no glass), as in Haul Road Lab's cab3d; the deck, rails, hood, canopy and mirrors
+ * outside come from the truck body itself, so they match the model exactly.
+ */
+function cabInterior(K: Kit, c: { ex: number; eyR: number; ez: number; cs: 1 | -1; deck: number; cabF: number; cabR: number; rk: number; ct: number; yA: number; yB: number; zs: number; paint: RGB }) {
+  const { ex, eyR, ez, deck, cabF, cabR, rk, ct, yA, yB, zs } = c;
+  const hC = ct - deck, xAt = (z: number) => cabF - (rk * (z - deck)) / hC - 0.05;
+  const ia = yA + 0.06, ib = yB - 0.06;                         // inner faces of the side walls
+  const roofZ = ct - 0.06;
+  // headliner + roof skin
+  K.box(cabR + 0.02, xAt(roofZ), ia, ib, roofZ, roofZ + 0.05, IN.headliner);
+  // header beam over the windscreen and a rear header
+  K.box(xAt(roofZ) - 0.17, xAt(roofZ) + 0.02, ia, ib, roofZ - 0.13, roofZ, IN.trim);
+  K.box(cabR + 0.02, cabR + 0.16, ia, ib, roofZ - 0.1, roofZ, IN.trim);
+  // A-pillars along the rake, B-pillars at the rear corners, a mullion on the outer side glass
+  for (const y of [ia + 0.035, ib - 0.035]) {
+    K.beam([xAt(zs - 0.08), y, zs - 0.08], [xAt(roofZ) - 0.02, y, roofZ], 0.075, 0.1, IN.pillar, 0, [1, 0, 0]);
+    K.box(cabR + 0.02, cabR + 0.14, y - 0.04, y + 0.04, deck, roofZ, IN.pillar);
+  }
+  const yOut = c.cs > 0 ? ib : ia, xm = cabR + (cabF - cabR) * 0.52;
+  K.box(xm - 0.04, xm + 0.04, yOut - c.cs * 0.06, yOut, zs - 0.05, roofZ, IN.pillar);
+  // side belt rails (window sills) and door cards below them
+  for (const [y, inner] of [[ia, -1], [ib, 1]] as [number, number][]) {
+    K.box(cabR + 0.1, xAt(zs) + 0.02, y - inner * 0.0, y + inner * -0.09, zs - 0.06, zs, IN.trim);
+    K.box(cabR + 0.1, xAt(deck + 0.1), y, y - inner * 0.035, deck, zs - 0.06, IN.wall);
+    // door handle / grab bar
+    K.tube([cabR + 0.6, y - inner * 0.06, zs - 0.25], [cabR + 1.0, y - inner * 0.06, zs - 0.22], 0.016, IN.trim, 0, 6);
+  }
+  // windscreen sill (lower frame)
+  K.box(xAt(zs) - 0.08, xAt(zs) + 0.03, ia, ib, zs - 0.09, zs - 0.01, IN.trim);
+  // dash: top sloping down towards the driver, face down to the floor, binnacle hump in front of the eye
+  const xd0 = xAt(zs) - 0.06, xd1 = ex + 0.42, zd0 = zs - 0.06, zd1 = zs - 0.17;
+  const sec = (x: number, zt: number): V3[] => [[x, ia + 0.02, deck + 0.3], [x, ia + 0.02, zt], [x, ib - 0.02, zt], [x, ib - 0.02, deck + 0.3]];
+  K.loft([sec(xd0, zd0), sec((xd0 + xd1) / 2, (zd0 + zd1) / 2 + 0.01), sec(xd1, zd1)], IN.dash);
+  K.box(xd1 - 0.25, xd0 - 0.02, ia + 0.03, ib - 0.03, zd0 - 0.005, zd0 + 0.004, IN.dashTop);
+  // binnacle + instrument face angled to the eye
+  const by = eyR, bw = 0.27;
+  K.hexa([[xd1 - 0.02, by - bw, zd1], [xd1 + 0.2, by - bw, zd1 + 0.02], [xd1 - 0.02, by + bw, zd1], [xd1 + 0.2, by + bw, zd1 + 0.02],
+    [xd1 - 0.04, by - bw + 0.03, zd1 + 0.13], [xd1 + 0.16, by - bw + 0.03, zd1 + 0.1], [xd1 - 0.04, by + bw - 0.03, zd1 + 0.13], [xd1 + 0.16, by + bw - 0.03, zd1 + 0.1]], IN.dash);
+  K.face([[xd1 - 0.015, by - bw + 0.05, zd1 + 0.015], [xd1 - 0.015, by + bw - 0.05, zd1 + 0.015], [xd1 - 0.035, by + bw - 0.06, zd1 + 0.115], [xd1 - 0.035, by - bw + 0.06, zd1 + 0.115]], IN.screen, 0, null, [-1, 0, 0.3]);
+  // side display on the inner side of the dash
+  const sy = eyR - c.cs * 0.62;
+  K.face([[xd1 + 0.02, sy - 0.14, zd1 + 0.04], [xd1 + 0.02, sy + 0.14, zd1 + 0.04], [xd1 + 0.0, sy + 0.14, zd1 + 0.16], [xd1 + 0.0, sy - 0.14, zd1 + 0.16]], IN.screen, 0, null, [-1, 0, 0.2]);
+  // steering column + wheel (rim tilted towards the driver), three spokes and a hub
+  const wc: V3 = [ex + 0.46, eyR, ez - 0.52], tilt = 0.95;              // wheel plane ~55° from horizontal
+  const nrm: V3 = [-Math.cos(tilt), 0, Math.sin(tilt)];               // faces the driver (back and up)
+  const u: V3 = [0, 1, 0], v: V3 = [Math.sin(tilt), 0, Math.cos(tilt)];
+  const R = 0.21, seg = 22;
+  const rim = (i: number): V3 => { const t = (i / seg) * Math.PI * 2; return [wc[0] + (u[0] * Math.cos(t) + v[0] * Math.sin(t)) * R, wc[1] + (u[1] * Math.cos(t) + v[1] * Math.sin(t)) * R, wc[2] + (u[2] * Math.cos(t) + v[2] * Math.sin(t)) * R]; };
+  for (let i = 0; i < seg; i++) K.tube(rim(i), rim(i + 1), 0.022, IN.wheel, 0, 8, false);
+  for (const t of [Math.PI * 0.5 + 0.2, Math.PI * 1.5 - 0.2, Math.PI * 1.0]) {
+    const p: V3 = [wc[0] + (u[0] * Math.cos(t) + v[0] * Math.sin(t)) * R, wc[1] + (u[1] * Math.cos(t) + v[1] * Math.sin(t)) * R, wc[2] + (u[2] * Math.cos(t) + v[2] * Math.sin(t)) * R];
+    K.beam(wc, p, 0.05, 0.018, IN.wheel, 0, nrm);
+  }
+  K.tube([wc[0] - nrm[0] * 0.02, wc[1], wc[2] - nrm[2] * 0.02], [wc[0] + nrm[0] * 0.03, wc[1], wc[2] + nrm[2] * 0.03], 0.06, IN.dash, 0, 12);
+  K.tube([wc[0] + 0.02, wc[1], wc[2] - 0.03], [xd1 + 0.12, wc[1], zd1 - 0.12], 0.045, IN.dash, 0, 10);
+}
+
 export function buildTruck(model: Pick<TruckModel, 'dims'> & { name?: string }): TruckGeoms {
   const dims = model.dims;
   const L = Math.max(4, dims.length), W = Math.max(2, dims.width), H = Math.max(2, dims.height), hw = W / 2;
@@ -104,9 +172,12 @@ export function buildTruck(model: Pick<TruckModel, 'dims'> & { name?: string }):
   const cs: 1 | -1 = eyR >= 0 ? 1 : -1;
   const ez = dims.eyeHeight || 0.75 * H;
   const deck = Math.max(ez - 1.2, D + 0.18), dT = 0.14;
-  const cabRoof = Math.max(Math.min(deck + 2.05, H - 0.38), ez + 0.3), canBot = Math.max(cabRoof + 0.08, H - 0.42);
-  const cabF = Math.min(ex + 0.9, -0.045 * L - 1.0), cabR = ex - 1.2, xBF = Math.min(-0.37 * L, cabR - 0.15);
-  const yCo = cs * Math.min(Math.abs(eyR) + 0.8, hw - 0.3), yCi = yCo - cs * 2.0;
+  // seated eye used by the model and the POV: never less than 1.5 m above the deck the cab stands on (the deck), else the tyre-driven
+  // deck height would put the windscreen sill at eye level (ASSUMED; the FLEET eye heights are estimates too)
+  const ezR = Math.max(ez, deck + 1.5);
+  const cabRoof = Math.max(Math.min(deck + 2.05, H - 0.38), ezR + 0.72), canBot = Math.max(cabRoof + 0.08, H - 0.42);
+  const cabF = Math.min(ex + 1.1, -0.045 * L - 1.0), cabR = ex - 1.2, xBF = Math.min(-0.37 * L, cabR - 0.15);
+  const yCo = cs * Math.min(Math.abs(eyR) + 0.95, hw - 0.3), yCi = yCo - cs * 1.95;
   const xCF = -0.03 * L, xDF = -0.045 * L;
   const bt = 0.47 * D, bb = 0.3 * D;
 
@@ -183,13 +254,22 @@ export function buildTruck(model: Pick<TruckModel, 'dims'> & { name?: string }):
       for (const f of [0.25, 0.75]) { const x = x0 + (x1 - x0) * f; box(x - 0.06, x + 0.06, y0 - sd * 0.01, y1 + sd * 0.02, 0.35 * D, 0.71 * D, C.black); }
     }
   }
+  // ── tread plate on the walkway in front of / beside the cab
+  {
+    const x0 = Math.max(xBF + 0.3, cabF + 0.1), x1 = xDF - 0.12, yy0 = -0.46 * W, yy1 = 0.46 * W, st = 0.22;
+    for (let x = x0; x < x1 - 0.05; x += st) for (let y = yy0; y < yy1 - 0.05; y += st) {
+      const alt = (Math.round((x - x0) / st) + Math.round((y - yy0) / st)) % 2 === 0;
+      const cx = x + st / 2, cy = y + st / 2, a = alt ? 0.07 : 0.025, b = alt ? 0.025 : 0.07;
+      K.face([[cx - a, cy - b, deck + 0.006], [cx + a, cy - b, deck + 0.006], [cx + a, cy + b, deck + 0.006], [cx - a, cy + b, deck + 0.006]], PD, 1, null, [0, 0, 1]);
+    }
+  }
   // ── handrails along the deck front
   const rails = (pts: [number, number][], z0: number, h: number) => {
     for (let i = 0; i < pts.length - 1; i++) {
       const a = pts[i], b = pts[i + 1], n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 1.3));
-      tube([a[0], a[1], z0 + h], [b[0], b[1], z0 + h], 0.035, C.rail, 0, 6);
-      tube([a[0], a[1], z0 + h * 0.5], [b[0], b[1], z0 + h * 0.5], 0.028, C.rail, 0, 5);
-      for (let j = 0; j <= n; j++) { const t = j / n; tube([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, z0], [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, z0 + h], 0.032, C.rail, 0, 6); }
+      tube([a[0], a[1], z0 + h], [b[0], b[1], z0 + h], 0.035, PL, 1, 8);
+      tube([a[0], a[1], z0 + h * 0.5], [b[0], b[1], z0 + h * 0.5], 0.028, PL, 1, 6);
+      for (let j = 0; j <= n; j++) { const t = j / n; tube([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, z0], [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, z0 + h], 0.032, P, 1, 6); }
     }
   };
   const xRl = xDF - 0.08, yRl = 0.47 * W - 0.06;
@@ -198,7 +278,7 @@ export function buildTruck(model: Pick<TruckModel, 'dims'> & { name?: string }):
   rails([[xRl, -cs * yRl], [xBF + 0.2, -cs * yRl]], deck, 1.05);
   // ── mirrors
   for (const [hp, base] of [[[-0.02 * L, cs * (hw - 0.14), deck + 1.55], [xRl, cs * yRl, deck + 1.05]], [[-0.03 * L, -cs * (hw - 0.14), deck + 1.3], [xRl, -cs * yRl, deck + 1.05]]] as [V3, V3][]) {
-    K.beam(base, [hp[0], hp[1], hp[2] - 0.2], 0.06, 0.06, C.rail);
+    K.beam(base, [hp[0], hp[1], hp[2] - 0.2], 0.04, 0.04, C.steel);
     K.obox(hp, [1, 0, 0], [0, 1, 0], [0, 0, 1], 0.05, 0.12, 0.3, C.black);
     const xg = hp[0] - 0.052;
     K.face([[xg, hp[1] - 0.1, hp[2] - 0.26], [xg, hp[1] + 0.1, hp[2] - 0.26], [xg, hp[1] + 0.1, hp[2] + 0.26], [xg, hp[1] - 0.1, hp[2] + 0.26]], C.glassHi, 0, null, [-1, 0, 0]);
@@ -216,29 +296,32 @@ export function buildTruck(model: Pick<TruckModel, 'dims'> & { name?: string }):
       tube([xs, yy, deck + 1.65], [xs + 0.25, yy, deck + 1.8], 0.13, C.under, 0, 10);
     }
   }
+  const KC = new Kit(), KI = new Kit();
   // ── operator cab (raised on the eye side), framed windows
   {
     const ct = cabRoof - 0.1, rk = 0.2, hC = ct - deck, xFt = cabF - rk;
     const yA = Math.min(yCi, yCo), yB = Math.max(yCi, yCo);
-    K.hexa([[cabR, yA, deck], [cabF, yA, deck], [cabR, yB, deck], [cabF, yB, deck], [cabR, yA + 0.03, ct], [xFt, yA + 0.03, ct], [cabR, yB - 0.03, ct], [xFt, yB - 0.03, ct]], P, 1);
-    box(cabR - 0.05, xFt + 0.06, yA - 0.04, yB + 0.04, ct, cabRoof, PL, 1);
+    KC.hexa([[cabR, yA, deck], [cabF, yA, deck], [cabR, yB, deck], [cabF, yB, deck], [cabR, yA + 0.03, ct], [xFt, yA + 0.03, ct], [cabR, yB - 0.03, ct], [xFt, yB - 0.03, ct]], P, 1);
+    KC.box(cabR - 0.05, xFt + 0.06, yA - 0.04, yB + 0.04, ct, cabRoof, PL, 1);
     const zs = deck + 0.78, zt2 = ct - 0.12, xAt = (z: number) => cabF - (rk * (z - deck)) / hC;
     const nF: V3 = [hC / Math.hypot(hC, rk), 0, rk / Math.hypot(hC, rk)];
     const fp = (y: number, z: number, o: number): V3 => [xAt(z) + nF[0] * o, y, z + nF[2] * o];
-    K.face([fp(yA + 0.1, zs - 0.05, 0.025), fp(yB - 0.1, zs - 0.05, 0.025), fp(yB - 0.1, zt2 + 0.05, 0.025), fp(yA + 0.1, zt2 + 0.05, 0.025)], C.seal, 0, null, nF);
-    K.face([fp(yA + 0.16, zs, 0.045), fp(yB - 0.16, zs, 0.045), fp(yB - 0.16, zt2, 0.045), fp(yA + 0.16, zt2, 0.045)], C.glass, 0, null, nF);
+    KC.face([fp(yA + 0.1, zs - 0.05, 0.025), fp(yB - 0.1, zs - 0.05, 0.025), fp(yB - 0.1, zt2 + 0.05, 0.025), fp(yA + 0.1, zt2 + 0.05, 0.025)], C.seal, 0, null, nF);
+    KC.face([fp(yA + 0.16, zs, 0.045), fp(yB - 0.16, zs, 0.045), fp(yB - 0.16, zt2, 0.045), fp(yA + 0.16, zt2, 0.045)], C.glass, 0, null, nF);
     const xm = cabR + (cabF - cabR) * 0.52;
     for (const outerSide of [1, -1]) {
       const yb = outerSide > 0 ? yB : yA, nn: V3 = [0, outerSide, 0];
-      const sq = (pts: [number, number][], o: number, c: RGB) => K.face(pts.map(([x, z]) => [x, yb + outerSide * o, z] as V3), c, 0, null, nn);
+      const sq = (pts: [number, number][], o: number, c: RGB) => KC.face(pts.map(([x, z]) => [x, yb + outerSide * o, z] as V3), c, 0, null, nn);
       sq([[cabR + 0.07, zs - 0.05], [xAt(zs - 0.05) - 0.07, zs - 0.05], [xAt(zt2 + 0.05) - 0.07, zt2 + 0.05], [cabR + 0.07, zt2 + 0.05]], 0.025, C.seal);
       sq([[cabR + 0.13, zs], [xm - 0.05, zs], [xm - 0.05, zt2], [cabR + 0.13, zt2]], 0.045, C.glass);
       sq([[xm + 0.07, zs], [xAt(zs) - 0.13, zs], [xAt(zt2) - 0.13, zt2], [xm + 0.07, zt2]], 0.045, C.glass);
     }
-    K.face([[cabR - 0.025, yA + 0.15, deck + 0.95], [cabR - 0.025, yB - 0.15, deck + 0.95], [cabR - 0.025, yB - 0.15, zt2 + 0.05], [cabR - 0.025, yA + 0.15, zt2 + 0.05]], C.seal, 0, null, [-1, 0, 0]);
-    K.face([[cabR - 0.045, yA + 0.22, deck + 1.0], [cabR - 0.045, yB - 0.22, deck + 1.0], [cabR - 0.045, yB - 0.22, zt2], [cabR - 0.045, yA + 0.22, zt2]], C.glass, 0, null, [-1, 0, 0]);
+    KC.face([[cabR - 0.025, yA + 0.15, deck + 0.95], [cabR - 0.025, yB - 0.15, deck + 0.95], [cabR - 0.025, yB - 0.15, zt2 + 0.05], [cabR - 0.025, yA + 0.15, zt2 + 0.05]], C.seal, 0, null, [-1, 0, 0]);
+    KC.face([[cabR - 0.045, yA + 0.22, deck + 1.0], [cabR - 0.045, yB - 0.22, deck + 1.0], [cabR - 0.045, yB - 0.22, zt2], [cabR - 0.045, yA + 0.22, zt2]], C.glass, 0, null, [-1, 0, 0]);
+    // the cab seen from the driver's seat (POV): interior shell with openings for the glass
+    cabInterior(KI, { ex, eyR, ez: ezR, cs, deck, cabF, cabR, rk, ct, yA, yB, zs, paint: P });
     // beacon on the cab roof
-    tube([cabR + 0.4, (yA + yB) / 2, cabRoof], [cabR + 0.4, (yA + yB) / 2, cabRoof + 0.22], 0.09, C.amber, 0, 8);
+    KC.tube([cabR + 0.4, (yA + yB) / 2, cabRoof], [cabR + 0.4, (yA + yB) / 2, cabRoof + 0.22], 0.09, C.amber, 0, 8);
   }
 
   // ── dump body (separate part: tips about the rear hinge)
@@ -319,9 +402,11 @@ export function buildTruck(model: Pick<TruckModel, 'dims'> & { name?: string }):
     wheels.push({ x: a[0], y: a[1], z: a[2], r, side: sd }, { x: b[0], y: b[1], z: b[2], r, side: sd }, { x: c[0], y: c[1], z: c[2], r, side: sd });
   }
   const hingeV = toLocal(-0.92 * L, 0, zFl0 - 0.05);
-  const eyeL = toLocal(ex, eyR, ez);
+  const eyeL = toLocal(ex, eyR, ezR);
+  const bodyNoCab = K.build(origin);
+  K.append(KC);
   return {
-    body: K.build(origin), tray: T.build(origin), load: Lh.build(origin), wheelHi: WH.build(), wheelLo: WL.build(),
+    body: K.build(origin), bodyNoCab, cabInterior: KI.build(origin), tray: T.build(origin), load: Lh.build(origin), wheelHi: WH.build(), wheelLo: WL.build(),
     wheels, hinge: [hingeV[0], hingeV[1]], L, W, H, D, wheelbase: 0.47 * L, frontX: 0.47 * L, frontAxleX: 0.235 * L,
     eye: eyeL, cabSide: cs,
   };

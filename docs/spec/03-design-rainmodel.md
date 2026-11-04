@@ -1220,6 +1220,28 @@ function rlTicks(lo, hi, sz, minPx) { steps = [0.25,0.5,1,2,5,10,20,50,100]; fir
 
 Independent X and Y fits ⇒ the exaggeration is whatever fills the panel, always labelled.
 
+As captured (`47_long_section_drain.png`, a 535 m drain drawn through `RM.plan.addItem` and opened with
+`RM.plan.lsOpen(uid)`): head "**Drain 1** 535 m · 1.0 to 8.5 m deep · falls 2.7 m (0.5%) · Dig about 13,300 m³" + red
+"410 m of it deeper than 2.0 m", right "Water at Wed 17:00" and ×; band "Start · P2 … Outlet"; RL ticks every 2 m
+("RL 266 … RL 258"), chainage every 25 m ("ch 0, 25, 50 …"), "vertical ×7" at the axis end; the cut between ground and
+invert grey where OK and **red where deeper than the red depth**, the invert red there too; square handles at the
+three points; fall labels "0.5 %" under each leg; the inset "V-drain at ch 535 m, the deepest · 17.1 m wide at the top ·
+8.5 m deep (red) · sides 1 : 1". `ls.debug()` reported `exaggeration 7.09, pxPerM 16.46 (vertical), pxPerMH 2.32
+(horizontal), range [256.76, 267.58]`. The strip pushes the 3D view up (the map column ends at its top) and the map
+shows the item labels with leaders and a floating "−6,609,278 L" change label. Axis labels fall back to a monospace
+face (`F_NUM = "IBM Plex Mono",ui-monospace,…` in this module) — the one place the "one family" rule is broken.
+Dragging the middle handle down (`48_long_section_drag_handle.png`): the picked square turns accent with a ring, a
+hairline marks its chainage, a dark readout chip (monospace, red underline when too deep) reads "ch 222 m · ground RL
+263.28 · invert RL 258.35 · 4.9 m deep", the pre-drag invert stays as a dashed line, the head numbers update live
+("1.0 to 10.1 m deep · falls 4.2 m (0.8%) · Dig about 19,910 m³"), per-leg falls become 1.2 % / 0.5 %, "Reset invert to
+auto" appears, the band shows the water key "▬ Before · Thu 16:00", and the 3D map shows a red-square "Spill here ·
+RL 323.9" marker on the bund. The **bund** variant (`49_long_section_bund.png`): "**Bund 1** 320 m · 1.0 m high · crest
+0.5 m wide · Fill about 640 m³ · no water against it", ground and crest lines with the fill between, "1.0 m" height
+labels, "Lowest crest RL 322.55 ▼", RL ticks every 0.5 m, chainage every 20 m, "vertical ×10", inset trapezoid
+"0.5 m crest · 1.0 m high · 3.5 m base". Bug seen: the RL tick labels are clipped at the strip's left edge ("L 325.5").
+In the shipped Design card the same profile appears as a mini chart (`30_drain_done.png`); the full strip is reached
+through the item card's "Long section" button where the legacy card is used, or `RM.plan.lsOpen(uid)`.
+
 Handles: drag a square up/down; the pin snaps to the **0.05 m RL grid** inside `RMPlan.pinRange` and inside the RL range
 frozen at drag start (so the square stays under the pointer); a press moving < 3 px pins nothing; hit radius 20 px
 (40 px target); keys on the focused strip: ←/→ pick a point, ↑/↓ ±0.05 m, Shift+↑/↓ ±0.5 m, Delete/Backspace unpin,
@@ -1506,3 +1528,56 @@ colour has an `-ink` variant ≥ 4.5:1 on its surface (RM's R68 rule: orange fai
 | Cards | `place()`/`dock()` verbatim; registry of card kinds; leaders on an SVG overlay re-projected each frame |
 | Perf | governor (pixel ratio levels, 4.3 M cap, 1.2 s rest), ambient 30 fps, perf HUD with `EXT_disjoint_timer_query_webgl2` |
 
+
+## 13. Screenshot index
+
+Folder: `/tmp/claude-0/-home-user-Haul-IQ---Intelligent-Haulage/6a799533-cbdc-5f2c-b7d8-1a1fb31b2822/scratchpad/rain_study/shots/`
+(1600×900, DPR 1, headless Chromium + SwiftShader; scripts `study1.js`–`study4.js` in the parent folder; fixture
+`demo_pit_surface.00t`, 120 mm typed in over 24 h, ARR pattern). SwiftShader renders slowly, so motion is caught as
+single frames and the HUD has often faded to its rest state. Captures that did not show what was intended were deleted.
+
+| File | Shows | Spec § |
+|---|---|---|
+| `00_entry_empty.png` | empty state: dashed drop zone, drifting contour background, "Drop a survey (.00t) here", Pick a file | 2.11 |
+| `01_loaded_rain_sheet.png` | survey in 3D (before any run); red-bar banner "Couldn't get the forecast…" with Try again / Close; the "Rain for this case" sheet | 2.11 |
+| `02_rain_sheet_typed.png` | Start sheet: Forecast \| Type it in segmented, Type mm… field, 24 h · 3 days · 7 days with underline, source footer, Start | 2.9, 2.11 |
+| `02b_preparing.png` | the preparation card "Working out the water" (4 px bar, "4 of 5") over the shade; storm sky; water forming | 2.11, 3.7 |
+| `03_run_done_storm_sky.png` | first result in a rain hour: grey-blue sky background, rain, water, water paths, wash crests; HUD at rest | 3.7–3.9 |
+| `04_scrubbed_hour18.png` | a later hour; the three bottom pills (rain · hour ⌃ · Fullest) and ⋯ | 5.1 |
+| `04b_pills_bar_folded.png` | shipped layout: time bar folded behind the ⌃ toggle | 2.8, 5.1 |
+| `05_playing_rain.png`, `05b_playing_rain.png` | playback frames (water between hours, rain) | 5.2 |
+| `06_hud_rested.png` / `06b_hud_awake.png` | auto-fade: top groups gone at rest / back after a pointer move | 2.8 |
+| `07_layers_menu.png` | Layers menu: uppercase head, ticks, Drainage + Details + Density slider, Ground parameters, Pump | 2.10 |
+| `09_more_menu_save_flyout.png` | ⋯ menu opening upward (New case, Save ›, Pumping plan, Site data, Settings, About & sources · 1 note) and the Save fly-out (DXF, CSV, Report, Plan picture) | 2.10 |
+| `10_plan_view_top.png` | Top / Plan view: 12° FOV, square on the pit | 3.12, 4 |
+| `11_dark_theme.png`, `12_dark_layers_menu.png`, `12b_dark_focus_ring.png` | dark theme: `#202528` surround, smoked menus, grey accent focus ring | 2.3 |
+| `14_closeup_pond.png` | close-up: water body with sky reflection, crest/toe accents, small-pool film rings | 3.3, 3.9 |
+| `15_horizon_sky_gradient.png` | near-horizontal view: analytic sky (dark zenith → bright horizon band) | 3.7 |
+| `16_timebar_open.png`, `16z_timebar_zoom2x.png` | the opened time bar: day columns "Wed 4 / Thu 5", played vs future rain bars, head with notch, flag "Thu 10:00 · 85 mm so far" | 5.1 |
+| `17_timebar_scrub_drag.png` | scrubbing: head and flag following the drag | 5.2 |
+| `22_measure.png` | Measure: A/B markers, drawn line, Distance / Horizontal / ΔRL / Grade | 7.2 |
+| `23_section_AB.png` / `24_section_fit_depth.png` | A–B Cross section panel: side column (Deepest, At, Length, Offset, Reset, 1:1 / Fit depth), chart at Vertical ×1.0 and ×2.0, readout line | 7.2 |
+| `25_more_menu.png`, `25b_case_menu.png` | ⋯ menu; the rain pill's case menu (Change the rain ›, Case details and assumptions ›) | 2.10 |
+| `25d_compass_cluster_opening.png` | the compass cluster sliding open (mid-animation) | 3.12 |
+| `26_segment_entered.png` | entered segment: catchment lit and the rest veiled, selected water in solid accent, diamond "P2" marker, SEGMENT info panel, tool rail (Drain, Bund, Undo, Redo, Pump) | 6.1, 8 |
+| `27_drain_snap_ring.png` | Drain tool: draw-hint bar, pointer E/N/RL readout, start snapped to the pond marker | 6.1, 6.2 |
+| `28_drain_live_line.png` | live line: numbered vertices, dashed leg to the pointer with halo, readout "Drain · 530 m · falls 4.9 m · open ground → P2" | 6.2 |
+| `29_drain_dig_animation.png` | after commit: Before \| After \| Compare, "Designs (1 of 1 on)", water re-run | 6.3, 6.4 |
+| `30_drain_done.png` | item card: held accent edge, Depth stepper, mini long section, consequence sentence, Delete; map label on a leader | 6.4, 8 |
+| `31_bund_live_readout.png` | Bund tool: live line snapped to "P85", readout "Bund · 430 m · 1.0 m high" | 6.2 |
+| `36_design_top_view.png`, `37_design_top_dark.png`, `38_design_3d_dark.png` | Design in Top (light/dark) and 3D dark: veil darkens outside the catchment in dark | 3.3, 6 |
+| `41_low_angle_rain_layers.png` | low-angle 3D with near/mid/far rain streak layers, water paths, ring glyphs | 3.8 |
+| `41b_closeup_wall_rain.png` | close-up of a steep wall with rain streaks and a water edge | 3.3, 3.8 |
+| `42_section_clip_3d.png` | 3D section: model clipped by a plane, earth-coloured cut face, depth label "2.4 m", survey edge line at the skirt foot | 3.5, 7.2 |
+| `43_storm_override_rain_streaks.png` | `RM3D.setWeather({rain:14, overcast:1})`: storm light and rain | 3.7, 3.8 |
+| `44_perf_hud.png` | perf readout (Ctrl+Shift+F): fps + sparkline, CPU/GPU, scale/governor/tier, tiles/tris/draws, long tasks, memory, red "Software WebGL" warning, Bench / Record 10 s / Save | 3.13 |
+| `45_dark_rain_streaks.png` | dark theme with luminance-aware rain showing against the dark surround | 3.8 |
+| `46_design_items_3d.png` | a drain and a bund added through `RM.plan.addItem`; "Recalculating water… 18.1 s" busy tag | 6.3 |
+| `47_long_section_drain.png` | full long section strip for the drain (head figures, red too-deep cut, handles, per-leg falls, "vertical ×7", V-drain inset) | 7.1 |
+| `48_long_section_drag_handle.png`, `48b_long_section_pinned.png` | dragging an invert handle: accent square, readout chip, dashed pre-drag invert, Reset invert to auto, live figures, Bund card, "Spill here" marker | 7.1 |
+| `49_long_section_bund.png` | bund long section: crest vs ground, "Lowest crest RL 322.55", trapezoid inset, "vertical ×10" (RL labels clipped at the left edge) | 7.1 |
+
+Not captured, in the time available: the hover card and the pinned/selected pond info panel on the whole-pit view
+(clicks only set the orbit pivot in this build, and the hover card never appeared under SwiftShader), the Settings and
+About sheets, the Presentation mode, and a sunny dry hour (the case rained through its last hour). These are specified
+from source in §2.11, §8 and §3.3.

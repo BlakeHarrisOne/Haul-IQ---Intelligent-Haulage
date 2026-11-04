@@ -105,7 +105,7 @@ function Scrubber({ lengthMin, startHour }: { lengthMin: number; startHour: numb
             <div key={e.id} className={cx(t.ev, t[`ev-${e.kind}`], active?.id === e.id && t.evActive)} style={{ left: `${l}%`, width: `${w}%` }}
               title={`${e.label} · ${clock(startHour, e.startMin)}–${clock(startHour, e.startMin + e.durMin)} · ${pct(e.fleetStopFraction, 0)} of fleet stopped`}>
               {px > 22 && <Icon name={EVENT_ICON[e.kind]} size={13} strokeWidth={2} />}
-              {px > 78 && <span>{e.label}</span>}
+              {px > 96 && <span>{e.label.replace(/\s*\(.*\)$/, '')}</span>}
             </div>
           );
         })}

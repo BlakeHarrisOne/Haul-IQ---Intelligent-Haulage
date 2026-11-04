@@ -101,6 +101,8 @@ export const actorsModule: SceneModule = (ctx: SceneContext) => {
   let lastFollow: TruckInfo | null = null;
   let followKey = '';
   let engineWarned = false;
+  /** The followed truck seen from the seat: body without the cab exterior + cab interior + tray + heap (count-1 instances). */
+  let pov: { modelId: Id; meshes: THREE.InstancedMesh[] } | null = null;
   const st = () => useApp.getState();
 
   // label DOM: selected truck card
@@ -151,6 +153,29 @@ export const actorsModule: SceneModule = (ctx: SceneContext) => {
   function disposeModel(r: ModelRes) {
     for (const im of [r.body, r.tray, r.load, r.wheelHi, r.wheelLo]) { group.remove(im); im.geometry.dispose(); im.dispose(); }
     models.delete(r.id);
+  }
+
+  function povFor(r: ModelRes): THREE.InstancedMesh[] {
+    if (pov && pov.modelId === r.id) return pov.meshes;
+    disposePov();
+    const g = r.geoms;
+    const meshes = [g.bodyNoCab, g.cabInterior, g.tray, g.load].map((geo, i) => {
+      const im = new THREE.InstancedMesh(geo, mat, 1);
+      im.name = `${r.id}:pov${i}`;
+      im.frustumCulled = false;
+      im.castShadow = true;
+      im.receiveShadow = true;
+      im.setColorAt(0, new THREE.Color(1, 1, 1));
+      group.add(im);
+      return im;
+    });
+    pov = { modelId: r.id, meshes };
+    return meshes;
+  }
+  function disposePov() {
+    if (!pov) return;
+    for (const im of pov.meshes) { group.remove(im); im.dispose(); }
+    pov = null;
   }
 
   function disposeMachines() {
@@ -325,6 +350,7 @@ export const actorsModule: SceneModule = (ctx: SceneContext) => {
         if (im.instanceColor) im.instanceColor.needsUpdate = true;
       }
     }
+    placePov(s, followSel);
     animateLoaders(dt, now);
     animateDozers(tMin);
     publishFollow(s, followSel);
@@ -362,6 +388,25 @@ export const actorsModule: SceneModule = (ctx: SceneContext) => {
       MW.multiplyMatrices(M, MT);
       im.setMatrixAt(j, MW);
     }
+  }
+
+  function placePov(s: AppState, sel: { c: CircuitRt; k: number } | null) {
+    if (s.camera !== 'pov' || !sel || !sel.c.poses[sel.k]) { if (pov) for (const im of pov.meshes) im.visible = false; return; }
+    const { c, k } = sel, g = c.res.geoms, ts = c.states[k], pose = c.poses[k], f = ctx.frame();
+    const [body, cab, tray, load] = povFor(c.res);
+    const sp = worldToScene(f, pose.e, pose.n, pose.z);
+    EUL.set(0, pose.heading, pose.pitch, 'YZX');
+    Q.setFromEuler(EUL);
+    M.compose(V.set(sp[0], sp[1], sp[2]), Q, S.set(1, 1, 1));
+    body.setMatrixAt(0, M); cab.setMatrixAt(0, M);
+    TRAY.makeTranslation(g.hinge[0], g.hinge[1], 0).multiply(MX.makeRotationZ((ts.tray * 52 * Math.PI) / 180)).multiply(MW.makeTranslation(-g.hinge[0], -g.hinge[1], 0));
+    MW.multiplyMatrices(M, TRAY);
+    tray.setMatrixAt(0, MW);
+    const fill = Math.max(0, Math.min(1, ts.fill));
+    if (fill > 0.01) MW.multiplyMatrices(M, TRAY).multiply(scaleAbout(g.hinge[1], 0.3 + 0.7 * fill)); else MW.makeScale(0, 0, 0);
+    load.setMatrixAt(0, MW);
+    body.setColorAt(0, c.bodyColor); cab.setColorAt(0, c.bodyColor); tray.setColorAt(0, c.bodyColor); load.setColorAt(0, c.matColor);
+    for (const im of [body, cab, tray, load]) { im.visible = true; im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true; }
   }
 
   const SC = new THREE.Matrix4(), SC2 = new THREE.Matrix4();
@@ -468,12 +513,21 @@ export const actorsModule: SceneModule = (ctx: SceneContext) => {
     followKey = `${c.circuit.id}:${k}`;
     const front = worldToScene(f, pose.fe, pose.fn, pose.fz);
     const d = c.model.dims;
+    // the eye of the seated driver in the model (pitched with the truck); the core rides FollowTarget with an unpitched
+    // offset, so the reported position is shifted to make position + offset land exactly on that eye (matters on ramps)
+    const back = g.frontAxleX - g.eye[0], height = g.eye[1], right = g.eye[2];
+    const sp = worldToScene(f, pose.e, pose.n, pose.z);
+    EUL.set(0, pose.heading, pose.pitch, 'YZX');
+    const eyeW = new THREE.Vector3(g.eye[0], g.eye[1], g.eye[2]).applyEuler(EUL).add(V.set(sp[0], sp[1], sp[2]));
+    const h = pose.heading, fx = Math.cos(h), fz = -Math.sin(h), rx = Math.sin(h), rz = Math.cos(h);
+    const position = new THREE.Vector3(eyeW.x + fx * back - rx * right, eyeW.y - height, eyeW.z + fz * back - rz * right);
+    if (s.camera !== 'pov') position.set(front[0], front[1], front[2]);
     ctx.setFollowTarget({
-      position: new THREE.Vector3(front[0], front[1], front[2]),
+      position,
       heading: pose.heading,
       pitch: pose.pitch,
-      // eye relative to the front-axle ground point (position): back = eyeBack − front overhang
-      eye: { height: d.eyeHeight || 0.75 * g.H, back: (d.eyeBack ?? 0.27 * g.L) - g.frontAxleX, right: d.eyeRight ?? -0.3 * g.W },
+      // eye relative to `position` (the front-axle ground point): back of the axle, height, right of the centreline
+      eye: { height, back, right },
       speedKmh: c.states[k].speedKmh,
       loaded: c.states[k].loaded,
       label: info.unitId,
@@ -563,6 +617,7 @@ export const actorsModule: SceneModule = (ctx: SceneContext) => {
     unsub(); offAlive(); offFrame(); offOverlay();
     if (lastFollow) ctx.setFollowTarget(null);
     bus.followed = null;
+    disposePov();
     bus.pickTruck = undefined;
     disposeMachines();
     for (const r of [...models.values()]) disposeModel(r);

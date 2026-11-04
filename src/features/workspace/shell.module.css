@@ -179,7 +179,7 @@
 .popover {
   position: absolute; top: calc(100% + 11px); right: -4px; z-index: var(--z-menu); width: 340px;
   background: var(--surface); border: 1px solid var(--hair); border-radius: var(--r-card); box-shadow: var(--shadow-lg);
-  animation: popDrop var(--t-slow) var(--ease); overflow: hidden;
+  animation: popDrop var(--t-slow) var(--ease); overflow: hidden; white-space: normal; cursor: default;
 }
 @keyframes popDrop { from { opacity: 0; translate: 0 -4px; } }
 .popHead { display: flex; align-items: center; height: 52px; padding: 0 8px 0 16px; border-bottom: 1px solid var(--hair-2); font: 600 16px/22px var(--font); }

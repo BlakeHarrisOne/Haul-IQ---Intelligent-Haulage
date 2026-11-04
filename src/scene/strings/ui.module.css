@@ -207,40 +207,51 @@
 .bar { height: 4px; border-radius: 2px; background: var(--hair, #E3E6EB); margin-top: 8px; overflow: hidden; }
 .bar > span { display: block; height: 100%; background: var(--accent, #0A6FE6); border-radius: 2px; }
 
-/* ── cockpit HUD (glass) ─────────────────────────────────────────────────────────── */
+/* ── cockpit HUD (glass, over the 3D cab) ────────────────────────────────────────── */
 .hud {
   position: absolute;
   left: 50%;
-  bottom: 22px;
+  bottom: 24px;
   transform: translateX(-50%);
   display: flex;
   align-items: stretch;
-  gap: 0;
-  padding: 10px 6px;
-  border-radius: 16px;
-  background: rgba(16, 22, 30, .46);
-  -webkit-backdrop-filter: blur(14px) saturate(150%);
-  backdrop-filter: blur(14px) saturate(150%);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16), 0 10px 30px rgba(0, 0, 0, .25);
+  padding: 12px 6px 12px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(22, 30, 40, .62), rgba(12, 17, 24, .7));
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  backdrop-filter: blur(16px) saturate(150%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14), inset 0 1px 0 rgba(255, 255, 255, .12), 0 14px 40px rgba(0, 0, 0, .3);
   color: #F4F7FA;
   text-shadow: 0 1px 2px rgba(0, 0, 0, .35);
+  font-variant-numeric: tabular-nums;
 }
 .hudCell { display: flex; flex-direction: column; justify-content: center; padding: 0 16px; min-width: 64px; }
-.hudCell + .hudCell { box-shadow: inset 1px 0 0 rgba(255, 255, 255, .14); }
-.hudBig { font-family: var(--font-display, inherit); font-size: 40px; font-weight: 600; line-height: 1; letter-spacing: -.02em; }
-.hudVal { font-size: 19px; font-weight: 600; line-height: 1.1; }
-.hudLbl { font-size: 10.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: rgba(236, 242, 248, .66); margin-top: 3px; }
-.hudUnit { font-size: 13px; font-weight: 600; color: rgba(236, 242, 248, .72); margin-left: 3px; }
-.hudPhase { display: inline-flex; align-items: center; gap: 7px; font-size: 15px; font-weight: 650; }
-.hudPhase i { width: 8px; height: 8px; border-radius: 50%; }
-.hudStop { display: inline-flex; align-items: center; gap: 6px; }
+.hudCell + .hudCell { box-shadow: inset 1px 0 0 rgba(255, 255, 255, .12); }
+.hudSpeed { position: relative; align-items: center; width: 128px; padding-top: 2px; }
+.hudGauge { width: 116px; height: 66px; display: block; }
+.hudSpeedVal { margin-top: -40px; display: flex; align-items: baseline; gap: 2px; }
+.hudBig { font-family: var(--font-display, inherit); font-size: 38px; font-weight: 600; line-height: 1; letter-spacing: -.02em; }
+.hudUnit { font-size: 12px; font-weight: 600; color: rgba(236, 242, 248, .72); margin-left: 2px; }
+.hudVal { font-size: 20px; font-weight: 650; line-height: 1.1; white-space: nowrap; }
+.hudSmall { font-size: 14px; font-weight: 600; margin-top: 6px; }
+.hudLbl { font-size: 10px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; color: rgba(236, 242, 248, .6); margin-top: 3px; white-space: nowrap; }
+.hudRoute { padding: 0 14px; }
+.hudRouteHead { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; white-space: nowrap; font-size: 13px; }
+.hudPhase { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 650; }
+.hudPhase i { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 0 2px rgba(255, 255, 255, .25); }
+.hudDist { font-weight: 600; color: rgba(244, 247, 250, .92); }
+.hudStop { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; font-weight: 600; color: #FFD2CC; }
+.hudProfile { display: block; border-radius: 8px; background: rgba(255, 255, 255, .06); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08); }
+.hudEnds { display: flex; justify-content: space-between; margin-top: 3px; font-size: 10.5px; font-weight: 600; color: rgba(236, 242, 248, .62); letter-spacing: .02em; }
+.hudRight { min-width: 132px; }
 .hudTop {
   position: absolute; left: 50%; top: 18px; transform: translateX(-50%);
   display: inline-flex; align-items: center; gap: 10px;
   height: 30px; padding: 0 14px; border-radius: 999px;
-  background: rgba(16, 22, 30, .42);
+  background: rgba(16, 22, 30, .5);
   -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16);
-  color: #F4F7FA; font-size: 12.5px; font-weight: 600;
+  color: #F4F7FA; font-size: 12.5px; font-weight: 650;
 }
-.hudTop span { color: rgba(236, 242, 248, .7); font-weight: 500; }
+.hudTop span { color: rgba(236, 242, 248, .72); font-weight: 500; }
+@media (max-width: 760px) { .hudRoute { display: none; } }
