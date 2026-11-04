@@ -270,3 +270,8 @@
 .placed { position: absolute; left: 0; top: 0; will-change: transform; }
 /* hover cards ride the HUD layer, above every scene label */
 .cardLayer { z-index: var(--z-card, 40); }
+
+/* the hint chip never blocks clicks on the map beneath it (e2e: measure points above the dock) - only its
+   controls (Finish, Follow-surface switch, links) take the pointer */
+.hint { pointer-events: none; }
+.hint button, .hint a, .hint input, .hint [role="switch"], .hint [role="button"], .hint label { pointer-events: auto; }
