@@ -78,6 +78,16 @@ function circuitSteps(t: Tally, tag: string, c: Circuit, r: CircuitResultExt) {
     if (st.id in field && field[st.id] != null && !rel(st.value, field[st.id] as number)) t.bad.push(`${tag} ${st.id}: value ${st.value} ≠ result field ${field[st.id]}`);
     if (st.id in expect && !rel(st.value, expect[st.id])) t.bad.push(`${tag} ${st.id}: value ${st.value} ≠ recomputed ${expect[st.id]}`);
     if (st.id.startsWith('travel.dropped.') && st.value !== 0) t.bad.push(`${tag} ${st.id}: dropped step value ${st.value}`);
+    if (st.id === 'fleet.assigned') {
+      // note: "… · C24 = x · C26 = y h · C28 = z h lost/shift · truck queue q h/shift · MF m · status"
+      const num = (re: RegExp) => Number(st.note?.match(re)?.[1]);
+      const o = r.assigned;
+      const pairs: [string, number, number][] = [['C24', num(/C24 = (-?[\d.]+)/), o.trucksNeeded], ['C26', num(/C26 = (-?[\d.]+) h/), o.loaderPtHrsDay],
+        ['C28', num(/C28 = (-?[\d.]+) h/), o.lostLoaderPtHrsShift], ['queue', num(/truck queue (-?[\d.]+) h/), o.truckQueueHrsShift], ['MF', num(/MF (-?[\d.]+)/), o.matchFactor]];
+      for (const [k, shown, v] of pairs) if (!(Math.abs(shown - v) <= 0.006)) t.bad.push(`${tag} fleet.assigned note ${k} ${shown} ≠ ${v}`);
+      if (!st.note?.endsWith(o.status)) t.bad.push(`${tag} fleet.assigned note status ≠ ${o.status}`);
+      t.parsed++;
+    }
     if (r.speedModel === 'spreadsheet' && (st.id === 'travel.loaded' || st.id === 'travel.empty')) {
       // "115 segments: 97 @ 30 km/h, 1 @ 20 km/h, 17 @ 12 km/h; 2 dropped" must match the segment table
       const loaded = st.id === 'travel.loaded';

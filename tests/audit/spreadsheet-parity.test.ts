@@ -53,7 +53,7 @@ function compare(c: Case): string[] {
     chk(`row ${w.row} A`, g.dist3dM, w.A);
     chk(`row ${w.row} B`, g.grade, w.B);
     if (g.gradeRoundedLoaded !== w.R) bad.push(`${c.id} row ${w.row} ROUND(B): engine ${g.gradeRoundedLoaded} vs ${w.R} (B=${w.B})`);
-    if (g.gradeRoundedEmpty + 0 !== (w.RK as number) + 0) bad.push(`${c.id} row ${w.row} ROUND(K): engine ${g.gradeRoundedEmpty} vs ${w.RK}`);
+    if ((g.gradeRoundedEmpty ?? NaN) + 0 !== (w.RK as number) + 0) bad.push(`${c.id} row ${w.row} ROUND(K): engine ${g.gradeRoundedEmpty} vs ${w.RK}`);
     if (w.C == null) { if (g.timeLoadedS !== 0 || !g.droppedLoaded) bad.push(`${c.id} row ${w.row}: Excel drops loaded, engine ${g.speedLoadedKmh} km/h ${g.timeLoadedS} s`); }
     else { if (g.speedLoadedKmh !== w.C) bad.push(`${c.id} row ${w.row} C: ${g.speedLoadedKmh} vs ${w.C}`); chk(`row ${w.row} D`, g.timeLoadedS, w.D as number); }
     if (w.L == null) { if (g.timeEmptyS !== 0 || !g.droppedEmpty) bad.push(`${c.id} row ${w.row}: Excel drops return, engine ${g.speedEmptyKmh} km/h ${g.timeEmptyS} s`); }
