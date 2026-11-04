@@ -22,7 +22,7 @@ import { queueEstimate } from '../fleet/queue';
 import { fmt, StepLog, type StepInput } from '../util/steps';
 import { kinematicLeg, type KinOpts, type LegSeg } from './kinematic';
 import { payloadFor, steadySpeed, type SteadySolve } from './physics';
-import { buildRoute, stopsPerCycle, type Route } from './route';
+import { buildRoute, stopBoundaries, type Route } from './route';
 import { tableSpeed } from './spreadsheet';
 import { truckPhysics } from './truck';
 
@@ -381,17 +381,18 @@ function rimpullTravel(route: Route, truck: TruckModel, material: Material | und
   let profiles: { loaded: TravelProfile; empty: TravelProfile };
   let bindingShare: TravelOut['bindingShare'];
   if (motion === 'kinematic') {
-    const stopL = new Set(route.stops.filter(s => s.oneWay !== 'empty').map(s => s.k));
-    const stopE = new Set(route.stops.filter(s => s.oneWay !== 'loaded').map(s => s.k));
-    stopsModelled = stopsPerCycle(route);
+    // stops attach to kept-segment boundaries (b = end of segs[b − 1] loaded = end of segs[b] empty), so a stop on a
+    // repeated point (zero-length segment skipped) applies on both legs; stopsModelled counts exactly what is applied
+    const { loaded: stopL, empty: stopE } = stopBoundaries(route);
+    stopsModelled = stopL.size + stopE.size;
     const ko = (loaded: boolean): KinOpts => ({
       massT: loaded ? mL : mE, accelMax: p.accelMaxMs2 ?? KINEMATIC_DEFAULTS.accelMaxMs2,
       decel: loaded ? (p.decelLoadedMs2 ?? KINEMATIC_DEFAULTS.decelLoadedMs2) : (p.decelEmptyMs2 ?? KINEMATIC_DEFAULTS.decelEmptyMs2),
       kRot: KINEMATIC_DEFAULTS.kRot, mu: p.tractionCoeff ?? KINEMATIC_DEFAULTS.tractionCoeff,
       driveShare: loaded ? tp.driveShare.loaded : tp.driveShare.empty, dwellS: p.stopDwellS ?? KINEMATIC_DEFAULTS.stopDwellS, dsMax: KINEMATIC_DEFAULTS.dsMaxM,
     });
-    const legL: LegSeg[] = route.segs.map((sg, k) => ({ segIndex: sg.i, len: sg.d3, sin: sg.grade, rrPct: sg.rrPct, steady: steadyL[k], stopAtEnd: stopL.has(sg.i + 1) }));
-    const legE: LegSeg[] = route.segs.map((sg, k) => ({ segIndex: sg.i, len: sg.d3, sin: -sg.grade, rrPct: sg.rrPct, steady: steadyE[k], stopAtEnd: stopE.has(sg.i) })).reverse();
+    const legL: LegSeg[] = route.segs.map((sg, k) => ({ segIndex: sg.i, len: sg.d3, sin: sg.grade, rrPct: sg.rrPct, steady: steadyL[k], stopAtEnd: stopL.has(k + 1) }));
+    const legE: LegSeg[] = route.segs.map((sg, k) => ({ segIndex: sg.i, len: sg.d3, sin: -sg.grade, rrPct: sg.rrPct, steady: steadyE[k], stopAtEnd: stopE.has(k) })).reverse();
     const rl = kinematicLeg(tp, legL, ko(true));
     const re = kinematicLeg(tp, legE, ko(false));
     warnings.push(...rl.warnings.map(w => `Loaded: ${w}`), ...re.warnings.map(w => `Empty: ${w}`));

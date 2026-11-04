@@ -10,6 +10,7 @@
  * Real Vulcan files are usually the compressed "vulZ" container (vulz.ts), decoded transparently.
  */
 import type { MeshData } from '@/core/types';
+import { orientMesh } from '@/geom/mesh';
 import { decodeVulZ, isVulZ } from './vulz';
 
 const PREFIX = "That file isn't a Vulcan .00t surface";
@@ -20,7 +21,10 @@ const REC = 24;
 export interface Parsed00t {
   mesh: MeshData;
   format: 'raw' | 'vulZ';
-  /** Non-fatal notes for the user (index base, degenerate triangles, page count …). */
+  /**
+   * Non-fatal notes for the user (index base, degenerate triangles, page count, triangle winding repaired
+   * or not checkable …). `mesh` is the file as written; volumes and depletion re-orient it (`orientMesh`).
+   */
   warnings: string[];
 }
 
@@ -79,7 +83,10 @@ export function parse00t(input: ArrayBuffer | ArrayBufferView): Parsed00t {
   for (let t = 0; t < tris.length; t += 3) if (tris[t] === tris[t + 1] || tris[t + 1] === tris[t + 2] || tris[t] === tris[t + 2]) degenerate++;
   if (degenerate) warnings.push(`${degenerate} degenerate triangle${degenerate === 1 ? '' : 's'} (repeated vertex)`);
   if (buf.byteLength > need) warnings.push('Trailing attributes after the triangles were ignored');
-  return { mesh: { verts, tris }, format, warnings };
+  const mesh: MeshData = { verts, tris };
+  // winding check (cached on the mesh, so the importer's meshStats reuses it)
+  warnings.push(...orientMesh(mesh).warnings);
+  return { mesh, format, warnings };
 }
 
 /** True when the buffer looks like a .00t (vulZ magic, or a raw header whose counts fit the file size). */

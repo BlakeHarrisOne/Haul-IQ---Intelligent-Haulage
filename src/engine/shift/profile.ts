@@ -4,23 +4,41 @@
 import type { ShiftEvent, ShiftProfile } from '@/core/types';
 
 /**
- * Fleet productive minutes = shift length − Σ event duration × fleetStopFraction.
+ * Fleet productive minutes = shift length − lost minutes, where the lost time is the union of the event windows
+ * (clipped to the shift), each instant weighted by the largest fleetStopFraction of the events in progress then.
+ * Overlapping events (a blast clearance called during crib) are counted once, not added.
  * @param profile shift profile
  */
 export function productiveMinutes(profile: ShiftProfile): number {
-  return profile.lengthH * 60 - profile.events.reduce((a, e) => a + clampDur(profile, e) * clamp01(e.fleetStopFraction), 0);
+  return productiveMinutesAt(profile, profile.lengthH * 60);
 }
 
-/** Productive minutes elapsed by tMin (piecewise linear, exact). */
+/** Productive minutes elapsed by tMin (piecewise linear, exact, non-decreasing in tMin). */
 export function productiveMinutesAt(profile: ShiftProfile, tMin: number): number {
   const t = Math.max(0, Math.min(tMin, profile.lengthH * 60));
-  let lost = 0;
+  return t - lostMinutesBy(profile, t);
+}
+
+/**
+ * Lost minutes in [0, t]: integrate max(fleetStopFraction) over the elementary intervals between event boundaries.
+ * Each interval loses at most its own length, so the productive minutes never run backwards.
+ */
+function lostMinutesBy(profile: ShiftProfile, t: number): number {
+  const ev: { a: number; b: number; f: number }[] = [];
   for (const e of profile.events) {
-    const a = e.startMin, b = e.startMin + e.durMin;
-    const o = Math.max(0, Math.min(t, b) - Math.max(0, a));
-    lost += o * clamp01(e.fleetStopFraction);
+    const a = Math.max(0, e.startMin), b = Math.min(t, e.startMin + e.durMin), f = clamp01(e.fleetStopFraction);
+    if (b > a && f > 0) ev.push({ a, b, f });
   }
-  return t - lost;
+  if (ev.length <= 1) return ev.length ? (ev[0].b - ev[0].a) * ev[0].f : 0;
+  const cuts = [...new Set(ev.flatMap(x => [x.a, x.b]))].sort((x, y) => x - y);
+  let lost = 0;
+  for (let i = 0; i + 1 < cuts.length; i++) {
+    const a = cuts[i], b = cuts[i + 1];
+    let f = 0;
+    for (const x of ev) if (x.a <= a && x.b >= b && x.f > f) f = x.f;
+    lost += (b - a) * f;
+  }
+  return lost;
 }
 
 /** Wall-clock text 'HH:MM' for minutes after shift start. */

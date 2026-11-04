@@ -147,8 +147,10 @@ export function stringMetrics(points: ReadonlyArray<XYZ>): StringMetrics {
 }
 
 /**
- * Reverses the direction of a string. Segment overrides move with their segment (the override that
- * started segment i→i+1 now starts at the reversed position of point i+1). Other point fields stay.
+ * Reverses the direction of a string (the caller swaps its dig and dump). Segment overrides move with their
+ * segment (the override that started segment i→i+1 now starts at the reversed position of point i+1), and
+ * a one-way stop swaps 'loaded' ↔ 'empty' so it still stops the same physical traffic stream (trucks that
+ * travelled first → last are now on the other leg). Other point fields stay.
  */
 export function reversePoints(points: readonly StringPoint[]): StringPoint[] {
   const n = points.length;
@@ -160,6 +162,8 @@ export function reversePoints(points: readonly StringPoint[]): StringPoint[] {
     // reversed segment k→k+1 is original segment (n-2-k)→(n-1-k)
     const seg = k < n - 1 ? points[n - 2 - k].seg : undefined;
     if (seg) p.seg = { ...seg };
+    if (src.stopOneWay === 'loaded') p.stopOneWay = 'empty';
+    else if (src.stopOneWay === 'empty') p.stopOneWay = 'loaded';
     out.push(p);
   }
   return out;

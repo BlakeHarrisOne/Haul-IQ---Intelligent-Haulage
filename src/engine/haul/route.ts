@@ -36,8 +36,13 @@ export interface Route {
   lengthM: number;
   riseM: number;
   fallM: number;
-  /** Stop points as segment-boundary indices along the loaded leg (k = point index) with direction filter. */
-  stops: { k: number; chainage: number; oneWay?: 'loaded' | 'empty' }[];
+  /**
+   * Stop points with direction filter: k = point index; `boundary` = index into the kept `segs` boundaries
+   * (b = end of segs[b − 1] = start of segs[b] in the loaded direction, so 1 … segs.length − 1 is interior). Zero-length
+   * segments are skipped, so a stop on a repeated point is attached to the boundary its position coincides with; a stop
+   * that coincides with the dig (b = 0) or dump (b = segs.length) end is not interior.
+   */
+  stops: { k: number; boundary: number; chainage: number; oneWay?: 'loaded' | 'empty' }[];
   warnings: string[];
   error?: string;
 }
@@ -116,12 +121,30 @@ export function buildRoute(hs: HaulString | undefined, p: Pick<CircuitParams, 'r
     chainAt.push(ch);
   }
   pts.forEach((q: StringPoint, k) => {
-    if (q.stop && k > 0 && k < pts.length - 1) out.stops.push({ k, chainage: chainAt[k], oneWay: q.stopOneWay });
+    if (!q.stop || k <= 0 || k >= pts.length - 1) return;
+    // kept segments that start before point k: their count is the boundary at point k (repeated points collapse)
+    let boundary = 0;
+    while (boundary < out.segs.length && out.segs[boundary].i < k) boundary++;
+    out.stops.push({ k, boundary, chainage: chainAt[k], oneWay: q.stopOneWay });
   });
   return out;
 }
 
-/** Number of stop-sign stops per cycle implied by the string's stop points (both ways unless one-way). */
+/**
+ * Interior segment boundaries with a stop sign, per direction (what the kinematic leg applies). Several stop points on
+ * one boundary (a repeated point digitised twice) are one stop.
+ */
+export function stopBoundaries(route: Route): { loaded: Set<number>; empty: Set<number> } {
+  const n = route.segs.length;
+  const inner = route.stops.filter(s => s.boundary > 0 && s.boundary < n);
+  return {
+    loaded: new Set(inner.filter(s => s.oneWay !== 'empty').map(s => s.boundary)),
+    empty: new Set(inner.filter(s => s.oneWay !== 'loaded').map(s => s.boundary)),
+  };
+}
+
+/** Number of stop-sign stops per cycle the string's stop points model (loaded + empty interior stops). */
 export function stopsPerCycle(route: Route): number {
-  return route.stops.reduce((a, s) => a + (s.oneWay ? 1 : 2), 0);
+  const b = stopBoundaries(route);
+  return b.loaded.size + b.empty.size;
 }

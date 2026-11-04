@@ -9,7 +9,9 @@
  *   per-dump           each distinct dump fed by matching circuits with ≥ 1 truck
  *   per-truck          each matching circuit: count × ceil(trucks / perUnits)
  * Rules run in array order; `expr` (derived count) and `whenExpr` see roles.* / rules.* accumulated so far.
- * `overrides[ruleId]` replaces a rule's per-firing count (the workbook's typed what-if values, block 2).
+ * `overrides[ruleId]` replaces a rule's per-firing count (the workbook's typed what-if values, block 2);
+ * `caps[ruleId]` limits it (min(cap, count): the priority planner's shed tasks).
+ * A count that is not a finite number (e.g. 0/0 when every loader is parked) is counted as 0 with a warning.
  */
 import type { CalcStep, CrewRole, CrewRule, Id, LoaderType, ManningLine, ManningResult, MaterialId, Scenario, ShiftCrew } from '@/core/types';
 import type { CrewRuleExt } from '../types';
@@ -40,11 +42,19 @@ export interface CrewEvalInput {
   shift?: ShiftCrew;
   /** Per-firing count overrides by rule id. */
   overrides?: Record<string, number>;
+  /**
+   * Per-firing upper limits by rule id (the priority planner's shed site tasks): the rule contributes
+   * min(cap, its own count), so the cap follows the rule when its count falls below the cap (e.g. more trucks → fewer
+   * bulk-push dozers) and never raises it.
+   */
+  caps?: Record<string, number>;
 }
 
 export interface CrewEvalResult extends ManningResult {
   /** People contributed by each rule. */
   ruleCounts: Record<string, number>;
+  /** People each rule would contribute without its cap (equals ruleCounts when no cap binds; fired rules only). */
+  uncappedCounts: Record<string, number>;
   /** People per circuit (lines with a circuitId). */
   byCircuit: Record<Id, number>;
   totalTrucks: number;
@@ -78,6 +88,7 @@ export function evaluateCrew(input: CrewEvalInput): CrewEvalResult {
   const required = zeroRoles();
   const lines: ManningLine[] = [];
   const ruleCounts: Record<string, number> = {};
+  const uncappedCounts: Record<string, number> = {};
   const byCircuit: Record<Id, number> = {};
   const warnings: string[] = [];
   const log = new StepLog();
@@ -151,19 +162,37 @@ export function evaluateCrew(input: CrewEvalInput): CrewEvalResult {
         if (!g) continue;
       }
       const ov = input.overrides?.[rule.id];
-      const per = ov != null ? ov : rule.expr ? safeEval(rule.expr, env, warnings, rule.id) : rule.count;
-      const people = per * f.units;
+      const raw = ov != null ? ov : rule.expr ? safeEval(rule.expr, env, warnings, rule.id) : rule.count;
+      // a non-finite count (0/0, x/0) would turn every total into NaN / ∞: count 0 people and say so
+      const bad = !Number.isFinite(raw);
+      const per = bad ? 0 : raw;
+      if (bad) {
+        const src = ov != null ? `override ${ov}` : rule.expr ? `"${rule.expr}"` : `count ${rule.count}`;
+        const where = f.label !== 'site' ? ` (${f.label})` : '';
+        warnings.push(`${rule.name}${where}: ${src} evaluates to ${raw} (division by zero?); counted as 0 people.`);
+        log.add('manning', `manning.${rule.id}.nonfinite${firings.length > 1 ? `.${parts.length}` : ''}`, `${rule.name}: count is not a number`, rule.expr ?? 'count', 0, 'people', {
+          substituted: `${src} = ${raw} → 0`, sheetRef: rule.sheetRef,
+          note: 'The rule produced a non-finite value (e.g. 0/0 or x/0, typically a divisor such as totals.activeLoaders that is 0 this shift). '
+            + 'It is treated as 0 people so the crew total stays a number; check the rule expression.',
+        });
+      }
+      const capIn = input.caps?.[rule.id];
+      const capped = capIn != null && Number.isFinite(capIn) && per > capIn;
+      const cap = capped ? (capIn as number) : per;
+      uncappedCounts[rule.id] = (uncappedCounts[rule.id] ?? 0) + per * f.units;
+      const people = cap * f.units;
       if (people < 0) warnings.push(`${rule.name}: evaluates to ${people} (negative; the workbook has no clamp at 0)`);
       required[rule.role] += people;
       ruleTotal += people;
       ruleCounts[rule.id] = (ruleCounts[rule.id] ?? 0) + people;
       if (f.c) byCircuit[f.c.circuitId] = (byCircuit[f.c.circuitId] ?? 0) + people;
-      const why = ov != null ? `override ${ov}` : rule.expr ? `${rule.expr} = ${fmt(per)}` : `${rule.count}`;
+      const why = (ov != null ? `override ${ov}` : rule.expr ? `${rule.expr} = ${bad ? raw : fmt(per)}` : `${rule.count}`) + (bad ? ' → treated as 0' : '')
+        + (capped ? ` → held at ${fmt(cap)} (priority plan)` : '');
       lines.push({
         circuitId: f.c?.circuitId, role: rule.role, count: people, ruleId: rule.id,
         reason: rule.scope === 'per-truck' ? `${f.label}: ${f.c?.trucks} trucks → ${people}` : `${rule.name}${f.label !== 'site' ? ` · ${f.label}` : ''} (${why})`,
       });
-      parts.push(rule.scope === 'per-truck' ? `${f.label} ${people}` : `${f.label !== 'site' ? `${f.label} ` : ''}${fmt(per)}`);
+      parts.push(rule.scope === 'per-truck' ? `${f.label} ${people}` : `${f.label !== 'site' ? `${f.label} ` : ''}${capped ? `min(${fmt(cap)}, ${fmt(per)})` : fmt(per)}`);
     }
     log.add('manning', `manning.${rule.id}`, rule.name,
       `${SCOPE_TEXT[rule.scope]}${rule.when ? ` when ${condText(rule)}` : ''}${rule.whenExpr ? ` and ${rule.whenExpr}` : ''} → ${rule.expr ? rule.expr : `${rule.count}${rule.scope === 'per-truck' && (rule.perUnits ?? 1) > 1 ? ` per ${rule.perUnits} trucks` : ''}`} ${rule.role}`,
@@ -189,7 +218,7 @@ export function evaluateCrew(input: CrewEvalInput): CrewEvalResult {
   }
   const steps: CalcStep[] = log.steps;
   for (const w of warnings) steps.push({ id: `manning.warn.${steps.length}`, group: 'manning', label: 'Check', formula: w, value: 0, unit: '' });
-  return { required, total, available: input.available, surplus, lines, steps, ruleCounts, byCircuit, totalTrucks, warnings };
+  return { required, total, available: input.available, surplus, lines, steps, ruleCounts, uncappedCounts, byCircuit, totalTrucks, warnings };
 }
 
 function condText(r: CrewRule): string {

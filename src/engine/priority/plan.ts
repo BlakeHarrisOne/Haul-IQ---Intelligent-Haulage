@@ -6,7 +6,12 @@
  *      then, while the crew rules need more people than the shift has, shed from the LOWEST priority item:
  *      a prioritised site task (CrewRuleExt.priority, e.g. bulk push = Targets priority 4) loses one person, or a
  *      circuit loses one truck; a circuit at 0 trucks is parked (its loader operator and support roles go too).
- *   3. Back-fill: in priority order, re-add trucks / task people while the crew still fits (uses any slack a park freed).
+ *      Every step re-evaluates ALL crew rules at the new allocation: a task's count is live (bulk push depends on total
+ *      trucks), and a shed task is a cap — people = min(cap, the rule's count) — never a frozen number.
+ *   3. Back-fill: in priority order, re-add trucks / task people while the crew still fits (uses any slack a park freed),
+ *      repeated until nothing changes; caps that no longer bind at the final allocation are dropped.
+ *      Invariant: the crew rules at the allocated trucks, with each reduced task set to its `allocated` count, give
+ *      exactly `crewUsed`; with no task reduced, "Apply allocation" (trucks only) gives exactly `crewUsed`.
  *   4. Report lost bcm/day and loader PT per circuit, and evaluate each circuit's altHaulStringIds
  *      (computeCircuit(…, { haulStringId })) for trucks needed and production deltas.
  */
@@ -30,8 +35,13 @@ export interface PriorityTask {
   ruleId: Id;
   name: string;
   priority: number;
+  /** People the crew rule needs at the PLANNED trucks (what Manning shows once the allocation is applied). */
   requested: number;
+  /** People the plan mans; below `requested` the planner stands people down (a manning override to set when applying). */
   allocated: number;
+  /** People the rule gives at the requested trucks (the scenario as it is, before the plan). */
+  baseline: number;
+  /** bcm/day given up by standing people down: (requested − allocated) × bcm per person. */
   bcmDayLost: number;
 }
 
@@ -61,8 +71,8 @@ export function computePriority(scenario: Scenario, results: Record<Id, CircuitR
     .sort((a, b) => a.c.priority - b.c.priority || a.order - b.order).map(x => x.c);
   const rules = scenario.crew.rules;
   const requested = new Map(circuits.map(c => [c.id, Math.max(0, Math.round(c.trucks))]));
-  const evalAt = (alloc: Map<Id, number>, overrides: Record<string, number>, available: number): CrewEvalResult =>
-    evaluateCrew({ circuits: crewCircuits(scenario, id => alloc.get(id) ?? 0), rules, trucksAvailable: trucksAvail, available, shift, overrides });
+  const evalAt = (alloc: Map<Id, number>, caps: Record<string, number>, available: number): CrewEvalResult =>
+    evaluateCrew({ circuits: crewCircuits(scenario, id => alloc.get(id) ?? 0), rules, trucksAvailable: trucksAvail, available, shift, caps });
 
   const planEval = evalAt(requested, {}, 0);
   const crewAvail = opts.crewAvailable ?? shift?.available ?? planEval.total;
@@ -86,12 +96,15 @@ export function computePriority(scenario: Scenario, results: Record<Id, CircuitR
     inputs: [{ label: 'Trucks available', value: trucksAvail, source: opts.trucksAvailable != null ? 'Input' : 'Fleet · trucks available' }],
   });
 
-  // prioritised site tasks
+  // prioritised site tasks. Their counts are LIVE: a rule-driven task (bulk push = 7 − enabling − max(0, trucks − 12))
+  // is re-evaluated at every allocation. Shedding a task sets a cap (people ≤ cap); the rule still applies under it.
   const tasks = opts.shedSiteTasks === false ? [] : (rules as CrewRuleExt[]).filter(r => r.enabled && r.priority != null && r.scope === 'site');
-  const overrides: Record<string, number> = {};
-  let ev = evalAt(alloc, overrides, crewAvail);
-  const taskFull: Record<string, number> = {};
-  for (const t of tasks) { taskFull[t.id] = ev.ruleCounts[t.id] ?? 0; }
+  const caps: Record<string, number> = {};
+  let ev = evalAt(alloc, caps, crewAvail);
+  /** People on task t in the current evaluation (capped). */
+  const taskNow = (t: CrewRuleExt) => ev.ruleCounts[t.id] ?? 0;
+  /** People the rule itself gives task t at the current allocation (no cap). */
+  const taskRule = (t: CrewRuleExt) => ev.uncappedCounts[t.id] ?? 0;
 
   const items: Item[] = [
     ...circuits.map((c, order) => ({ kind: 'circuit' as const, c, priority: c.priority, order })),
@@ -121,7 +134,7 @@ export function computePriority(scenario: Scenario, results: Record<Id, CircuitR
       if (n <= 1 || bcmAt(c, n - 1) < bcmAt(c, n) - 0.5) break;
       alloc.set(c.id, n - 1);
       trimmed.set(c.id, (trimmed.get(c.id) ?? 0) + 1);
-      ev = evalAt(alloc, overrides, crewAvail);
+      ev = evalAt(alloc, caps, crewAvail);
     }
   }
   for (const [id, k] of trimmed) {
@@ -131,44 +144,53 @@ export function computePriority(scenario: Scenario, results: Record<Id, CircuitR
       substituted: `${before.get(id)} → ${alloc.get(id)} at ${fmt(bcmAt(c, alloc.get(id) ?? 0), 0)} bcm/day`,
     });
   }
-  // 2b. shed lowest priority first
-  const taskCount = (t: CrewRuleExt) => overrides[t.id] ?? taskFull[t.id] ?? 0;
+  // 2b. shed lowest priority first; every step re-evaluates the rules (task counts follow the trucks)
   while (ev.total > crewAvail && guard++ < 2000) {
-    const it = shedOrder.find(x => (x.kind === 'task' ? taskCount(x.rule) > 0 : (alloc.get(x.c.id) ?? 0) > 0));
+    const it = shedOrder.find(x => (x.kind === 'task' ? taskNow(x.rule) > 0 : (alloc.get(x.c.id) ?? 0) > 0));
     if (!it) break;
-    if (it.kind === 'task') overrides[it.rule.id] = taskCount(it.rule) - 1;
+    if (it.kind === 'task') caps[it.rule.id] = taskNow(it.rule) - 1;
     else alloc.set(it.c.id, (alloc.get(it.c.id) ?? 0) - 1);
-    ev = evalAt(alloc, overrides, crewAvail);
+    ev = evalAt(alloc, caps, crewAvail);
   }
   if (ev.total > crewAvail) {
     warnings.push(`Fixed site roles alone need ${ev.total} people > ${crewAvail} available: no mining can be fully manned.`);
     narrative.push(`Fixed site roles alone need ${ev.total} > ${crewAvail}: check supervision / statutory roles.`);
   }
-  // 3. back-fill with any slack, most important first
-  for (const it of fillOrder) {
-    let k = 0;
-    while (k++ < 100) {
-      if (it.kind === 'task') {
-        const full = taskFull[it.rule.id] ?? 0;
-        if (taskCount(it.rule) >= full) break;
-        const trial = { ...overrides, [it.rule.id]: taskCount(it.rule) + 1 };
-        const e2 = evalAt(alloc, trial, crewAvail);
-        if (e2.total > crewAvail) break;
-        Object.assign(overrides, trial);
-        ev = e2;
-      } else {
-        const cur = alloc.get(it.c.id) ?? 0;
-        const used = [...alloc.values()].reduce((a, b) => a + b, 0);
-        if (cur >= (requested.get(it.c.id) ?? 0) || used >= trucksAvail) break;
-        const trial = new Map(alloc).set(it.c.id, cur + 1);
-        const e2 = evalAt(trial, overrides, crewAvail);
-        if (e2.total > crewAvail) break;
-        alloc.set(it.c.id, cur + 1);
-        ev = e2;
+  // 3. back-fill with any slack, most important first; repeat until nothing changes (task counts move with the trucks)
+  const used = () => [...alloc.values()].reduce((a, b) => a + b, 0);
+  for (let pass = 0, changed = true; changed && pass < 20; pass++) {
+    changed = false;
+    for (const it of fillOrder) {
+      let k = 0;
+      while (k++ < 100) {
+        if (it.kind === 'task') {
+          const id = it.rule.id;
+          if (caps[id] == null || taskNow(it.rule) >= taskRule(it.rule)) break;  // not shed, or the cap no longer binds
+          const trial = { ...caps, [id]: taskNow(it.rule) + 1 };
+          if (trial[id] >= taskRule(it.rule)) delete trial[id];
+          const e2 = evalAt(alloc, trial, crewAvail);
+          if (e2.total > crewAvail) break;
+          for (const key of Object.keys(caps)) delete caps[key];
+          Object.assign(caps, trial);
+          ev = e2;
+          changed = true;
+        } else {
+          const cur = alloc.get(it.c.id) ?? 0;
+          if (cur >= (requested.get(it.c.id) ?? 0) || used() >= trucksAvail) break;
+          const trial = new Map(alloc).set(it.c.id, cur + 1);
+          const e2 = evalAt(trial, caps, crewAvail);
+          if (e2.total > crewAvail) break;
+          alloc.set(it.c.id, cur + 1);
+          ev = e2;
+          changed = true;
+        }
       }
     }
   }
-  for (const t of tasks) if (overrides[t.id] != null && overrides[t.id] >= (taskFull[t.id] ?? 0)) delete overrides[t.id];
+  // fixed point: a cap that no longer binds at the final allocation is dropped, so every remaining cap is a real shed
+  // (the rule would man more): applying the trucks gives exactly this crew once those caps are set as manning overrides
+  for (const t of tasks) if (caps[t.id] != null && caps[t.id] >= taskRule(t)) delete caps[t.id];
+  ev = evalAt(alloc, caps, crewAvail);
 
   // 4. report
   const allocations: PriorityAllocation[] = [];
@@ -213,22 +235,30 @@ export function computePriority(scenario: Scenario, results: Record<Id, CircuitR
       }
     }
   }
+  const nUsed = used();
   const taskOut: PriorityTask[] = tasks.map(t => {
-    const full = taskFull[t.id] ?? 0, got = overrides[t.id] ?? full;
-    const lost = (full - got) * (t.bcmPerUnitDay ?? 0);
-    if (got < full) {
-      narrative.push(`${t.name} (P${t.priority}) reduced ${full} → ${got}${t.bcmPerUnitDay ? ` (−${fmtInt(lost)} bcm/day)` : ''}.`);
-      log.add('priority', `priority.task.${t.id}`, `${t.name}: reduced`, 'people = full − shed', got, 'people', {
-        substituted: `${full} → ${got}`, sheetRef: t.sheetRef, note: t.bcmPerUnitDay ? `${fmtInt(t.bcmPerUnitDay)} bcm/day per person.` : undefined,
+    // requested = what the rule mans at the PLANNED trucks (= Manning after "Apply allocation"); allocated = what the plan
+    // mans (< requested: the planner stands people down); baseline = the rule at the requested trucks (before the plan)
+    const want = ev.uncappedCounts[t.id] ?? 0, got = ev.ruleCounts[t.id] ?? 0, base = reqEval.ruleCounts[t.id] ?? 0;
+    const rate = t.bcmPerUnitDay ?? 0;
+    const lost = (want - got) * rate;
+    if (want !== base) {
+      narrative.push(`${t.name} (P${t.priority}): the rule mans ${fmt(want)} at the planned ${nUsed} truck${nUsed === 1 ? '' : 's'} (${fmt(base)} at the requested ${reqTrucks}).`);
+    }
+    if (got < want) {
+      narrative.push(`${t.name} (P${t.priority}) reduced ${fmt(want)} → ${fmt(got)}${rate ? ` (−${fmtInt(lost)} bcm/day)` : ''}: stand ${fmt(want - got)} down in Manning when applying the plan.`);
+      log.add('priority', `priority.task.${t.id}`, `${t.name}: reduced`, 'people = min(cap, rule count at the planned trucks)', got, 'people', {
+        substituted: `min(${fmt(caps[t.id] ?? got)}, ${fmt(want)}) = ${fmt(got)}`, sheetRef: t.sheetRef,
+        note: `${rate ? `${fmtInt(rate)} bcm/day per person. ` : ''}The rule gives ${fmt(base)} at the requested ${reqTrucks} trucks.`,
       });
     }
-    planned += full * (t.bcmPerUnitDay ?? 0);
-    achieved += got * (t.bcmPerUnitDay ?? 0);
-    return { ruleId: t.id, name: t.name, priority: t.priority as number, requested: full, allocated: got, bcmDayLost: lost };
+    planned += base * rate;
+    achieved += got * rate;
+    return { ruleId: t.id, name: t.name, priority: t.priority as number, requested: want, allocated: got, baseline: base, bcmDayLost: lost };
   });
-  const trucksUsed = [...alloc.values()].reduce((a, b) => a + b, 0);
+  const trucksUsed = nUsed;
   narrative.push(`Crew used ${ev.total} of ${crewAvail}; trucks ${trucksUsed} of ${trucksAvail}; production ${fmtInt(planned)} → ${fmtInt(achieved)} bcm/day`
-    + `${planned - achieved > 0.5 ? ` (−${fmtInt(planned - achieved)})` : ''}.`);
+    + `${planned - achieved > 0.5 ? ` (−${fmtInt(planned - achieved)})` : achieved - planned > 0.5 ? ` (+${fmtInt(achieved - planned)})` : ''}.`);
   log.add('priority', 'priority.result', 'Production achieved', 'Σ V(n_allocated) (+ site tasks)', achieved, 'bcm/day', {
     substituted: `planned ${fmt(planned, 0)} − lost ${fmt(planned - achieved, 0)}`,
   });

@@ -1,12 +1,15 @@
 /**
  * Tiny, safe expression language for derived crew rules (no eval).
- *   numbers · identifiers with dots (totals.trucks, params.pushFleet, roles.pushDozer, rules.R9_ENABLING_DOZERS)
+ *   numbers (12, 1.5, .5, 1e-3, 2.5E+2; malformed literals such as 1.2.3 or 1e throw) · identifiers with dots (totals.trucks, params.pushFleet, roles.pushDozer, rules.R9_ENABLING_DOZERS)
  *   + − * / · unary − and ! · comparisons > >= < <= == != · && || · parentheses
  *   functions: max(a, b, …), min(a, b, …), ceil(x), floor(x), abs(x), round(x), if(cond, a, b)
  * Booleans are numbers (true = 1). Unknown identifiers evaluate to 0 and are reported.
  */
 
 type Tok = { t: 'num'; v: number } | { t: 'id'; v: string } | { t: 'op'; v: string };
+
+/** A number literal at the sticky position: mantissa (`12`, `1.5`, `1.`, `.5`) and an optional signed exponent. */
+const NUM = /(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?/y;
 
 function tokenize(src: string): Tok[] {
   const out: Tok[] = [];
@@ -15,9 +18,17 @@ function tokenize(src: string): Tok[] {
     const c = src[i];
     if (c === ' ' || c === '\t' || c === '\n') { i++; continue; }
     if (/[0-9.]/.test(c)) {
-      let j = i + 1;
-      while (j < src.length && /[0-9.eE]/.test(src[j])) j++;
-      out.push({ t: 'num', v: parseFloat(src.slice(i, j)) });
+      // digits with an optional fraction, then an optional signed exponent: 12 · 1.5 · .5 · 1e-3 · 2.5E+2
+      NUM.lastIndex = i;
+      const m = NUM.exec(src);
+      const j = m ? i + m[0].length : i;
+      // the number must end cleanly: "1.2.3", "1e", "1e+", "3x" and a lone "." are malformed, not silently truncated
+      if (!m || (j < src.length && /[0-9.A-Za-z_]/.test(src[j]))) {
+        let k = j;
+        while (k < src.length && /[0-9.A-Za-z_]/.test(src[k])) k++;
+        throw new Error(`Malformed number "${src.slice(i, Math.max(k, i + 1))}" in expression "${src}"`);
+      }
+      out.push({ t: 'num', v: Number(m[0]) });
       i = j;
       continue;
     }

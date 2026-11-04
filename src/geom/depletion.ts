@@ -16,7 +16,7 @@
  */
 import type { DepletionMode, MeshData, Vec3 } from '@/core/types';
 import type { Plane } from './types';
-import { meshBBox, meshTopology } from './mesh';
+import { meshBBox, orientMesh } from './mesh';
 import { chainSegments } from './chain';
 import { triangulatePolygon } from './triangulate';
 import { pointInRing, ringArea } from './polyline';
@@ -43,6 +43,10 @@ interface DirTable {
 
 /** Prepared, cached data for repeated depletion queries on one closed mesh. Create with `prepareSolid`. */
 export interface SolidHandle {
+  /**
+   * The mesh the queries use: the input re-oriented by `orientMesh` (closed shells wound consistently), so
+   * faces exported the wrong way round do not corrupt volumes, plane positions or clipped meshes.
+   */
   readonly mesh: MeshData;
   /** Local origin used for precision (bounding-box centre, world m). */
   readonly ref: Vec3;
@@ -56,6 +60,10 @@ export interface SolidHandle {
   readonly orientation: 1 | -1;
   /** True when every edge has exactly two triangles (volumes are only meaningful when closed). */
   readonly closed: boolean;
+  /** Triangles re-oriented relative to the input (see `orientMesh`). */
+  readonly flippedTriangles: number;
+  /** User-facing notes on winding repairs or fallbacks (from `orientMesh`); empty when none were needed. */
+  readonly warnings: readonly string[];
   /** Size of the bounding box diagonal (m), used for tolerances. */
   readonly extent: number;
   /** Per-direction tables (internal cache). */
@@ -67,7 +75,8 @@ const MAX_TABLES = 8;
 
 /**
  * Precomputes what depletion queries need for a closed mesh (cached per MeshData object, so calling it
- * again with the same mesh is free).
+ * again with the same mesh is free). The mesh is re-oriented first (`orientMesh`), so volume, centroid,
+ * depletion planes, caps and clipped meshes all use consistently wound triangles.
  */
 export function prepareSolid(mesh: MeshData): SolidHandle {
   const hit = handles.get(mesh);
@@ -78,7 +87,8 @@ export function prepareSolid(mesh: MeshData): SolidHandle {
   for (let i = 0; i < n; i++) {
     local[i * 3] = v[i * 3] - ref[0]; local[i * 3 + 1] = v[i * 3 + 1] - ref[1]; local[i * 3 + 2] = v[i * 3 + 2] - ref[2];
   }
-  const t = mesh.tris;
+  const o = orientMesh(mesh);
+  const t = o.mesh.tris;
   let vol6 = 0, cx = 0, cy = 0, cz = 0;
   for (let k = 0; k < t.length; k += 3) {
     const a = t[k] * 3, b = t[k + 1] * 3, c = t[k + 2] * 3;
@@ -93,8 +103,8 @@ export function prepareSolid(mesh: MeshData): SolidHandle {
     ? [ref[0] + cx / (4 * vol6), ref[1] + cy / (4 * vol6), ref[2] + cz / (4 * vol6)]
     : [...ref] as Vec3;
   const h: SolidHandle = {
-    mesh, ref, local, volume: Math.abs(vol6) / 6, centroid, orientation,
-    closed: meshTopology(mesh).closed,
+    mesh: o.mesh, ref, local, volume: Math.abs(vol6) / 6, centroid, orientation,
+    closed: o.topology.closed, flippedTriangles: o.flippedTriangles, warnings: o.warnings,
     extent: Math.hypot(bb.max[0] - bb.min[0], bb.max[1] - bb.min[1], bb.max[2] - bb.min[2]),
     tables: new Map(),
   };
@@ -474,8 +484,8 @@ export function capLoops(mesh: MeshData | SolidHandle, plane: Plane, keep: KeepS
 
 /**
  * Clips a closed solid by the plane, keeping one side, and closes it with a triangulated cap.
- * The result is a closed MeshData (world coordinates) wound like the input. Use it instead of GPU clipping
- * planes when the cut face must be drawn.
+ * The result is a closed MeshData (world coordinates) wound like the handle's re-oriented mesh (the input's
+ * majority winding). Use it instead of GPU clipping planes when the cut face must be drawn.
  */
 export function clipMesh(mesh: MeshData | SolidHandle, plane: Plane, keep: KeepSide): MeshData {
   const h = asHandle(mesh);

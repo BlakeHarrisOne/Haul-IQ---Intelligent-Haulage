@@ -7,7 +7,8 @@
  *      t_gap = 3600 × load / rate × max(1, loader active min / loader PT target min)
  *    so a loader-limited circuit digs exactly rate × PT per shift (the workbook's C19 / shifts).
  *  · Shift events: every truck stops for f × duration (staggered across the window; f = 1 → all trucks, whole window)
- *    wherever it is; events with f = 1 also stop the loader.
+ *    wherever it is, except under the loader: a truck whose own pause would fall inside its spot + load sits it out in
+ *    the queue and the next truck is served (the loader is not held). Events with f = 1 also stop the loader.
  *  · Circuit standby: when the profile has more fleet productive minutes than the circuit's PT target (e.g. LDR 18 h/day
  *    = 540 min/shift vs 600), the circuit (loader + its trucks) stands by for the difference mid-shift.
  *  · Trucks start the shift empty, queued at the loader (pipeline fill at the dump comes naturally).
@@ -30,7 +31,8 @@ interface SimLeg { iv: SimIv[]; durS: number; lengthM: number }
 interface SimInternal extends ShiftSim {
   legL: SimLeg;
   legE: SimLeg;
-  /** Per truck: pauses for travel/dump (own) and for spot/load (own ∪ loader down). */
+  /** Per truck: pauses that apply while it is at the loader (spot/load): loader-down windows only — a truck's own rolling
+   *  pauses never fall inside its spot + load (it sits them out in the queue). */
   svcPauses: [number, number, string][][];
   route: { ch: number[]; from: Vec3[]; to: Vec3[]; len: number[] };
   spotS: number;
@@ -110,7 +112,23 @@ function runSim(scenario: Scenario, c: Circuit | undefined, r: CircuitResultExt 
   if (ptTargetMin > prodMin + 0.5) warnings.push(`PT target ${fmt(ptTargetMin / 60, 2)} h/shift exceeds the profile's ${fmt(prodMin / 60, 2)} productive hours: the simulation produces less than the calculation.`);
 
   const pauses = Array.from({ length: n }, (_, k) => mergeWindows([...truckPauses(prof, k, n), ...standbyWin]));
+  // a truck may only start spot/load when neither it nor the loader is paused …
   const svc = pauses.map(pz => mergeWindows([...pz, ...loaderDown]));
+  // … and only if its own (rolling) pauses — the parts outside loader-down windows — fall clear of the whole spot + load:
+  // a truck due for its fuel stop sits it out in the queue and the next queued truck is served, so the loader is never
+  // held by one truck's personal pause. Only loader-down windows (whole-fleet stops, standby) stretch spot and load.
+  const own = pauses.map(pz => subtractWindows(pz, loaderDown));
+  const serviceEnd = (st: number) => advance(advance(st, p.spotS, loaderDown), p.loadS, loaderDown);
+  const startFor = (k: number, from: number): number => {
+    let st = nextActive(from, svc[k]);
+    for (let g = 0; g < 1000 && st < H; g++) {
+      const end = serviceEnd(st);
+      const w = own[k].find(x => x[0] < end - 1e-9 && x[1] > st + 1e-9);
+      if (!w) break;
+      st = nextActive(Math.max(st, w[1]), svc[k]);
+    }
+    return st;
+  };
   const timelines: TruckTimeline[] = Array.from({ length: n }, (_, k) => ({ truckIndex: k, unitId: unitIds[k], records: [], pauses: pauses[k] }));
   const arr = new Array<number>(n).fill(0);
   const done = new Array<boolean>(n).fill(false);
@@ -124,7 +142,7 @@ function runSim(scenario: Scenario, c: Circuit | undefined, r: CircuitResultExt 
     let best = -1, bestStart = Infinity;
     for (let k = 0; k < n; k++) {
       if (done[k]) continue;
-      const st = nextActive(Math.max(arr[k], ready), svc[k]);
+      const st = startFor(k, Math.max(arr[k], ready));
       if (st < bestStart - 1e-9 || (Math.abs(st - bestStart) <= 1e-9 && best >= 0 && arr[k] < arr[best])) { best = k; bestStart = st; }
     }
     if (best < 0) break;
@@ -136,8 +154,8 @@ function runSim(scenario: Scenario, c: Circuit | undefined, r: CircuitResultExt 
       break;
     }
     pushRec(tl, 'queue', arr[k], bestStart);
-    const spotEnd = advance(bestStart, p.spotS, svc[k]);
-    const loadEnd = advance(spotEnd, p.loadS, svc[k]);
+    const spotEnd = advance(bestStart, p.spotS, loaderDown);
+    const loadEnd = advance(spotEnd, p.loadS, loaderDown);
     pushRec(tl, 'spot', bestStart, spotEnd);
     pushRec(tl, 'load', spotEnd, loadEnd);
     loadStarts.push(spotEnd);
@@ -182,8 +200,25 @@ function runSim(scenario: Scenario, c: Circuit | undefined, r: CircuitResultExt 
   });
   return {
     ...base, trucks: n, loaderGapS: gap, timelines, loadStartsS: loadStarts, loadEndsS: loadEnds, dumpEndsS: dumpEnds, loads, bcm, dumpedBcm: dumped,
-    loaderDown, standby, steps: log.steps as CalcStep[], warnings, svcPauses: svc,
+    loaderDown, standby, steps: log.steps as CalcStep[], warnings, svcPauses: pauses.map(() => loaderDown),
   };
+}
+
+/** Parts of windows `w` outside every window of `cut` (both sorted and merged). */
+function subtractWindows(w: [number, number, string][], cut: [number, number, string][]): [number, number, string][] {
+  const out: [number, number, string][] = [];
+  for (const [a0, b, label] of w) {
+    let a = a0;
+    for (const [c, d] of cut) {
+      if (d <= a) continue;
+      if (c >= b) break;
+      if (c > a) out.push([a, c, label]);
+      a = Math.max(a, d);
+      if (a >= b) break;
+    }
+    if (a < b) out.push([a, b, label]);
+  }
+  return out;
 }
 
 function pushRec(tl: TruckTimeline, phase: TruckPhase, t0: number, t1: number) {

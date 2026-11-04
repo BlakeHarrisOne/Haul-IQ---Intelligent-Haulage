@@ -10,10 +10,10 @@ export type { Vec2, XYZ, Grid, Plane } from './types';
 
 // mesh analysis
 export {
-  meshStats, meshTopology, meshBBox, signedVolume, classifyMesh, weldVertices, mergeMeshes, flipWinding,
+  meshStats, meshTopology, orientMesh, meshBBox, signedVolume, classifyMesh, weldVertices, mergeMeshes, flipWinding,
   toLocalFloat32, computeNormals, vertexCount, triangleCount,
 } from './mesh';
-export type { MeshTopology, LocalBuffers } from './mesh';
+export type { MeshTopology, MeshOrientation, LocalBuffers } from './mesh';
 
 // height queries and grids
 export { buildHeightIndex, heightAt, heightsAlong, rasterize, gridHeightAt, gridToMesh } from './heightIndex';
