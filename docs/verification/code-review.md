@@ -44,6 +44,29 @@ sheds, back-fills, deletes overrides and reports from that frozen number. The de
 - Report `requested` from `reqEval.ruleCounts` and `allocated` from the final `ev.ruleCounts`.
 - Only drop an override when it equals the natural count at the *final* allocation.
 
+**Fixed (R-PRIO-1 passes; R-PRIO-2 left failing, see below):** `src/engine/priority/plan.ts` no longer freezes anything.
+Every shed and fill step re-evaluates every crew rule at the current allocation. A shed task is a *cap*:
+`evaluateCrew` has a new `caps` input, and the rule then mans min(cap, its own count), so the cap follows the rule when trucks
+change. The result also has a new `uncappedCounts` field. Back-fill repeats until nothing changes. At the end, any cap that no
+longer binds is dropped. Each task is reported against the final allocation:
+- `requested` is the rule's count at the planned trucks, which is what Manning shows after *Apply allocation*;
+- `allocated` is what the plan mans;
+- `baseline` (new) is the count at the requested trucks;
+- `bcmDayLost` is (requested − allocated) × rate.
+
+`bcmDayAchieved` counts the push people the plan actually mans.
+
+The invariant now holds: the rules at the allocated trucks, with each reduced task set to its `allocated` count, give exactly
+`crewUsed`. With no task reduced, applying the trucks gives exactly `crewUsed`. This is tested for crew 40 → 20 in
+`priority.test.ts`, and audit D2 passes.
+
+R-PRIO-2 is left failing because it cannot pass without breaking the priority order. At 11 trucks or fewer, R7 is 6; at 13 or
+more, the rules need at least 33. So any allocation that fits 30 crew from the trucks alone, with push not overridden, has at
+most 9 trucks: EX04 (P2) would have to drop to 3 while P4 push keeps all 6 dozers. The audit's priority-order check rejects
+exactly that plan, because shedding everything below P2 would fit a 4th EX04 truck. The planner keeps EX04 full instead, and
+reports push as **reduced 6 → 4 (stand 2 down)**. The test's `allocated === requested` asserts the old "not reduced" report,
+which was the defect.
+
 ## 2. Closed solid with mixed winding gets a wrong volume (High)
 
 **Where:** `src/geom/mesh.ts:149-153` (`meshStats`); `src/geom/depletion.ts:91-96` (`prepareSolid`)
@@ -61,6 +84,17 @@ positions are all wrong, with no warning.
 **Fix:** Orient the shells consistently before the volume sums: flip triangles by a BFS over manifold edges, then make each
 shell's signed volume positive. If that is not possible, return `volume: undefined` and raise an import warning whenever
 `inconsistentEdges > 0`. Use the same reoriented triangle list in `prepareSolid`.
+
+**Fixed:** New `orientMesh(mesh)` in `src/geom/mesh.ts` (exported from `@/geom`, cached per MeshData) builds edge
+adjacency, runs a BFS per shell that flips triangles until every shared edge is traversed in opposite directions, and keeps
+the file's majority winding. A separate shell wound inside-out as a whole is flipped, unless a bbox + winding-number test finds
+it inside a larger shell (a void, which keeps its opposite winding). `meshStats` and `prepareSolid` take volume and centroid
+from the re-oriented triangles. `prepareSolid` also hands them to its depletion tables, `capLoops` and `clipMesh`
+(`SolidHandle.mesh`). The flipped-face count and any fallback (non-orientable shell, or non-manifold edges, where the file's
+winding is kept with abs volume) come back in `orientMesh(...).warnings`. They are also in `SolidHandle.warnings` and,
+through `parse00t`, in the import warnings the import UI already shows. The `MeshStats` contract is unchanged. Cost: 1.1×
+on the 326 k-triangle open topo, about 1.5× on a 328 k-triangle closed solid. R-GEOM-1 and R-GEOM-1b pass, and new unit tests
+in `mesh.test.ts`, `depletion.test.ts` and `vulcan00t.test.ts` cover the cases above.
 
 ## 3. Shift sim: a truck on its rolling fuel stop holds the loader (Medium-High)
 
@@ -89,6 +123,12 @@ low numbers.
 - Alternatively, move a rolling pause that would start under the loader to the truck's next travel phase.
 - Only loader-down windows should stretch spot or load.
 
+**Fixed:** In `src/engine/shift/sim.ts`, a truck is only picked for the loader if its own pauses (outside loader-down windows)
+fall clear of the whole spot + load. Otherwise it sits out its fuel stop in the queue and the next queued truck is served. Spot
+and load are stretched by loader-down windows only. Default profile, EX09 on the test haul: 6/7/8 trucks give
+17,673/17,783/17,783 bcm per shift, and 9 or more give 17,992 (0.04 % below the calculated 18,000). Production is monotone from
+1 to 16 trucks. R-SIM-1, R-SIM-2 and R-SIM-3 pass.
+
 ## 4. Kinematic: a stop sign on a repeated point is lost on the loaded leg (Medium)
 
 **Where:** `src/engine/haul/circuit.ts:386`, `:393`; `src/engine/haul/route.ts:80-83`, `:119`
@@ -106,6 +146,12 @@ counts that stop, so the stop penalty is reduced as well.
 
 **Fix:** In `buildRoute`, record each kept segment's end point index after skipping, and attach stops by that index (or by
 chainage). Compute `stopsModelled` from the stops `kinematicLeg` actually applies (`nodeStop`), not from `route.stops`.
+
+**Fixed:** `buildRoute` (`src/engine/haul/route.ts`) attaches each stop to a kept-segment `boundary`. This is the count of
+kept segments that start before the stop point, so a repeated point collapses onto the same boundary. The new `stopBoundaries`
+gives the interior boundaries with a stop for each direction. `circuit.ts` uses it for `stopAtEnd` on both legs and sets
+`stopsModelled` to the stops actually applied. Two stop flags on one repeated point count as one stop, and a stop that
+coincides with the dig or dump end is not counted, so the penalty covers it. R-KIN-1 passes.
 
 ## 5. Overlapping shift events are subtracted twice (Medium)
 
@@ -125,6 +171,11 @@ simulation.
 **Fix:** Integrate over the elementary intervals of the merged event boundaries, using the combined stop fraction in each
 interval: `max(f)`, or `1 − Π(1 − f)`.
 
+**Fixed:** `src/engine/shift/profile.ts` integrates `max(fleetStopFraction)` over the elementary intervals between the event
+boundaries, clipped to [0, t]. `productiveMinutes` is now `productiveMinutesAt(L)`. Lost time per interval is at most its own
+length, so the result never goes backwards. With no overlaps, the numbers are unchanged (the default profile is still 600).
+R-SHIFT-1 and R-SHIFT-2 pass.
+
 ## 6. Crew-rule expression divides by zero, total becomes NaN (Medium)
 
 **Where:** `src/engine/manning/evaluate.ts:154-157`
@@ -138,6 +189,10 @@ interval: `max(f)`, or `1 − Π(1 − f)`.
 **Test:** `manning.review.test.ts` › R-EXPR-3
 
 **Fix:** If `!Number.isFinite(per)`, push a warning and use 0 (or `rule.count`).
+
+**Fixed:** `evaluateCrew` (`src/engine/manning/evaluate.ts`) counts a non-finite count (from an expression, an override or a
+count) as 0 people. It pushes a warning naming the rule and the value, and the warning also becomes a `Check` step. It adds a
+`manning.<rule>.nonfinite` CalcStep explaining the 0, and the line's reason says "→ treated as 0". R-EXPR-3 passes.
 
 ## 7. Expression tokenizer misreads numbers (Low-Medium)
 
@@ -155,6 +210,10 @@ whatever it cannot read.
 
 **Fix:** Match `/(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?/y` at position i. Throw if the next character is a digit, `.` or a letter.
 
+**Fixed:** The tokenizer (`src/engine/manning/expr.ts`) matches the sticky number regex above and reads the match with
+`Number`. If the next character is a digit, `.`, a letter or `_`, it throws `Malformed number "…" in expression "…"`. That
+covers `1.2.3`, a lone `.`, `1e`, `1e+` and `3x`. `1e-3` is 0.001 and `2.5E+1` is 25. R-EXPR-1 and R-EXPR-2 pass.
+
 ## 8. DXF export: duplicate layer names (Low-Medium)
 
 **Where:** `src/io/strings.ts:231-236` (`toDxf3dPolyline`)
@@ -170,6 +229,11 @@ other strings.
 
 **Fix:** Keep a `Set` of names already emitted. Increment `k` (and truncate the base to fit 31 characters) until the name
 is unused.
+
+**Fixed:** New `dxfLayerNames` in `src/io/strings.ts`, used by `toDxf3dPolyline`, de-duplicates after sanitising. The first
+string with a given name keeps it. Later ones get the first free `NAME_k` (trimmed to 31 characters), never a name another
+string owns and never `0`. "Haul", "Haul" and "Haul 2" give `HAUL`, `HAUL_3` and `HAUL_2`. R-IO-1 passes; there is a new
+unit test.
 
 ## 9. `store.commit`: the no-op guard can never fire (Low-Medium)
 
@@ -199,6 +263,9 @@ but the stop is still marked `'loaded'`, so trucks going c→a stop instead.
 
 **Fix:** Swap `'loaded'` ↔ `'empty'` in `reversePoints`.
 
+**Fixed:** `reversePoints` (`src/geom/strings.ts`) swaps `'loaded'` ↔ `'empty'`. Segment overrides already moved with their
+physical segment, and that is still true. R-GEOM-2 passes; there is a new unit test, including a double reverse.
+
 ## 11. DXF export writes a non-finite coordinate as `0.0` (Low)
 
 **Where:** `src/io/strings.ts:259` (`fmt`)
@@ -211,6 +278,11 @@ workbook's "phantom segment" bug, now handed on to Deswik or Vulcan.
 **Test:** `io.review.test.ts` › R-IO-2
 
 **Fix:** Throw a user-facing error, or skip the vertex and return a warning.
+
+**Fixed:** `toDxf3dPolyline` skips any vertex with a non-finite E, N or RL and adds a note to the new optional
+`opts.warnings`. If that would leave a string with fewer than 2 points, it throws a clear error naming the string. `fmt` now
+throws rather than write `0.0`. R-IO-2 passes; there is a new unit test. UI callers (`StringEditor`, `exporters.ts`) should
+pass `{ warnings }` and catch the error to show a toast.
 
 ---
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { HaulString, MeshAsset, Scenario } from '@/core/types';
-import { computeAllCircuits, computeManning, computePriority, productiveMinutes } from '@/engine';
+import { computeAllCircuits, computeManning, computePriority, curveForce, productiveMinutes } from '@/engine';
+import { gearForce } from '@/engine/util/curve';
 import type { TruckModelExt } from '@/engine/types';
 import { fixture, straightString } from '@/engine/testing';
 import { defaultScenarioData, demoCircuits, LOADER_MODELS, TRUCK_MODELS, WORKBOOK_SPEEDS } from './index';
@@ -43,6 +44,14 @@ describe('master data', () => {
       expect(t.rimpull.length).toBeGreaterThan(5);
       expect(t.retarder.length).toBeGreaterThan(5);
       for (let k = 1; k < t.rimpull.length; k++) expect(t.rimpull[k][0]).toBeGreaterThan(t.rimpull[k - 1][0]);
+    }
+    // calc-audit D5: the rimpull envelope is the true upper envelope of the per-gear curves (no overshoot past upshifts)
+    for (const t of TRUCK_MODELS as TruckModelExt[]) {
+      if (!t.rimpullGears?.length) continue;
+      for (let v = 0; v <= t.topSpeedKmh; v += 0.01) {
+        const best = Math.max(...t.rimpullGears.map(g => gearForce(g.points, v)));
+        if (best > 0) expect(Math.abs(curveForce(t.rimpull, v) / best - 1), `${t.id} at ${v.toFixed(2)} km/h`).toBeLessThan(1e-3);
+      }
     }
     expect(LOADER_MODELS.map(l => l.name)).toEqual(expect.arrayContaining(['KOM PC4000', 'LIEB R996B', 'HIT EX2600', 'HIT EX5600', 'KOM WA900']));
     expect(LOADER_MODELS.find(l => l.id === 'KOM_WA900_8')!.type).toBe('loader');

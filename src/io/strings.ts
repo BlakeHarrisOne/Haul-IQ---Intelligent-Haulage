@@ -218,22 +218,58 @@ export function dxfLayerName(name: string): string {
 }
 
 /**
- * AutoCAD R12 ASCII DXF with one 3D POLYLINE (70 = 8) per string on its own layer, VERTEX entities
- * (70 = 32) and SEQEND. Coordinates are written as given (site grid metres, 4 decimals).
- * @param opts.colour ACI colour for the layers (default 2, yellow)
+ * One DXF layer name per string, unique across the export (and distinct from the default layer "0"): the
+ * first string with a sanitised name keeps it; later ones get the first free `NAME_k` (k = 2, 3 …), the
+ * base trimmed so the name still fits in 31 characters. Names a string has as its own are never reused.
  */
-export function toDxf3dPolyline(strings: StringLike | readonly StringLike[], opts: { colour?: number } = {}): string {
+export function dxfLayerNames(names: readonly string[]): string[] {
+  const bases = names.map(dxfLayerName);
+  const taken = new Set<string>(['0']);
+  const first = bases.map(b => {
+    if (taken.has(b)) return false;
+    taken.add(b);
+    return true;
+  });
+  return bases.map((b, i) => {
+    if (first[i]) return b;
+    for (let k = 2; ; k++) {
+      const suffix = `_${k}`;
+      const name = `${b.slice(0, 31 - suffix.length)}${suffix}`;
+      if (!taken.has(name)) { taken.add(name); return name; }
+    }
+  });
+}
+
+/**
+ * AutoCAD R12 ASCII DXF with one 3D POLYLINE (70 = 8) per string on its own, uniquely named layer, VERTEX
+ * entities (70 = 32) and SEQEND. Coordinates are written as given (site grid metres, 4 decimals).
+ * A vertex with a non-finite coordinate (NaN / ±Infinity) is never written: it is skipped and a warning is
+ * added to `opts.warnings` (writing it as 0.0 would put a phantom vertex at RL 0 or the grid origin).
+ * @param opts.colour ACI colour for the layers (default 2, yellow)
+ * @param opts.warnings receives a note per string that had vertices skipped
+ * @throws Error when skipping invalid vertices would leave a string with fewer than 2 points
+ */
+export function toDxf3dPolyline(
+  strings: StringLike | readonly StringLike[], opts: { colour?: number; warnings?: string[] } = {},
+): string {
   const list = (Array.isArray(strings) ? strings : [strings]) as readonly StringLike[];
   const colour = opts.colour ?? 2;
   const out: string[] = [];
   const g = (code: number, value: string | number) => { out.push(String(code), typeof value === 'number' ? fmt(value) : value); };
-  const used = new Map<string, number>();
-  const layers = list.map(s => {
-    const base = dxfLayerName(s.name);
-    const k = (used.get(base) ?? 0) + 1;
-    used.set(base, k);
-    return k === 1 ? base : `${base.slice(0, 27)}_${k}`;
+  const verts = list.map((s, i) => {
+    const all = s.points.map(xyzOf);
+    const ok = all.filter(p => Number.isFinite(p[0]) && Number.isFinite(p[1]) && Number.isFinite(p[2]));
+    const bad = all.length - ok.length;
+    if (bad > 0) {
+      const nm = s.name || `String ${i + 1}`;
+      if (ok.length < 2) {
+        throw new Error(`Cannot export "${nm}" to DXF: ${bad} of its ${all.length} points have a missing or invalid coordinate (fewer than 2 valid points left). Fix the point coordinates and export again.`);
+      }
+      opts.warnings?.push(`${nm}: skipped ${bad} point${bad === 1 ? '' : 's'} with a missing or invalid coordinate in the DXF export.`);
+    }
+    return ok;
   });
+  const layers = dxfLayerNames(list.map(s => s.name));
   g(0, 'SECTION'); g(2, 'HEADER'); g(9, '$ACADVER'); g(1, 'AC1009'); g(0, 'ENDSEC');
   g(0, 'SECTION'); g(2, 'TABLES');
   g(0, 'TABLE'); g(2, 'LTYPE'); g(70, '1');
@@ -243,11 +279,10 @@ export function toDxf3dPolyline(strings: StringLike | readonly StringLike[], opt
   for (const name of ['0', ...layers]) { g(0, 'LAYER'); g(2, name); g(70, '0'); g(62, String(colour)); g(6, 'CONTINUOUS'); }
   g(0, 'ENDTAB'); g(0, 'ENDSEC');
   g(0, 'SECTION'); g(2, 'ENTITIES');
-  list.forEach((s, i) => {
+  list.forEach((_, i) => {
     const layer = layers[i];
     g(0, 'POLYLINE'); g(8, layer); g(66, '1'); g(10, '0.0'); g(20, '0.0'); g(30, '0.0'); g(70, '8');
-    for (const p of s.points) {
-      const [x, y, z] = xyzOf(p);
+    for (const [x, y, z] of verts[i]) {
       g(0, 'VERTEX'); g(8, layer); g(10, x); g(20, y); g(30, z); g(70, '32');
     }
     g(0, 'SEQEND'); g(8, layer);
@@ -256,4 +291,8 @@ export function toDxf3dPolyline(strings: StringLike | readonly StringLike[], opt
   return out.join('\r\n') + '\r\n';
 }
 
-const fmt = (v: number) => (Number.isFinite(v) ? v.toFixed(4) : '0.0');
+/** Fixed 4-decimal coordinate; callers filter non-finite values first (never written as a fake 0.0). */
+const fmt = (v: number) => {
+  if (!Number.isFinite(v)) throw new Error(`DXF export: invalid coordinate ${v}`);
+  return v.toFixed(4);
+};

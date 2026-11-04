@@ -82,6 +82,19 @@ describe('raw .00t', () => {
     expect(us.bbox.max[2]).toBeCloseTo(367, 6);
     // round-trip through the writer is byte-identical for these canonical files
     expect(new Uint8Array(write00t(dig.mesh))).toEqual(new Uint8Array(fixture('demo_dig_EX09_block.00t')));
+    // consistently wound: no winding notes
+    expect([...dig.warnings, ...dump.warnings].join(' ')).not.toMatch(/winding|non-manifold|wound/);
+  });
+
+  it('flags a solid with faces wound the wrong way; the mesh is returned as in the file', () => {
+    const cube: MeshData = {
+      verts: Float64Array.from([0, 0, 0, 10, 0, 0, 10, 10, 0, 0, 10, 0, 0, 0, 10, 10, 0, 10, 10, 10, 10, 0, 10, 10].map((x, i) => x + [236000, 7051000, 300][i % 3])),
+      tris: Uint32Array.from([0, 2, 1, 0, 3, 2, 4, 6, 5, 4, 7, 6, 0, 1, 5, 0, 5, 4, 1, 2, 6, 1, 6, 5, 2, 3, 7, 2, 7, 6, 3, 0, 4, 3, 4, 7]), // top (2, 3) inward
+    };
+    const p = parse00t(write00t(cube));
+    expect(Array.from(p.mesh.tris)).toEqual(Array.from(cube.tris));
+    expect(p.warnings.join(' ')).toMatch(/2 triangles of 12 faced the wrong way and were re-oriented/);
+    expect(meshStats(p.mesh).volume!).toBeCloseTo(1000, 6);
   });
 });
 

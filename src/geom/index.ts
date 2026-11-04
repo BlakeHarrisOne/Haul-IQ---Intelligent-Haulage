@@ -49,7 +49,7 @@ export { parse00t, write00t, looksLike00t } from '@/io/vulcan00t';
 export type { Parsed00t } from '@/io/vulcan00t';
 export { isVulZ, inspectVulZ, decodeVulZ, expandFastLZ } from '@/io/vulz';
 export type { VulZInfo, VulZDecoded } from '@/io/vulz';
-export { parseStringsText, toCsv, toXyz, toDxf3dPolyline, toDataDump, dxfLayerName } from '@/io/strings';
+export { parseStringsText, toCsv, toXyz, toDxf3dPolyline, toDataDump, dxfLayerName, dxfLayerNames } from '@/io/strings';
 export type { ParsedString, ParsedStrings, StringLike } from '@/io/strings';
 
 // demo site

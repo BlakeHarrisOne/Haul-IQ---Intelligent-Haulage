@@ -110,6 +110,17 @@ describe('editing', () => {
     expect(reversePoints(reversePoints(base())).map(p => p.seg?.zone)).toEqual(['pit', 'ramp', 'road', undefined]);
   });
 
+  it('reversePoints keeps a one-way stop on the same traffic stream (loaded ↔ empty), two-way stops as they are', () => {
+    const s = base();
+    s[1] = { ...s[1], stop: true, stopOneWay: 'loaded' };
+    s[2] = { ...s[2], stop: true, stopOneWay: 'empty' };
+    s[3] = { ...s[3], stop: true };
+    const r = reversePoints(s);
+    expect(r.map(p => [p.id, p.stop, p.stopOneWay])).toEqual([['p3', true, undefined], ['p2', true, 'loaded'], ['p1', true, 'empty'], ['p0', undefined, undefined]]);
+    expect(reversePoints(r).map(p => p.stopOneWay)).toEqual([undefined, 'loaded', 'empty', undefined]);
+    expect(s[1].stopOneWay).toBe('loaded'); // input untouched
+  });
+
   it('insertPoint interpolates or snaps, inherits the split segment; remove / move', () => {
     const s = base();
     const a = insertPoint(s, 2, 15, 1);

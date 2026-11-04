@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dxfLayerName, parseStringsText, toCsv, toDataDump, toDxf3dPolyline, toXyz } from './strings';
+import { dxfLayerName, dxfLayerNames, parseStringsText, toCsv, toDataDump, toDxf3dPolyline, toXyz } from './strings';
 
 /** The calculator's 'Raw Data' sheet as Excel puts it on the clipboard (tab separated). */
 const RAW_DATA = [
@@ -120,5 +120,25 @@ describe('exports', () => {
     expect(layers).toEqual(['0', 'EX09_S51_WEST_LONG_HAUL', 'B', 'B_2']);
     expect(dxfLayerName('  ')).toBe('STRING');
     expect(dxfLayerName('x'.repeat(40)).length).toBe(31);
+  });
+
+  it('DXF layer names are unique after sanitising; a string keeps its own name when it is unique', () => {
+    expect(dxfLayerNames(['Haul', 'Haul', 'Haul 2', 'haul', '0', ''])).toEqual(['HAUL', 'HAUL_3', 'HAUL_2', 'HAUL_4', '0_2', 'STRING']);
+    const long = dxfLayerNames(['y'.repeat(40), 'y'.repeat(35), `${'y'.repeat(29)}_2`]);
+    expect(new Set(long).size).toBe(3);
+    for (const n of long) expect(n.length).toBeLessThanOrEqual(31);
+    expect(long[1]).toBe(`${'Y'.repeat(29)}_3`);
+  });
+
+  it('DXF: a vertex with a non-finite coordinate is skipped with a warning, never written as 0.0', () => {
+    const warnings: string[] = [];
+    const bad = { name: 'Ramp', points: [[236000, 7051000, 300], [236010, 7051000, NaN], [Infinity, 7051000, 301], [236020, 7051000, 302]] };
+    const dxf = toDxf3dPolyline([s, bad], { warnings });
+    expect(dxf.split('\r\n').filter(l => l === 'VERTEX').length).toBe(4);
+    expect(dxf).not.toMatch(/NaN|Infinity/);
+    expect(dxf).toContain('\r\n30\r\n302.0000\r\n');
+    expect(warnings).toEqual(['Ramp: skipped 2 points with a missing or invalid coordinate in the DXF export.']);
+    expect(() => toDxf3dPolyline({ name: 'Bad', points: [[1, 2, 3], [NaN, 2, 3]] })).toThrow(/Cannot export "Bad" to DXF/);
+    expect(toDxf3dPolyline(s)).toBe(toDxf3dPolyline(s, { warnings: [] })); // no warning, same output
   });
 });

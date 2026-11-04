@@ -80,7 +80,14 @@ function Editor({ hs, scenario }: { hs: HaulString; scenario: Scenario }) {
   const exportItems = [
     { label: 'Export', header: true },
     { label: 'CSV (E, N, Z)', icon: 'download' as const, onSelect: () => downloadText(`${safeFileName(hs.name)}.csv`, toCsv(hs), 'text/csv') },
-    { label: 'DXF 3D polyline', icon: 'download' as const, hint: 'Deswik / Vulcan', onSelect: () => downloadText(`${safeFileName(hs.name)}.dxf`, toDxf3dPolyline(hs), 'application/dxf') },
+    { label: 'DXF 3D polyline', icon: 'download' as const, hint: 'Deswik / Vulcan', onSelect: () => {
+      // invalid vertices are skipped (reported in warnings); a string left with < 2 valid points throws
+      const warnings: string[] = [];
+      try {
+        downloadText(`${safeFileName(hs.name)}.dxf`, toDxf3dPolyline(hs, { warnings }), 'application/dxf');
+        if (warnings.length) toast('warn', warnings.join(' · '));
+      } catch (e) { toast('error', e instanceof Error ? e.message : String(e)); }
+    } },
     { label: 'Copy for Data Dump', icon: 'copy' as const, hint: 'E ⇥ N ⇥ RL', onSelect: async () => toast((await copyText(toDataDump(hs))) ? 'ok' : 'error', `Copied ${hs.points.length} rows - paste at Data Dump!A2`) },
     { separator: true, label: '' },
     { label: hs.locked ? 'Unlock string' : 'Lock string', icon: (hs.locked ? 'unlock' : 'lock') as 'lock' | 'unlock', onSelect: () => updateString(hs.id, { locked: !hs.locked }) },

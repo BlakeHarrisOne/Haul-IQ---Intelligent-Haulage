@@ -82,24 +82,49 @@ export function maxSpeedForForce(curve: CurvePoint[], forceKN: number): { kmh: n
   return { kmh: 0, ok: false };
 }
 
+/** Knee width at a gear's band end (km/h): the envelope steps down to the next gear just past the last point. */
+const KNEE_KMH = 1e-4;
+
 /**
- * Max-over-curves envelope sampled at every breakpoint of every curve (plus midpoints), with each curve
- * contributing only inside its own speed band. Used to build retarder envelopes from per-gear curves.
+ * True upper envelope of per-gear curves: F_env(v) = max over gears of gearForce(gear, v) (each gear only inside its
+ * own speed band), represented so that curveForce(envelope, v) reproduces that max.
+ *   · every breakpoint of every curve, plus a knee just past each band end (the step down to the next gear) and just
+ *     before each band start;
+ *   · a dense grid (0.02 km/h below 1 km/h and 0.1 km/h below 5 km/h, where first-gear pieces are linear in force, then
+ *     0.25 km/h) so that
+ *     power-space interpolation between envelope points follows the gear curves;
+ *   · the exact crossing speed wherever the best gear changes between two samples (bisection), so gear-change knees
+ *     are kept instead of being interpolated across (which overstated rimpull just above each upshift).
+ * Used to build rimpull and retarder envelopes from per-gear curves.
  */
 export function envelopeOf(curves: CurvePoint[][]): CurvePoint[] {
+  const cs = curves.filter(c => c.length > 0);
+  if (!cs.length) return [];
+  const lo = Math.min(...cs.map(c => c[0][0])), hi = Math.max(...cs.map(c => c[c.length - 1][0]));
+  const fAt = (v: number) => { let f = 0; for (const c of cs) { const x = gearForce(c, v); if (x > f) f = x; } return f; };
+  const best = (v: number) => { let k = -1, f = 0; for (let i = 0; i < cs.length; i++) { const x = gearForce(cs[i], v); if (x > f + 1e-12) { f = x; k = i; } } return k; };
   const vs = new Set<number>();
-  for (const c of curves) for (let i = 0; i < c.length; i++) {
-    vs.add(c[i][0]);
-    if (i + 1 < c.length) vs.add((c[i][0] + c[i + 1][0]) / 2);
+  const add = (v: number) => { if (v >= lo - 1e-12 && v <= hi + 1e-12) vs.add(round6(v)); };
+  for (const c of cs) {
+    for (const p of c) add(p[0]);
+    add(c[c.length - 1][0] + KNEE_KMH);
+    if (c[0][0] > lo) add(c[0][0] - KNEE_KMH);
   }
-  const sorted = [...new Set([...vs].map(round6))].sort((a, b) => a - b);
-  const out: CurvePoint[] = [];
-  for (const v of sorted) {
-    let f = 0;
-    for (const c of curves) f = Math.max(f, gearForce(c, v));
-    out.push([v, round6(f)]);
+  for (let v = lo; v < hi; v += v < 1 ? 0.02 : v < 5 ? 0.1 : 0.25) add(v);
+  let sorted = [...vs].sort((a, b) => a - b);
+  // gear-change crossings between consecutive samples
+  const cross: number[] = [];
+  for (let i = 0; i + 1 < sorted.length; i++) {
+    let a = sorted[i], b = sorted[i + 1];
+    const ka = best(a), kb = best(b);
+    if (ka === kb || ka < 0 || kb < 0 || b - a <= 2 * KNEE_KMH) continue;
+    const d = (v: number) => gearForce(cs[ka], v) - gearForce(cs[kb], v);
+    if (!(d(a) > 0 && d(b) < 0)) continue;   // a band end, not a crossing (handled by the knee points)
+    for (let it = 0; it < 50 && b - a > 1e-7; it++) { const m = (a + b) / 2; if (d(m) > 0) a = m; else b = m; }
+    cross.push(round6((a + b) / 2));
   }
-  return out;
+  sorted = [...new Set([...sorted, ...cross])].sort((a, b) => a - b);
+  return sorted.map(v => [v, round6(fAt(v))] as CurvePoint);
 }
 
 export const clamp = (x: number, lo: number, hi: number) => (x < lo ? lo : x > hi ? hi : x);

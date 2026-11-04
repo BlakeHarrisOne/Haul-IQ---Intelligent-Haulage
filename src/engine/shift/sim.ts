@@ -24,6 +24,8 @@ import {
 /** Queue geometry along the string (m from the dig): slot q waits at min(L/2, QUEUE_FRONT_M + QUEUE_GAP_M × q). */
 export const QUEUE_FRONT_M = 30;
 export const QUEUE_GAP_M = 15;
+/** Speed at which a queued truck moves up a slot when the truck ahead leaves the queue, km/h. */
+export const QUEUE_CREEP_KMH = 6;
 
 interface SimIv { s0: number; ds: number; t0: number; dt: number; v0: number; v1: number }
 interface SimLeg { iv: SimIv[]; durS: number; lengthM: number }
@@ -39,6 +41,8 @@ interface SimInternal extends ShiftSim {
   loadS: number;
   dumpS: number;
   unitIds: (string | undefined)[];
+  /** Per queue record: times (s, ascending) at which each truck ahead of it at arrival leaves the queue. */
+  queueAhead: Map<PhaseRecord, number[]>;
 }
 
 const cache = new WeakMap<Scenario, Map<Id, { r: CircuitResult | undefined; sim: SimInternal }>>();
@@ -70,6 +74,7 @@ function emptySim(circuitId: Id, shiftS: number, productiveMin: number, why: str
     circuitId, trucks: 0, shiftS, productiveMin, serviceS: 0, loaderGapS: 0, cycleS: 0, truckLoadBcm: 0, timelines: [], loadStartsS: [],
     loadEndsS: [], dumpEndsS: [], loads: 0, bcm: 0, dumpedBcm: 0, loaderDown: [], steps: [], warnings: why ? [why] : [],
     legL: leg, legE: leg, svcPauses: [], route: { ch: [], from: [], to: [], len: [] }, spotS: 0, loadS: 0, dumpS: 0, unitIds: [],
+    queueAhead: new Map(),
   };
 }
 
@@ -174,8 +179,11 @@ function runSim(scenario: Scenario, c: Circuit | undefined, r: CircuitResultExt 
   }
   // queue slots at arrival (for presentation)
   const queues = timelines.flatMap(t => t.records.filter(x => x.phase === 'queue').map(x => ({ x, k: t.truckIndex })));
+  const queueAhead = new Map<PhaseRecord, number[]>();
   for (const q of queues) {
-    q.x.queueSlot = queues.filter(o => o !== q && o.x.t0 <= q.x.t0 + 1e-9 && o.x.t1 > q.x.t0 + 1e-9 && (o.x.t0 < q.x.t0 - 1e-9 || o.k < q.k)).length;
+    const ahead = queues.filter(o => o !== q && o.x.t0 <= q.x.t0 + 1e-9 && o.x.t1 > q.x.t0 + 1e-9 && (o.x.t0 < q.x.t0 - 1e-9 || o.k < q.k));
+    q.x.queueSlot = ahead.length;
+    queueAhead.set(q.x, ahead.map(o => o.x.t1).sort((a, b) => a - b));
   }
   loadEnds.sort((a, b) => a - b);
   loadStarts.sort((a, b) => a - b);
@@ -194,13 +202,13 @@ function runSim(scenario: Scenario, c: Circuit | undefined, r: CircuitResultExt 
     note: 'Keeps the simulated loader at its planned rate; loader active minutes exclude fleet-wide stops and standby.',
   });
   if (standby) log.add('shift', 'shift.standby', `${c.loaderUnitId} standby`, 'T_standby = T_prod − PT target / shifts', standbyMin, 'min', { substituted: `${fmt(prodMin, 1)} − ${fmt(ptTargetMin, 1)}`, note: standby.reason });
-  log.add('shift', 'shift.bcm', 'Simulated production this shift', 'V = loads × truck load', bcm, 'bcm', {
-    substituted: `${loads}${inProg > 0 ? ` + ${fmt(inProg, 2)}` : ''} × ${fmt(p.truckLoadBcm)}`,
+  log.add('shift', 'shift.bcm', 'Simulated production this shift', 'V = (loads + load in progress) × truck load', bcm, 'bcm', {
+    substituted: `${inProg > 0 ? `(${loads} + ${fmt(inProg, 2)})` : loads} × ${fmt(p.truckLoadBcm)}`,
     note: `Calculation: ${fmt(analytic, 0)} bcm/shift (${fmt(r.assigned.bcmPerDay, 0)} bcm/day ÷ ${shifts}); difference ${fmt(bcm - analytic, 0)} bcm (start-up, end-of-shift and event bunching).`,
   });
   return {
     ...base, trucks: n, loaderGapS: gap, timelines, loadStartsS: loadStarts, loadEndsS: loadEnds, dumpEndsS: dumpEnds, loads, bcm, dumpedBcm: dumped,
-    loaderDown, standby, steps: log.steps as CalcStep[], warnings, svcPauses: pauses.map(() => loaderDown),
+    loaderDown, standby, steps: log.steps as CalcStep[], warnings, svcPauses: pauses.map(() => loaderDown), queueAhead,
   };
 }
 
@@ -347,8 +355,20 @@ export function truckStatesAt(scenario: Scenario, results: Record<Id, CircuitRes
       const dur = Math.max(1e-9, activeBetween(rec.t0, rec.t1, pz));
       const u = Math.min(1, act / dur);
       switch (rec.phase) {
-        case 'queue': ch = slotCh(qIndex.get(k) ?? 0); break;
-        case 'spot': ch = slotCh(0) * (1 - u); v = pw ? 0 : (slotCh(0) / Math.max(1, sim.spotS)) * 3.6; dir = pw ? 0 : -1; break;
+        case 'queue': {
+          // move up smoothly (creep speed, active time only) as the trucks ahead leave, instead of jumping a slot
+          const q = queueChainage(sim, rec, t, pz, slotCh);
+          ch = q.ch;
+          if (q.moving && !pw) { v = QUEUE_CREEP_KMH; dir = -1; }
+          break;
+        }
+        case 'spot': {
+          // the spot run starts where the truck queued (slot 0, or further back when it was served out of turn)
+          const prev = tl.records[i - 1];
+          const ch0 = prev?.phase === 'queue' ? queueChainage(sim, prev, prev.t1, tl.pauses, slotCh).ch : slotCh(0);
+          ch = ch0 * (1 - u); v = pw ? 0 : (ch0 / Math.max(1, sim.spotS)) * 3.6; dir = pw ? 0 : -1;
+          break;
+        }
         case 'load': ch = 0; fill = u; break;
         case 'haul': { const q = legAt(sim.legL, act); ch = q.s; v = pw ? 0 : q.v * 3.6; dir = v > 0.05 ? 1 : 0; loaded = true; fill = 1; break; }
         case 'dump': ch = L; loaded = u < 1; fill = 1 - u; break;
@@ -377,6 +397,25 @@ export function truckStatesAt(scenario: Scenario, results: Record<Id, CircuitRes
     if (phase === 'queue') st.queueIndex = qIndex.get(k);
     return st;
   });
+}
+
+/**
+ * Chainage of a queued truck at t: it arrives at its slot and moves up one slot (QUEUE_GAP_M) each time a truck ahead
+ * leaves the queue, at QUEUE_CREEP_KMH during its active (unpaused) time, so the position is continuous in time.
+ */
+function queueChainage(sim: SimInternal, rec: PhaseRecord, t: number, pauses: [number, number, string][], slotCh: (q: number) => number): { ch: number; moving: boolean } {
+  const ends = sim.queueAhead.get(rec) ?? [];
+  const creep = QUEUE_CREEP_KMH / 3.6;
+  let q = ends.length, pos = slotCh(q), last = rec.t0;
+  for (const e of ends) {
+    if (e > t) break;
+    pos = Math.max(slotCh(q), pos - creep * activeBetween(last, e, pauses));
+    last = e;
+    q--;
+  }
+  const target = slotCh(q);
+  const ch = Math.max(target, pos - creep * activeBetween(last, t, pauses));
+  return { ch, moving: ch > target + 1e-9 };
 }
 
 function recordIndexAt(recs: PhaseRecord[], t: number): number {

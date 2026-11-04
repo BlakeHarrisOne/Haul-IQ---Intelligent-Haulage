@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { computeAllCircuits, computeManning } from '../index';
+import { crewCircuits, evaluateCrew } from '../manning/evaluate';
 import { circuitFor, scenarioWith, straightString } from '../testing';
 import { computePriority } from './plan';
 
@@ -112,5 +113,63 @@ describe('priority planner', () => {
       }
       expect(p.steps.length).toBeGreaterThan(0);
     }
+  });
+
+  describe('rule-driven site tasks are live (bulk push = 7 − enabling − max(0, trucks − 12))', () => {
+    /** 15 trucks requested (6 + 5 + 4), LDR coal at P5 below bulk push P4. */
+    function site15() {
+      const { s } = plan();
+      const t: Record<string, number> = { 'c-ex09': 6, 'c-ex04': 5, 'c-ldr1': 4 };
+      const s2 = { ...s, fleet: { ...s.fleet, trucksAvailable: 15 }, circuits: s.circuits.map(c => ({ ...c, trucks: t[c.id], priority: c.id === 'c-ldr1' ? 5 : c.priority })) };
+      return { s: s2, res: computeAllCircuits(s2) };
+    }
+
+    it('the reported plan is exactly what the rules man; with no task reduced, applying the trucks gives crewUsed', () => {
+      const { s, res } = site15();
+      for (let crew = 40; crew >= 20; crew--) {
+        const p = computePriority(s, res, { crewAvailable: crew });
+        const alloc = new Map(p.allocations.map(a => [a.circuitId, a.allocatedTrucks]));
+        const ov: Record<string, number> = {};
+        for (const t of p.tasks) if (t.allocated < t.requested) ov[t.ruleId] = t.allocated;
+        const ev = evaluateCrew({ circuits: crewCircuits(s, id => alloc.get(id)), rules: s.crew.rules, trucksAvailable: 15, available: crew, overrides: ov });
+        expect(ev.total, `crew ${crew}`).toBe(p.crewUsed);
+        expect(p.crewUsed, `crew ${crew}`).toBeLessThanOrEqual(crew);
+        for (const t of p.tasks) {
+          expect(ev.ruleCounts[t.ruleId] ?? 0, `crew ${crew} ${t.ruleId}`).toBe(t.allocated);
+          // requested = the rule at the planned trucks (what Manning shows after "Apply allocation")
+          const natural = evaluateCrew({ circuits: crewCircuits(s, id => alloc.get(id)), rules: s.crew.rules, trucksAvailable: 15, available: crew });
+          expect(natural.ruleCounts[t.ruleId] ?? 0, `crew ${crew} ${t.ruleId}`).toBe(t.requested);
+        }
+        if (p.tasks.every(t => t.allocated >= t.requested)) {
+          const applied = { ...s, circuits: s.circuits.map(c => ({ ...c, trucks: alloc.get(c.id) ?? c.trucks })) };
+          expect(computeManning(applied, computeAllCircuits(applied)).total, `crew ${crew}`).toBe(p.crewUsed);
+        }
+      }
+    });
+
+    it('crew 35: LDR (P5) parked, push follows the rule to 6 at 11 trucks (baseline 3 at 15) and its production counts', () => {
+      const { s, res } = site15();
+      const p = computePriority(s, res, { crewAvailable: 35 });
+      const push = p.tasks.find(t => t.ruleId === 'R7_BULK_PUSH')!;
+      expect(p.allocations.find(a => a.circuitId === 'c-ldr1')!.allocatedTrucks).toBe(0);
+      expect(push).toMatchObject({ baseline: 3, requested: 6, allocated: 6, bcmDayLost: 0 });
+      expect(p.crewUsed).toBe(32);
+      const circuitsAchieved = p.allocations.reduce((a, x) => a + x.bcmDayAchieved, 0);
+      expect(p.bcmDayAchieved - circuitsAchieved).toBe(6 * 18 * 320);
+      expect(p.narrative.some(l => /Bulk push dozers \(P4\): the rule mans 6 at the planned 11 trucks \(3 at the requested 15\)/.test(l))).toBe(true);
+    });
+
+    it('crew 30: higher-priority EX04 stays full; push (P4) is held at 4 of the 6 the rule gives at 11 trucks, and says so', () => {
+      const { s, res } = site15();
+      const p = computePriority(s, res, { crewAvailable: 30 });
+      expect(p.allocations.map(a => a.allocatedTrucks)).toEqual([6, 5, 0]);
+      const push = p.tasks.find(t => t.ruleId === 'R7_BULK_PUSH')!;
+      expect(push).toMatchObject({ requested: 6, allocated: 4, bcmDayLost: 2 * 18 * 320 });
+      expect(p.crewUsed).toBe(30);
+      expect(p.narrative.some(l => /Bulk push dozers \(P4\) reduced 6 → 4 .*stand 2 down in Manning/.test(l))).toBe(true);
+      // applying the trucks alone gives the rule's 6 push dozers: 2 more than the plan, exactly the 2 reported as stood down
+      const applied = { ...s, circuits: s.circuits.map(c => ({ ...c, trucks: p.allocations.find(a => a.circuitId === c.id)!.allocatedTrucks })) };
+      expect(computeManning(applied, computeAllCircuits(applied)).total).toBe(p.crewUsed + push.requested - push.allocated);
+    });
   });
 });

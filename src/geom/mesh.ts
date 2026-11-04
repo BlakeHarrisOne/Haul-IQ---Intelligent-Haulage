@@ -193,16 +193,23 @@ export function orientMesh(mesh: MeshData): MeshOrientation {
     if (c < a) { f = fill[c]++; far[f] = a; } else { f = fill[a]++; far[f] = c; }
     slot[f] = s + 2;
   }
-  // link[s] = neighbour triangle · 2 + (1 when both traverse the edge the same way); −1 boundary / non-manifold
-  const link = new Int32Array(T * 3).fill(-1);
+  // link[s] = neighbour triangle · 2 + (1 when both traverse the edge the same way); only read for closed
+  // meshes, where every slot of a valid triangle is set
+  const link = new Uint32Array(T * 3);
   let edges = 0, boundary = 0, nonManifold = 0, inconsistent = 0;
   for (let i0 = 0; i0 < V; i0++) {
-    const e0 = start[i0 + 1];
-    for (let i = start[i0]; i < e0; i++) {
+    const s0 = start[i0], e0 = start[i0 + 1];
+    // a handful of entries per vertex: match by scanning; a high-valence (fan) vertex: sort first, then the
+    // entries of one edge are adjacent and the scan stops at the first other far vertex
+    const sorted = e0 - s0 > 32;
+    if (sorted) sortGroup(far, slot, s0, e0);
+    for (let i = s0; i < e0; i++) {
       const hi = far[i];
       if (hi === TAKEN) continue;
       let m = -1, k = 1;
-      for (let j = i + 1; j < e0; j++) if (far[j] === hi) { k++; m = j; far[j] = TAKEN; }
+      for (let j = i + 1; j < e0; j++) {
+        if (far[j] === hi) { k++; m = j; far[j] = TAKEN; } else if (sorted) break;
+      }
       edges++;
       if (k === 1) boundary++;
       else if (k === 2) {
@@ -219,29 +226,29 @@ export function orientMesh(mesh: MeshData): MeshOrientation {
     degenerateTriangles: degenerate, closed: edges > 0 && boundary === 0 && nonManifold === 0,
   };
   const res: MeshOrientation = { mesh, topology, flippedTriangles: 0, shells: 0, invertedShells: 0, nonOrientableShells: 0, warnings: [] };
-  orientCache.set(mesh, res);
   if (nonManifold > 0) {
-    res.warnings.push(`${count(nonManifold, 'edge')} ${nonManifold === 1 ? 'is' : 'are'} shared by three or more triangles (non-manifold): not a clean closed solid, so the triangle winding was not checked and any volume uses the file's winding.`);
+    res.warnings.push(`${count(nonManifold, 'edge')} ${nonManifold === 1 ? 'is' : 'are'} shared by three or more triangles (non-manifold): the mesh cannot be treated as a closed solid and its triangle winding was not checked.`);
   }
-  if (!topology.closed) return res;
-  // ── BFS per shell: labels and flips; `order` lists each shell's triangles contiguously from cStart[c]
-  const comp = new Int32Array(T).fill(-1);
+  if (!topology.closed) { orientCache.set(mesh, res); return res; }
+  // ── BFS per shell: labels (comp = shell + 1, 0 = not reached) and flips; `order` lists each shell's
+  // triangles contiguously from cStart[c]
+  const comp = new Uint32Array(T);
   const flip = new Uint8Array(T);
   const order = new Uint32Array(T);
   const cStart: number[] = [], cFlips: number[] = [], cBad: boolean[] = [];
   let qt = 0;
   for (let seed = 0; seed < T; seed++) {
-    if (!valid[seed] || comp[seed] >= 0) continue;
+    if (!valid[seed] || comp[seed]) continue;
     const c = cStart.length;
     cStart.push(qt);
-    comp[seed] = c; order[qt++] = seed;
+    comp[seed] = c + 1; order[qt++] = seed;
     let bad = false, flips = 0;
     for (let qh = cStart[c]; qh < qt; qh++) {
       const t = order[qh], ft = flip[t];
       flips += ft;
       for (let s = t * 3; s < t * 3 + 3; s++) {
-        const L = link[s], u = L >> 1, need = ft ^ (L & 1);
-        if (comp[u] < 0) { comp[u] = c; flip[u] = need; order[qt++] = u; }
+        const L = link[s], u = L >>> 1, need = ft ^ (L & 1);
+        if (!comp[u]) { comp[u] = c + 1; flip[u] = need; order[qt++] = u; }
         else if (flip[u] !== need) bad = true;
       }
     }
@@ -267,7 +274,7 @@ export function orientMesh(mesh: MeshData): MeshOrientation {
     const rx = (bb.min[0] + bb.max[0]) / 2, ry = (bb.min[1] + bb.max[1]) / 2, rz = (bb.min[2] + bb.max[2]) / 2;
     const vol = new Float64Array(C);
     for (let t = 0, s = 0; t < T; t++, s += 3) {
-      const c = comp[t];
+      const c = comp[t] - 1;
       if (c < 0 || !mode[c]) continue;
       const d = det3(v, tris[s] * 3, tris[s + 1] * 3, tris[s + 2] * 3, rx, ry, rz);
       vol[c] += (flip[t] ^ (mode[c] - 1)) ? -d : d;
@@ -308,7 +315,7 @@ export function orientMesh(mesh: MeshData): MeshOrientation {
   if (flipped > 0) {
     const nt = tris.slice();
     for (let t = 0, s = 0; t < T; t++, s += 3) {
-      const c = comp[t];
+      const c = comp[t] - 1;
       if (c < 0 || !mode[c] || !(flip[t] ^ (mode[c] - 1))) continue;
       nt[s + 1] = tris[s + 2]; nt[s + 2] = tris[s + 1];
     }
@@ -330,7 +337,15 @@ export function orientMesh(mesh: MeshData): MeshOrientation {
   if (nonOrientable > 0) {
     res.warnings.push(`${count(nonOrientable, 'shell')} cannot be wound consistently (twisted or self-intersecting triangles); the volume uses the file's winding and may be wrong. Check the solid.`);
   }
+  orientCache.set(mesh, res);
   return res;
+}
+
+/** Sorts entries [s, e) by far vertex, carrying the edge slot (only for high-valence vertices). */
+function sortGroup(far: Uint32Array, slot: Uint32Array, s: number, e: number): void {
+  const idx = Array.from({ length: e - s }, (_, i) => s + i).sort((x, y) => far[x] - far[y]);
+  const f = idx.map(i => far[i]), w = idx.map(i => slot[i]);
+  far.set(f, s); slot.set(w, s);
 }
 
 /** det(a − r, b − r, c − r) for vertex offsets a, b, c (= 6 × the signed volume of the tetrahedron r a b c). */

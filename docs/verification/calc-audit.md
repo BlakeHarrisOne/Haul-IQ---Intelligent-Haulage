@@ -66,6 +66,18 @@ Plateau overshoot on 1 500 m climbs (kinematic vs steady):
 
 **Tests:** `physics.test.ts` › "long constant climb…", "…independent fine-step reference", "every accelerating kinematic interval…".
 
+**Fixed:** In `kinematicLeg` (`src/engine/haul/kinematic.ts`), a step whose two RK2 slopes have opposite signs, or that starts
+at or above the segment's force-balance speed, is integrated with 16 explicit-Euler sub-steps. Those sub-steps never cross the
+balance speed in either direction. On a propel segment the balance (steady) speed is a hard ceiling: a truck below it is clamped
+at it, and a truck above it (entering a steeper grade) can only slow down to it. The backward-pass and limit caps still apply
+afterwards. All three tests pass:
+- every plateau is within 0.5 % of steady, for example the 930E at 12 % now gives 7.81 km/h;
+- every demo leg × 8 trucks is within 1 % of the fine-step reference;
+- no accelerating interval exceeds the force limit.
+
+Spreadsheet parity is untouched (spreadsheet mode does not use this code). Together with D5, the kinematic pass now uses a
+rimpull equal to the per-gear max.
+
 ### D2 (High): the priority planner freezes site-task counts, so its plan needs more crew than it reports
 
 This is the same defect as code-review #1, reached independently here.
@@ -85,11 +97,22 @@ R7 is computed at 15 trucks as 7 − 1 − 3 = 3. Once LDR1 is parked, 11 trucks
 
 **Test:** `priority.test.ts` › "coal circuit below the push task…".
 
+**Fixed** with code-review #1 (`src/engine/priority/plan.ts` and `manning/evaluate.ts` `caps`). Task counts are re-evaluated
+at every step. A shed task is a cap, min(cap, rule), and the tasks are reported against the final allocation. The audit test
+passes for crew 40 → 20, and so do the other planner audits. In the repro (crew 30) the plan is EX09 6, EX04 5 and LDR1 parked,
+with R7 reported as **6 requested / 4 allocated**: 2 are stood down and crewUsed is 30. With those 2 set in Manning, the applied
+plan needs exactly 30.
+
 ### D3 (Low): `shift.bcm` substituted expression has the wrong precedence
 
 **Where:** `src/engine/shift/sim.ts:198`.
 
 The step reads `"58 + 0.99 × 100"` (which evaluates to 157), but the value is (58 + 0.99) × 100 = 5 899. It needs parentheses whenever a load is in progress at the end of the shift.
+
+**Fixed:** `src/engine/shift/sim.ts` writes `(58 + 0.99) × 100` when a load is in progress, and the formula reads `V = (loads +
+load in progress) × truck load`. I also checked every other engine `substituted` template that mixes + / − with × / ÷:
+`cycle.haul`, `loader.lost`, `fleet.matchFactor`, `phys.*`, the manning sums and the priority steps. They were already
+correctly bracketed. The audit test passes.
 
 **Test:** `calcsteps.test.ts` › "manning, priority and shift steps".
 
@@ -103,6 +126,13 @@ Queued trucks jump `QUEUE_GAP_M` = 15 m in a single instant when the truck ahead
 
 **Test:** `shift.test.ts` › "positions are continuous in time…".
 
+**Fixed:** `truckStatesAt` (`src/engine/shift/sim.ts`) places a queued truck by the new `queueChainage`. The truck arrives at
+its slot and, each time a truck ahead of it leaves the queue, moves up at `QUEUE_CREEP_KMH` = 6 km/h. It only moves during its
+active (unpaused) time, so trucks still stand still during crib. The queue state reports that speed and dir −1 while moving.
+A spot run starts from the chainage where the truck queued, so a truck served from slot 1 no longer jumps. Per-record
+"trucks ahead" leave times are computed once per simulation. The audit test passes with 0 jumps, and the crib and smoothness
+tests in `src/engine/shift` still pass.
+
 ### D5 (Low): the rimpull envelope deviates from the per-gear curves
 
 There is no failing test for this one; the numbers come from the audit probe.
@@ -110,6 +140,17 @@ There is no failing test for this one; the numbers come from the audit probe.
 **Where:** `src/data/trucks.ts:112` → `src/engine/util/curve.ts:93-100`. `envelopeOf` samples breakpoints and midpoints, and the result is then interpolated in power space.
 
 The envelope overstates the best-gear rimpull by up to +12 % in a band of about 0.2 km/h just above each upshift (789C +12.0 % at 40.43 km/h, 793F +12.3 %). It understates by about 2 % in the 1st-gear converter region (≈1.5 km/h). The steady solver uses the gear curves, so it is unaffected. The kinematic forward pass and the Truck Curves chart use the envelope.
+
+**Fixed:** `envelopeOf` (`src/engine/util/curve.ts`) now builds the true upper envelope, max over gears of `gearForce`, from:
+- every breakpoint;
+- a knee 1e-4 km/h past each band end and before each band start;
+- a dense grid: 0.02 km/h below 1 km/h, 0.1 km/h below 5 km/h, then 0.25 km/h;
+- the exact gear-crossing speed between samples, found by bisection.
+
+`curveForce(envelope, v)` now matches the per-gear max within 0.033 % at every speed from 0.01 km/h up to top speed for all
+6 geared trucks. Before the fix the error was up to +12 % and −2 %. A new check in `src/data/data.test.ts` enforces 0.1 %. The
+retarder envelopes built from gears use the same function. The §G.3 steady sanity table (±0.15 km/h) and spreadsheet parity
+still pass.
 
 ## Not defects (deviations and notes)
 

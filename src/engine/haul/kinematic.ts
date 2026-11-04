@@ -139,16 +139,33 @@ export function kinematicLeg(tp: TruckPhysics, segs: LegSeg[], o: KinOpts): LegR
     const h = sH[k];
     const v0 = v[i];
     const w0 = v0 * v0;
+    const bal = sProp[k] && sBal[k] !== Infinity ? sBal[k] : Infinity;
     const k1 = 2 * accel(k, v0);
     const wp = w0 + k1 * h;
     const k2 = 2 * accel(k, Math.sqrt(wp > 0 ? wp : 0));
-    const w1 = w0 + 0.5 * (k1 + k2) * h;
+    let w1: number;
+    if (k1 * k2 < 0 || v0 >= bal - 1e-9) {
+      // the step crosses a force balance or a force discontinuity (gear change, governor droop, v = 0 for an electric
+      // drive): the RK2 average of the two slopes is meaningless there and held trucks above the balance speed on long
+      // climbs. Sub-step with explicit Euler, never crossing the balance speed in either direction.
+      const n = 16, hq = h / n, b2 = bal * bal;
+      w1 = w0;
+      for (let q = 0; q < n; q++) {
+        const before = w1;
+        w1 += 2 * accel(k, Math.sqrt(w1 > 0 ? w1 : 0)) * hq;
+        if (before <= b2 && w1 > b2) w1 = b2;
+        else if (before >= b2 && w1 < b2) w1 = b2;
+        if (w1 < 0) w1 = 0;
+      }
+    } else {
+      w1 = w0 + 0.5 * (k1 + k2) * h;
+    }
     let v1 = Math.sqrt(w1 > 0 ? w1 : 0);
     let tag = v1 > v0 + 1e-6 ? TAG.accel : sProp[k] ? TAG.rimpull : TAG.coast;
-    const bal = sBal[k];
-    if (sProp[k] && bal !== Infinity) {
+    if (bal !== Infinity) {
+      // the force-balance (steady) speed of this grade is never exceeded: above it the truck can only slow down to it
       if (v0 <= bal + 1e-9 && v1 >= bal) { v1 = bal; tag = TAG.rimpull; }
-      else if (v0 >= bal - 1e-9 && v1 <= bal) { v1 = bal; tag = TAG.rimpull; }
+      else if (v0 > bal + 1e-9) { v1 = Math.max(bal, Math.min(v1, v0)); tag = TAG.rimpull; }
     }
     if (v1 < crawl && k1 <= 0 && vb[i + 1] > 0) {
       v1 = Math.min(crawl, vb[i + 1]);

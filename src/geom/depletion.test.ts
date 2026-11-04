@@ -4,7 +4,8 @@ import {
 } from './depletion';
 import { meshStats, meshTopology } from './mesh';
 import { box, extrude, icosphere, MGA, translate } from './__tests__/shapes';
-import type { Vec3 } from '@/core/types';
+import { mulberry32 } from '@/demo/rng';
+import type { MeshData, Vec3 } from '@/core/types';
 
 const B = { sx: 60, sy: 40, sz: 20 };
 const solid = translate(box(B.sx, B.sy, B.sz, 6), MGA);
@@ -143,5 +144,44 @@ describe('capLoops / clipMesh', () => {
     expect(dot(scene(MGA[0] + 30, MGA[1] + 5, MGA[2] + 3))).toBeCloseTo(0, 6);
     const back = toScenePlane(p, origin, 2, 'back');
     expect(back.normal[0]).toBeCloseTo(-sp.normal[0], 12);
+  });
+});
+
+describe('solids exported with mixed triangle winding', () => {
+  // the 60 × 40 × 20 m box with a quarter of its faces wound inward (still closed, winding inconsistent)
+  const r = mulberry32(5);
+  const t = solid.tris.slice();
+  let flipped = 0;
+  for (let k = 0; k < t.length / 3; k++) if (r() < 0.25) { const b = t[k * 3 + 1]; t[k * 3 + 1] = t[k * 3 + 2]; t[k * 3 + 2] = b; flipped++; }
+  const mixed: MeshData = { verts: solid.verts, tris: t };
+
+  it('prepareSolid re-orients: true volume and centroid, the repair reported', () => {
+    expect(meshTopology(mixed).inconsistentEdges).toBeGreaterThan(0);
+    const h = prepareSolid(mixed);
+    expect(h.volume).toBeCloseTo(total, 6);
+    expect(h.centroid[0]).toBeCloseTo(MGA[0] + B.sx / 2, 6);
+    expect(h.centroid[2]).toBeCloseTo(MGA[2] + B.sz / 2, 6);
+    expect(h.orientation).toBe(1);
+    expect(h.closed).toBe(true);
+    expect(h.flippedTriangles).toBe(flipped);
+    expect(h.warnings[0]).toMatch(/faced the wrong way/);
+    expect(meshTopology(h.mesh).inconsistentEdges).toBe(0);
+    expect(prepareSolid(solid).warnings).toEqual([]);
+  });
+
+  it('depletion planes, volumes either side and clipped meshes match the clean solid', () => {
+    for (const f of [0.1, 0.5, 0.9]) {
+      const a = depletionPlane(mixed, 'face-advance', 33, f), b = depletionPlane(solid, 'face-advance', 33, f);
+      within(a.volumeRemoved, f * total, 0.002);
+      expect(a.constant).toBeCloseTo(b.constant, 6);
+      expect(volumeBehindPlane(mixed, a) + volumeBeyondPlane(mixed, a)).toBeCloseTo(total, 6);
+    }
+    const p = depletionPlane(mixed, 'bench-down', 0, 0.4);
+    const front = clipMesh(mixed, p, 'front'), back = clipMesh(mixed, p, 'back');
+    expect(meshTopology(front).inconsistentEdges).toBe(0);
+    expect(meshTopology(back).inconsistentEdges).toBe(0);
+    within(meshStats(back).volume!, p.volumeRemoved, 1e-6);
+    within(meshStats(front).volume!, total - p.volumeRemoved, 1e-6);
+    expect(capLoops(mixed, p, 'front').area).toBeCloseTo(B.sx * B.sy, 6);
   });
 });
